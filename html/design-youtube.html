@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design YouTube — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:200px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}@media print{nav{display:none}main{margin-left:0;max-width:100%}.phase.collapsed .phase-body{display:block}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design YouTube</h1><span>Worked Example · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-upload">Upload & Transcoding</a>
+  <a href="#dd-streaming">Streaming & CDN</a>
+  <a href="#dd-feed">Home Feed & Recs</a>
+  <a href="#dd-data">Data Model & Storage</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span><span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a video sharing platform. Creators upload videos, the system transcodes them into multiple resolutions, and viewers stream them with adaptive bitrate. Users also get a personalized home feed of recommended videos."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What outcome are we optimizing for?</strong> <em>→ Watch time (total minutes viewed), not views. A 10-minute video watched to completion is worth more than a clickbait video abandoned after 5 seconds. Secondary: creator ecosystem health (upload rate, creator revenue). This shapes the recommendation engine (optimize for predicted watch time, not clicks) and the transcoding pipeline (quality must be good enough that users don't abandon due to buffering).</em></li>
+      <li><strong>Upload vs. streaming priority?</strong> <em>→ Streaming is 1000:1 more frequent than uploads. But upload reliability matters for creators — a failed upload of a 2-hour video is devastating. Design both, optimize for streaming.</em></li>
+      <li><strong>Live streaming in scope?</strong> <em>→ Out of scope for now. Fundamentally different pipeline (real-time transcoding vs. batch).</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Video upload & transcoding pipeline</td><td>Live streaming</td></tr>
+        <tr><td>Video streaming (adaptive bitrate)</td><td>Shorts / vertical video</td></tr>
+        <tr><td>Home feed / recommendations</td><td>Monetization / ads</td></tr>
+        <tr><td>Likes, comments, subscriptions</td><td>Content moderation (mention only)</td></tr>
+        <tr><td>Search</td><td>Creator Studio / analytics dashboard</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Video start time &lt;2s</strong> — users abandon if buffering takes too long. CDN + adaptive bitrate are essential.</li>
+      <li><strong>Upload processing within 10–30 min</strong> — creator sees "processing" then "published." Async pipeline.</li>
+      <li><strong>Massive storage</strong> — petabytes of video. Cost optimization is a first-class concern.</li>
+      <li><strong>Global</strong> — users everywhere. CDN with multi-region origin.</li>
+      <li><strong>Read-heavy</strong> — ~1000:1 watch-to-upload ratio. System optimized for streaming reads.</li>
+    </ul>
+    <div class="callout tip">The defining tension: the UPLOAD path is a heavyweight async pipeline (transcode, process, store), while the WATCH path must be ultra-low-latency (CDN-served, adaptive bitrate). These are almost two different systems sharing a storage layer.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span><span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Daily Active Users</div><div class="value">~800M</div><div class="detail">2B+ registered, ~40% DAU</div></div>
+      <div class="est-card"><div class="label">Videos Watched / Day</div><div class="value">~5B</div><div class="detail">~800M users × ~6 videos/day. ~58K plays/sec.</div></div>
+      <div class="est-card"><div class="label">Videos Uploaded / Day</div><div class="value">~500K</div><div class="detail">~6/sec. Average duration: 7 min. Total: ~58K hours/day of new content.</div></div>
+      <div class="est-card"><div class="label">Ingestion per Day</div><div class="value">~1.5 PB</div><div class="detail">500K × avg 3GB raw file. After transcoding to 5 resolutions: ~5× = 7.5 PB stored.</div></div>
+      <div class="est-card"><div class="label">Total Storage</div><div class="value">~1 Exabyte</div><div class="detail">Years of accumulated video. Tiered: hot (CDN) → warm (S3) → cold (Glacier).</div></div>
+      <div class="est-card"><div class="label">Egress Bandwidth</div><div class="value">~100 Tbps peak</div><div class="detail">58K concurrent streams × avg 5 Mbps bitrate = ~290 Gbps base, 100 Tbps at global peak with CDN.</div></div>
+    </div>
+    <div class="callout decision"><strong>Key insight #1:</strong> Storage and bandwidth are THE cost drivers. Every optimization (better compression, smarter CDN caching, tiered storage) directly impacts the bottom line by millions of dollars.</div>
+    <div class="callout decision"><strong>Key insight #2:</strong> The transcoding pipeline must handle 500K videos/day = ~6/sec. Each transcode to 5 resolutions takes 10-30 min of compute. This requires a massive, auto-scaling worker pool.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span><span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 556" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_7174" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_7174h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="333" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="447" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <text x="394" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">video</text>
+    <line x1="447" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_7174)" opacity=".6"/>
+    <line x1="447" y1="194" x2="158" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="447" y1="194" x2="390" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="447" y1="194" x2="506" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="447" y1="194" x2="622" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="158" y1="294" x2="333" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <text x="249" y="372" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">raw</text>
+    <line x1="158" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="390" y1="354" x2="274" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="274" y1="294" x2="333" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <text x="307" y="372" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">encoded</text>
+    <line x1="390" y1="254" x2="333" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" stroke-dasharray="4 3" opacity=".5"/>
+    <line x1="622" y1="294" x2="447" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <line x1="506" y1="294" x2="219" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7174)" opacity=".5"/>
+    <rect class="svg-node" x="283" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="333" y="78" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">🎬 Creator</text>
+    <rect class="svg-node" x="397" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="447" y="78" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">📺 Viewer</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌍 CDN Edge</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">video segments · thumbnails</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · route</text>
+    <rect class="svg-node" x="107" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="158" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📤 Upload Service</text>
+    <text x="158" y="284" fill="#6e7681" font-size="8" text-anchor="middle">resumable · tus</text>
+    <rect class="svg-node" x="223" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="274" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🎬 Transcode Pipeline</text>
+    <text x="274" y="284" fill="#6e7681" font-size="8" text-anchor="middle">FFmpeg · 360p–4K</text>
+    <rect class="svg-node" x="339" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📺 Streaming</text>
+    <text x="390" y="284" fill="#6e7681" font-size="8" text-anchor="middle">HLS/DASH · ABR</text>
+    <rect class="svg-node" x="455" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="506" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📰 Feed / Rec</text>
+    <text x="506" y="284" fill="#6e7681" font-size="8" text-anchor="middle">ML ranking</text>
+    <rect class="svg-node" x="571" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="622" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔍 Search</text>
+    <text x="622" y="284" fill="#6e7681" font-size="8" text-anchor="middle">Elasticsearch</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="371" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka / SQS</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">transcode jobs · events</text>
+    <rect class="svg-node" x="169" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="219" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL</text>
+    <text x="219" y="484" fill="#6e7681" font-size="8" text-anchor="middle">metadata · users</text>
+    <rect class="svg-node" x="283" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="333" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📦 S3</text>
+    <text x="333" y="484" fill="#6e7681" font-size="8" text-anchor="middle">raw + transcoded video</text>
+    <rect class="svg-node" x="397" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="447" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔎 Elasticsearch</text>
+    <text x="447" y="484" fill="#6e7681" font-size="8" text-anchor="middle">video search index</text>
+    <rect class="svg-node" x="511" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="561" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📊 ClickHouse</text>
+    <text x="561" y="484" fill="#6e7681" font-size="8" text-anchor="middle">analytics · view counts</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card"><h4>📤 Upload Service <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">WRITE</span></h4>
+        <ul><li>Resumable upload (tus protocol)</li><li>Store raw video to S3</li><li>Publish transcode job to queue</li></ul></div>
+      <div class="comp-card"><h4>🎬 Transcoding Pipeline <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">ASYNC HEAVY</span></h4>
+        <ul><li>FFmpeg workers (auto-scaling pool)</li><li>Encode to 5 resolutions (360p–4K)</li><li>Generate HLS/DASH manifests</li></ul></div>
+      <div class="comp-card"><h4>📺 Streaming Service <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">HOT PATH</span></h4>
+        <ul><li>Serve video manifest + segments</li><li>Adaptive bitrate selection</li><li>CDN-first, origin fallback</li></ul></div>
+      <div class="comp-card"><h4>📰 Feed / Rec Service <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">READ</span></h4>
+        <ul><li>Personalized home feed</li><li>ML ranking model</li><li>Precomputed candidate lists</li></ul></div>
+      <div class="comp-card"><h4>🔍 Search Service <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">READ</span></h4>
+        <ul><li>Elasticsearch for video metadata</li><li>Title, description, tags, captions</li></ul></div>
+      <div class="comp-card"><h4>📊 Video Metadata Service <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">CORE</span></h4>
+        <ul><li>Video info, channel, view counts</li><li>Likes, comments</li><li>Heavily cached</li></ul></div>
+    </div>
+
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Transcoding takes 15-30 min — can't block upload</td><td style="color:var(--accent-cyan);font-weight:500">Kafka/SQS queue → worker pool</td><td>Acknowledge upload in seconds (file in S3). Transcode async with auto-scaling workers. Synchronous would timeout HTTP connections.</td><td>—</td></tr>
+      <tr><td>Video storage at petabyte/month scale</td><td style="color:var(--accent-cyan);font-weight:500">S3 with lifecycle tiering</td><td>Hot (CDN) → Warm (S3 Standard) → Cold (Glacier). 80% of videos have &lt;1K views — tiered storage saves millions/month.</td><td>—</td></tr>
+      <tr><td>Analytics: "views per country per hour" over billions</td><td style="color:var(--accent-cyan);font-weight:500">ClickHouse (not PostgreSQL)</td><td>Columnar store scans 1B+ rows/sec reading only needed columns. PostgreSQL reads full rows — 10-100x slower for aggregations.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Video start time &lt;2s globally</td><td style="color:var(--accent-cyan);font-weight:500">CDN + Adaptive Bitrate Streaming (HLS)</td><td>CDN edge caching + client-side ABR means first segment loads from nearest PoP at optimal quality. Origin rarely hit.</td><td>—</td></tr>
+      <tr><td>Metadata needs relational integrity</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL for video metadata</td><td>Videos belong to channels, have tags, comments, playlists — relational. Search index (ES) is secondary, derived from Postgres.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Upload spikes after events (Super Bowl)</td><td style="color:var(--accent-cyan);font-weight:500">Auto-scaling worker pool, not fixed capacity</td><td>Workers scale 100→1000+ based on queue depth. Fixed capacity wastes money 99% of the time or fails during spikes.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+
+    <div class="sub">Flow 1: Video Upload & Processing</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 536" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9536" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="130" y="40" width="301" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Creator</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <rect class="svg-node" x="119" y="124" width="322" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Upload Service</text>
+    <line x1="280" y1="168" x2="280" y2="222" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">publish job to SQS/Kafka</text>
+    <rect class="svg-node" x="128" y="224" width="304" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="252" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">S3 (raw)</text>
+    <line x1="280" y1="268" x2="280" y2="354" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="284" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">encode: 360p, 480p, 720p, 1080p, 4K</text>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">generate HLS manifest (.m3u8) + segments (.ts)</text>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">generate thumbnails, extract captions</text>
+    <rect class="svg-node" x="112" y="356" width="337" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="374" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Transcoding Workers</text>
+    <text x="280" y="390" fill="#6e7681" font-size="9" text-anchor="middle">auto-scaling pool</text>
+    <line x1="280" y1="400" x2="280" y2="470" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="416" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">update video status: READY</text>
+    <text x="296" y="432" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">push to CDN origin</text>
+    <rect class="svg-node" x="119" y="472" width="322" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="500" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">S3 (processed)</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Video Streaming</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Video Streaming</span>
+  <svg viewBox="0 0 560 452" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a5105" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Viewer</text>
+    <line x1="280" y1="84" x2="280" y2="154" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5105)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. fetch video metadata (title, manifest URL)</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. player requests HLS manifest from CDN</text>
+    <rect class="svg-node" x="130" y="156" width="301" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="184" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Web App</text>
+    <line x1="280" y1="200" x2="280" y2="238" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5105)"/>
+    <rect class="svg-node" x="128" y="240" width="304" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="268" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">CDN Edge</text>
+    <line x1="280" y1="284" x2="280" y2="386" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5105)"/>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. player selects resolution based on bandwidth</text>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. requests video segments (.ts) from CDN</text>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">5. adaptive: switches quality mid-stream</text>
+    <text x="296" y="348" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">async: log view event → Kafka → analytics</text>
+    <rect class="svg-node" x="122" y="388" width="316" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="416" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Video Player</text>
+  </svg>
+</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span><span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div id="dd-upload">
+    <div class="sub">Deep Dive 1: Upload & Transcoding Pipeline (~10 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Process 500K video uploads/day. Each requires transcoding to 5 resolutions, thumbnail generation, caption extraction. Total compute: millions of CPU-hours/day. Must be reliable (never lose an upload) and cost-efficient.</div>
+
+    <ul class="items">
+      <li><strong>Resumable upload:</strong> Large videos (multi-GB) need resumable uploads. Use the tus protocol or Google's resumable upload API. Client can resume from last byte on network failure. Upload directly to S3 via presigned multipart upload.</li>
+      <li><strong>Transcoding DAG:</strong> Not a single job — it's a directed acyclic graph: (1) probe input format → (2) transcode to 5 resolutions in parallel → (3) generate HLS segments + manifests → (4) generate thumbnails → (5) extract/generate captions → (6) content moderation scan → (7) update metadata → (8) push to CDN origin.</li>
+      <li><strong>Worker pool:</strong> Spot/preemptible instances for cost (60-80% savings). Jobs are idempotent and retryable — if a spot instance is reclaimed, the job retries on another. Kubernetes with auto-scaling based on queue depth.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why parallel transcode per resolution?</strong> A 10-min 4K video takes ~30 min to transcode to 1080p on a single core. Doing 5 resolutions sequentially = 2.5 hours. In parallel = 30 min. We spin up 5 workers per video (one per resolution). The cost is the same (same total CPU), but time-to-publish drops 5×. Tradeoff: more orchestration complexity, but Step Functions / Temporal handles this cleanly.</div>
+
+    <div class="callout decision"><strong>Storage tiering:</strong> Raw upload stored temporarily (deleted after 30 days). Transcoded versions in S3 Standard. Videos not accessed in 90 days → S3 Infrequent Access. 1 year → Glacier. This saves enormous storage costs since the long tail of videos has very few views.</div>
+
+    <div class="schema"><span class="comment">── HLS Output Structure (per video) ──</span>
+s3://videos/{video_id}/
+  master.m3u8           <span class="comment">// master playlist (lists all resolutions)</span>
+  360p/
+    playlist.m3u8       <span class="comment">// resolution-specific playlist</span>
+    segment_000.ts      <span class="comment">// 2-10 second video segments</span>
+    segment_001.ts
+    ...
+  720p/
+    playlist.m3u8
+    segment_000.ts
+    ...
+  1080p/ ...
+  4k/ ...
+  thumbnails/
+    thumb_0.jpg, thumb_1.jpg, ...
+  captions/
+    en.vtt, es.vtt, ...  <span class="comment">// WebVTT format</span></div>
+    </div>
+
+    <div id="dd-streaming">
+    
+    
+    <div class="sub">Deep Dive 2: Streaming & CDN Architecture (~8 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Serve 58K concurrent video streams globally with &lt;2s start time. Bandwidth: 100 Tbps at peak. CDN hit ratio must be >95% to keep origin costs manageable.</div>
+
+    <ul class="items">
+      <li><strong>Adaptive Bitrate Streaming (ABR):</strong> Client player downloads the HLS master manifest, which lists all available resolutions. Player starts with a low resolution for fast start, then switches up as bandwidth estimate stabilizes. On bandwidth drop → seamlessly drops to lower quality. This is the standard HLS/DASH behavior.</li>
+      <li><strong>CDN strategy:</strong> Multi-CDN (CloudFront + Akamai + Fastly) for redundancy and geo optimization. Popular videos cached at edge (thousands of PoPs). Long-tail videos cached at regional PoPs. Cache key: <code>{video_id}/{resolution}/segment_{n}</code>.</li>
+      <li><strong>Prewarming:</strong> When a video is published, pre-push the first few segments of each resolution to CDN edges in the creator's region. For viral videos, aggressively pre-warm globally.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why HLS over DASH?</strong> Both work, but HLS has broader device support (native on iOS/Safari, well-supported everywhere else). DASH is technically more flexible. At YouTube's scale, you'd support both. For this design, HLS as the primary with DASH as secondary. Tradeoff: maintaining two manifest formats, but the video segments themselves are the same.</div>
+
+    <div class="callout decision"><strong>View counting at scale:</strong> 5B views/day can't be counted synchronously. Click → Kafka event → consumer increments counter in Redis. Periodically flush Redis counters to the Videos DB. Accept that the displayed count is ~30s stale. For "is this view legitimate?" filtering (bot detection, replay attacks), a separate fraud detection pipeline processes view events async.</div>
+    </div>
+
+    <div id="dd-feed">
+    <div class="sub">Deep Dive 3: Home Feed & Recommendations (~7 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> From a catalog of ~1B videos, select and rank the best 20–50 to show each of 800M users on their home page.</div>
+
+    <ul class="items">
+      <li><strong>Two-stage architecture:</strong> (1) <strong>Candidate generation</strong> — narrow 1B videos down to ~1000 using lightweight models (collaborative filtering, content-based, subscription-based). (2) <strong>Ranking</strong> — score the 1000 candidates with a heavier ML model (deep neural net) that predicts engagement probability. Return top 20.</li>
+      <li><strong>Candidate sources:</strong> Subscribed channels (recent uploads), watch history similarity (collaborative filtering), topic/category affinity, trending videos, and "explore" candidates for diversity.</li>
+      <li><strong>Ranking features:</strong> Video age, view velocity, user's watch history, user-channel affinity, video length preference, time of day, device type.</li>
+      <li><strong>Serving:</strong> Pre-generate candidate lists offline (batch, hourly). Ranking is online (per request) but fast (~50ms with model serving via TensorFlow Serving / TorchServe).</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why two-stage?</strong> Running a deep ranking model over 1B videos per request is computationally impossible. The two-stage funnel (lightweight filter → heavy ranker) is the standard industry approach. Tradeoff: the candidate generation stage might miss some relevant videos, but the ranking quality on the candidates it does find makes up for it.</div>
+    </div>
+
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Data Model & Storage Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Access Pattern</th><th>Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Video Files</td><td>S3 (tiered) + CDN</td><td>Write once, read many. CDN-first. ~1 EB total.</td><td>Eventual (CDN)</td></tr>
+        <tr><td>Video Metadata</td><td>PostgreSQL + Redis cache</td><td>Read by video_id. Heavily cached for watch page.</td><td>Strong write, eventual read</td></tr>
+        <tr><td>View / Like Counts</td><td>Redis (counter) → flush to DB</td><td>5B increments/day. Approximate display.</td><td>Eventual (30s stale)</td></tr>
+        <tr><td>Comments</td><td>PostgreSQL (sharded by video_id)</td><td>Append-heavy. Read paginated by video_id.</td><td>Strong</td></tr>
+        <tr><td>Subscriptions</td><td>PostgreSQL + Redis cache</td><td>"Who does user X subscribe to?" for feed. Graph-like.</td><td>Strong</td></tr>
+        <tr><td>Search Index</td><td>Elasticsearch</td><td>Video title, description, tags, auto-captions.</td><td>Near-real-time</td></tr>
+        <tr><td>Rec Candidates</td><td>Feature Store (Redis/Bigtable)</td><td>Pre-generated per user. Read at feed load.</td><td>Stale (hourly batch)</td></tr>
+        <tr><td>Transcode Jobs</td><td>SQS / Kafka</td><td>Job queue for transcoding workers.</td><td>At-least-once</td></tr>
+        <tr><td>View Events</td><td>Kafka → ClickHouse</td><td>Streaming analytics. 58K events/sec.</td><td>Eventual</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span><span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Raw uploads</td>
+        <td style="color:var(--accent-cyan)">S3</td>
+        <td>Original video files. Write-once, read by transcoding pipeline. Lifecycle policy → Glacier after 90 days.</td>
+      </tr>
+      <tr>
+        <td>Transcoded segments</td>
+        <td style="color:var(--accent-cyan)">S3 + CDN</td>
+        <td>HLS/DASH segments at 5 resolutions. CDN-first serving. Origin fallback for cold videos (&lt;10 views/day).</td>
+      </tr>
+      <tr>
+        <td>Video metadata</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Title, description, upload date, channel, privacy settings. Relational joins for channel pages.</td>
+      </tr>
+      <tr>
+        <td>View counts &amp; analytics</td>
+        <td style="color:var(--accent-cyan)">ClickHouse</td>
+        <td>Columnar store for time-series analytics. &quot;Views per country per hour&quot; queries across billions of rows.</td>
+      </tr>
+      <tr>
+        <td>Search index</td>
+        <td style="color:var(--accent-cyan)">Elasticsearch</td>
+        <td>Video metadata + auto-generated captions. Full-text search with relevance scoring.</td>
+      </tr>
+      <tr>
+        <td>Transcode job queue</td>
+        <td style="color:var(--accent-cyan)">Kafka / SQS</td>
+        <td>Durable queue for upload → transcode pipeline. Dead-letter queue for failed transcodes.</td>
+      </tr>
+      <tr>
+        <td>Recommendation features</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>Precomputed candidate lists per user. Refreshed hourly by ML pipeline. ~1000 video_ids per user.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Transcode worker crashes mid-job</span><span class="mitigation">Job stays in queue with visibility timeout. On timeout, another worker picks it up. Jobs are idempotent — re-running produces same output. Spot instance reclaims handled the same way.</span></div>
+    <div class="failure-row"><span class="scenario">CDN origin overloaded</span><span class="mitigation">Stale-while-revalidate. Multi-origin failover. Shield/mid-tier caching to reduce origin load. Popular videos never need origin after initial cache fill.</span></div>
+    <div class="failure-row"><span class="scenario">Viral video (10M views in 1 hour)</span><span class="mitigation">CDN absorbs the read load. Pre-warm globally when velocity exceeds threshold. View counter handled via Redis batch incrementing. Metadata cached aggressively.</span></div>
+    <div class="failure-row"><span class="scenario">S3 region outage</span><span class="mitigation">Cross-region replication for hot videos. CDN has cached content. Cold videos may be temporarily unavailable. Rebuild from other regions.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Video storage is the dominant cost: at ~500 hours uploaded per minute, each generating 5 resolution variants, storage grows at ~2PB/month. The CDN absorbs 95%+ of read traffic — origin servers only handle cache misses for cold videos. Transcoding scales horizontally with an auto-scaling worker pool: during upload surges (post-event uploads), workers scale from 100 to 1000+ within minutes. The recommendation service is pre-computed: ML models generate candidate lists offline, and the serving layer is a simple Redis lookup. The real scalability challenge is the long tail: 80% of videos have &lt;1000 total views but still need to be stored, indexed, and servable. This is why tiered storage (hot CDN → warm S3 → cold Glacier) is essential for cost management.</div>
+
+    <div class="sub">Cost Optimization (unique to video platforms)</div>
+    <ul class="items">
+      <li><strong>Storage tiering:</strong> ~90% of videos get &lt;1% of total views. Move to Glacier after inactivity. Saves ~70% storage cost.</li>
+      <li><strong>Codec optimization:</strong> AV1 encoding reduces bandwidth ~30% vs. H.264 at same quality. Encode popular videos in AV1; long-tail stays H.264 (not worth the encode cost).</li>
+      <li><strong>CDN cost:</strong> Multi-CDN bidding — route traffic to cheapest CDN per region. Peer-to-peer assist for live events.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Content moderation is the primary security concern: uploaded videos are scanned by ML classifiers (nudity, violence, copyright via Content ID) before being made public. Videos flagged by automated systems go into a human review queue. Copyright uses audio/video fingerprinting against a database of registered content. For user security: OAuth 2.0 for API access, session tokens with short TTLs, and rate limiting on uploads (prevent spam). CDN content is served over HTTPS with signed URLs for private/unlisted videos — the URL includes a time-limited HMAC token, so sharing the URL only works within the validity window. Creator accounts with &gt;100K subscribers require 2FA.</div>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> Key SLOs: video start time &lt;2s (p95), rebuffering ratio &lt;0.1%, upload-to-published &lt;30 minutes. Monitored per-CDN-region: if a specific edge PoP degrades, traffic is rerouted to the next nearest. Transcoding pipeline has per-stage latency metrics: if &quot;720p encoding&quot; stage exceeds 5 minutes, alert fires. View count pipeline has an end-to-end latency SLO of &lt;60 seconds (view event → reflected in analytics dashboard). Creator Studio metrics (revenue, watch time) have separate freshness SLOs. Error budget: 99.95% availability on video playback — roughly 22 minutes of allowed downtime per month, measured as &quot;successful segment fetches / total segment requests.&quot;</div>
+
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span><span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"This system is defined by the asymmetry between the upload path and the watch path. Uploading is a heavyweight async pipeline — resumable uploads, a DAG of transcoding jobs on spot instances, multi-resolution HLS output. Watching is ultra-low-latency — CDN-served adaptive bitrate streaming with &lt;2s start time. The bridge is S3: uploads write to it, CDN pulls from it. Cost is the dominant concern at scale — storage tiering, codec optimization, and multi-CDN routing are as architecturally important as any service design."</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Live Streaming</td><td>Completely different pipeline: ingest (RTMP) → real-time transcode → low-latency HLS (LL-HLS) → CDN. No pre-processing possible.</td></tr>
+        <tr><td>Shorts</td><td>Vertical video format. Different transcoding profiles. Feed is swipe-based (infinite scroll of short videos), preloading next 3-5 videos.</td></tr>
+        <tr><td>Content Moderation</td><td>ML pipeline on upload: nudity, violence, copyright (Content ID fingerprinting). Block before publish or flag for human review.</td></tr>
+        <tr><td>Offline Downloads</td><td>DRM-encrypted video stored on device. License server controls access. Separate download manifest from streaming manifest.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Closing framing:</strong> YouTube's architecture is defined by COST at scale. When you're storing an exabyte and serving 100 Tbps, every percentage point of CDN hit ratio, every codec efficiency gain, every storage tier decision translates to millions of dollars. The technical design serves the economics.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why not transcode on upload instead of queueing?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Because transcoding is CPU-intensive and variable-duration. A 10-minute 4K video takes ~15-30 minutes to transcode into all 5 resolutions. If we did this synchronously, the upload API would need to hold the connection open for 30+ minutes — HTTP timeouts would kill it. More importantly, upload traffic is spiky: after a major event (Super Bowl, product launch), thousands of creators upload simultaneously. A synchronous model would require provisioning for peak transcoding capacity at all times. The queue-based model lets us: (1) acknowledge the upload in seconds (file is in S3), (2) transcode at our own pace with backpressure (workers pull from queue), (3) auto-scale workers based on queue depth, (4) retry failed transcodes without re-uploading. The creator sees &quot;Processing...&quot; for 10-30 minutes, which is an accepted UX pattern. We do prioritize: verified creators and scheduled premieres get higher queue priority.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How would you handle a video that suddenly gets 100M views in an hour?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The CDN handles this naturally — that's its entire purpose. The video segments are cached at edge PoPs worldwide. After the first few thousand views, the segments are cached at every major PoP, and 99.9% of requests never hit origin. The real challenges are: (1) view counting — 100M Kafka events/hour needs partitioning by video_id so a single consumer isn't overwhelmed, (2) comment section — this becomes a write hotspot, so we use the same approach as Facebook likes: Redis INCR for the counter, Kafka for the event stream, batch flush to PostgreSQL, (3) recommendation cascade — the video appears in many users' &quot;Trending&quot; feeds, which increases load on the recommendation serving layer. But since recs are pre-computed in Redis, this is just more cache reads. The one thing we'd actively do is ensure the video's origin copy is replicated to additional S3 regions in case the primary region's CDN connectivity degrades.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why ClickHouse for analytics instead of PostgreSQL?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">YouTube analytics queries are almost always &quot;aggregate X over time window, grouped by dimension.&quot; Example: &quot;total watch time per country per day for the last 90 days.&quot; This is a columnar workload: you're scanning billions of rows but only reading 3-4 columns (watch_time, country, date, video_id). ClickHouse is purpose-built for this: columnar storage means it only reads the columns needed, compression ratios are 10-20x better than row-based stores, and it can scan 1B+ rows/second on a modest cluster. PostgreSQL would need to read entire rows, can't compress as effectively, and aggregate queries would take minutes instead of seconds. The tradeoff: ClickHouse has no transactions, limited UPDATE support, and no foreign keys. But analytics data is append-only (events are immutable), so we don't need any of those features.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you decide which resolution to serve during adaptive bitrate streaming?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The client decides, not the server — that's the key insight. We use HLS (HTTP Live Streaming) where the manifest file lists all available resolutions with their bandwidth requirements. The video player measures its actual download speed by timing how long each 2-second segment takes to fetch. If the last segment downloaded at 5Mbps, the player selects the highest resolution that requires ≤5Mbps. If speed drops (user enters a tunnel), the player transparently switches to a lower resolution — the next segment is fetched at 480p instead of 1080p. The server's job is just to have all segments pre-transcoded and available. The CDN serves whatever resolution the client requests. This client-side ABR is why we transcode into 5 resolutions upfront: 360p (0.5Mbps), 480p (1Mbps), 720p (2.5Mbps), 1080p (5Mbps), 4K (20Mbps). Each is independently cached at the CDN.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What's your content moderation pipeline?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">It's a multi-stage funnel designed to catch harmful content before it reaches viewers while minimizing false positives. Stage 1 (upload time): lightweight ML classifiers check thumbnail and first 30 seconds for NSFW content, known CSAM hashes (PhotoDNA), and Copyright ID audio fingerprints. Takes &lt;60 seconds. If flagged with high confidence (&gt;95%), the video is blocked and queued for human review. Stage 2 (pre-publish): full-video analysis runs during transcoding — scene classification, speech-to-text for hate speech detection, frame-by-frame nudity detection. If flagged, the video stays in &quot;processing&quot; state (creator doesn't know it's flagged). Stage 3 (post-publish): community reports trigger re-review. Viral videos (&gt;10K views/hour) get automatic re-scan with higher-sensitivity models. Stage 4: human reviewers handle appeals and ambiguous cases. The key tension: aggressive moderation catches bad content but also blocks legitimate content (false positives). We tune for high precision on auto-blocks and high recall on &quot;queue for human review.&quot;</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});</script>
+</body>
+</html>

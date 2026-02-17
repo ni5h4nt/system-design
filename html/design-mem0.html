@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Mem0 — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+  nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}
+  nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}
+  .nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .api-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;margin:10px 0;overflow:hidden}.api-method{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;font-family:var(--font-mono);font-size:12px;width:100%;border-bottom:1px solid var(--border)}.api-method .verb{padding:2px 8px;border-radius:4px;font-weight:600;font-size:10px;text-transform:uppercase}.api-method .verb.post{background:rgba(63,185,80,.15);color:var(--accent-green)}.api-method .verb.get{background:rgba(88,166,255,.15);color:var(--accent-blue)}.api-method .verb.put{background:rgba(210,153,34,.15);color:var(--accent-orange)}.api-method .verb.delete{background:rgba(248,81,73,.15);color:var(--accent-red)}.api-method .path{color:var(--text)}.api-method .desc{margin-left:auto;color:var(--text-dim);font-size:11px;font-family:var(--font-body)}.api-body{padding:10px 14px;font-size:12px;color:var(--text-dim);line-height:1.55}
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Mem0</h1>
+    <span>Worked Example · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-pipeline">Memory Pipeline</a>
+  <a href="#dd-hybrid">Hybrid Datastore</a>
+  <a href="#dd-graph">Graph Memory</a>
+  <a href="#dd-data">Data Model &amp; APIs</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#evolution">Evolution</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"We're designing Mem0 — an intelligent memory layer for AI agents and LLM applications. The core problem: LLMs are stateless. Every conversation starts from scratch. Mem0 extracts, stores, and retrieves user-specific facts across sessions so AI agents can personalize without stuffing entire chat histories into every prompt. It's not RAG over documents — it's memory over relationships."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What kind of memory?</strong> Short-term (within session), long-term (across sessions), or both? <em>→ Focus on long-term cross-session memory. Session context is the LLM's job; Mem0 handles what persists after.</em></li>
+      <li><strong>What's the unit of memory?</strong> Raw chat chunks (RAG-style), or extracted facts? <em>→ Extracted facts: "User is vegetarian," not "User said 'I don't eat meat' on Jan 5." This is the key difference from RAG.</em></li>
+      <li><strong>Multi-tenant?</strong> Multiple apps, each with their own users? <em>→ Yes. Scoped by org → project → user/agent/session.</em></li>
+      <li><strong>Graph memory in scope?</strong> <em>→ Yes — the graph variant (Mem0ᵍ) stores entity-relationship triples for relational reasoning.</em></li>
+      <li><strong>Self-hosted or managed?</strong> <em>→ Both. Open-source (BYO vector DB + graph DB) and managed platform (fully hosted).</em></li>
+      <li><strong>Scale?</strong> <em>→ Millions of users across thousands of tenants. Billions of memories total. Sub-50ms retrieval latency.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Memory extraction from conversations (LLM-based)</td><td>The LLM serving layer itself (OpenAI, Claude)</td></tr>
+        <tr><td>Memory CRUD: add, search, update, delete</td><td>Full RAG pipeline (document ingestion, chunking)</td></tr>
+        <tr><td>Hybrid store: vector + graph + key-value</td><td>Prompt engineering / agent orchestration</td></tr>
+        <tr><td>Multi-tenant isolation (org/project/user/agent/session)</td><td>Fine-tuning models per user</td></tr>
+        <tr><td>Graph memory (entity-relationship extraction)</td><td>Multimodal memory (images, audio)</td></tr>
+        <tr><td>Memory consolidation (dedup, conflict resolution)</td><td>Real-time streaming conversations</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1: memory.add(messages, user_id)</strong> — After a conversation turn, extract salient facts and store them. Deduplicate against existing memories. Resolve conflicts (user changed preference).</li>
+      <li><strong>UC2: memory.search(query, user_id)</strong> — Before generating a response, retrieve relevant memories to inject into the system prompt. Must return in &lt;50ms.</li>
+      <li><strong>UC3: memory.update(memory_id, data)</strong> — Explicitly modify a stored memory (admin correction, user request to forget).</li>
+      <li><strong>UC4: memory.delete(user_id)</strong> — GDPR right-to-be-forgotten. Delete all memories for a user across all stores.</li>
+      <li><strong>UC5: Graph traversal</strong> — "What does this user know about Python?" → traverse entity graph: User → knows → Python → related_to → Django, Flask.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Memory retrieval &lt;50ms p95:</strong> Memory lookup is on the hot path of every LLM call. 200ms retrieval + 2s LLM = unacceptable. Must be fast enough that adding memory doesn't noticeably increase response time.</li>
+      <li><strong>Memory extraction is async and can tolerate latency:</strong> Extracting facts from a conversation takes 1-3s (LLM call). This happens AFTER the response is sent to the user — not on the critical path.</li>
+      <li><strong>Multi-tenant isolation is non-negotiable:</strong> Tenant A's memories must NEVER leak to Tenant B. User X's memories must NEVER leak to User Y. This is PHI/PII data (medical history, dietary preferences, financial info).</li>
+      <li><strong>SOC 2 / HIPAA compliance:</strong> Audit logs, encryption at rest, encryption in transit, BYOK (bring your own encryption key).</li>
+      <li><strong>Eventual consistency for memory writes is acceptable:</strong> A memory extracted 2 seconds ago doesn't need to be immediately searchable. 5-second propagation delay is fine.</li>
+      <li><strong>Memory quality &gt; memory quantity:</strong> 10 precise, deduplicated facts are better than 500 raw chat chunks. The extraction LLM must be ruthlessly selective.</li>
+    </ul>
+
+    <div class="callout tip">The fundamental insight: Mem0 is NOT RAG. RAG retrieves chunks of existing documents. Mem0 uses an LLM to EXTRACT facts from conversations, CONSOLIDATE them against existing knowledge, and RETRIEVE them semantically. It's closer to how human memory works: you don't remember the exact words of every conversation — you remember the important facts, updated when you learn something new.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Let me estimate the two planes: write-path (extraction + storage) and read-path (retrieval)."</div>
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">Conversations / Day</div>
+        <div class="value">~50M</div>
+        <div class="detail">Thousands of tenants × millions of users × multiple sessions</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Memories Extracted / Conversation</div>
+        <div class="value">~2-5 facts</div>
+        <div class="detail">LLM extracts only salient info. Most turns yield 0-3 new facts.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Memory Searches / Day</div>
+        <div class="value">~200M</div>
+        <div class="detail">Every LLM call triggers a memory search. 4x write volume.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Total Memories Stored</div>
+        <div class="value">~10B+</div>
+        <div class="detail">Millions of users × hundreds of facts each, accumulated over months</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Vector Embedding Size</div>
+        <div class="value">~6 KB / memory</div>
+        <div class="detail">1536-dim float32 embedding = 6KB. Plus ~500B text + metadata.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Total Vector Storage</div>
+        <div class="value">~60 TB</div>
+        <div class="detail">10B memories × 6KB = 60TB of embeddings alone</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> The read:write ratio is ~4:1 (200M searches vs 50M extractions). But the write path is far more expensive per operation: each write triggers an LLM call (extraction), an embedding computation, a vector similarity search (dedup check), and potentially a graph update. Read is just: embed query → vector search → return top-k.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> Memory extraction is the most expensive operation — it requires an LLM call (1-3 seconds, $0.001-0.01 per call). At 50M extractions/day, that's $50K-500K/day in LLM costs alone. This is why extraction must be smart: only extract when new salient information exists, not on every message.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> The search path must be &lt;50ms. A vector similarity search across 10B vectors is too slow for a single index. We need per-tenant or per-user partitioning: a user with 500 memories searches 500 vectors, not 10B. Tenant isolation naturally solves the scale problem.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Mem0 has two async planes: a write plane (extract + consolidate memories from conversations) and a read plane (retrieve relevant memories for a query). The write plane is LLM-intensive but off the critical path. The read plane is latency-sensitive and must be fast."</div>
+
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Semantic search over facts (&lt;50ms)</td><td style="color:var(--accent-cyan);font-weight:500">Vector DB (Qdrant / pgvector)</td><td>Embedding-based similarity search returns semantically relevant memories, not just keyword matches. Full-text search can't find "vegetarian" when query is "dinner suggestions."</td><td>AP</td></tr>
+        <tr><td>Relational reasoning ("who knows whom")</td><td style="color:var(--accent-cyan);font-weight:500">Graph DB (Neo4j / Neptune)</td><td>Entity-relationship triples enable multi-hop traversal. Vector search can't answer "what topics is the user's manager interested in?" — requires graph path traversal.</td><td>AP</td></tr>
+        <tr><td>Memory metadata: CRUD, TTL, audit trail</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL for metadata</td><td>Memory records need ACID: created_at, updated_at, version history, tenant isolation. Vector DBs lack rich querying and transactions.</td><td>CP</td></tr>
+        <tr><td>Memory extraction from conversations</td><td style="color:var(--accent-cyan);font-weight:500">LLM with tool-calling (not regex/NER)</td><td>LLM understands context: "I stopped eating meat" → UPDATE existing memory "User eats chicken" to "User is vegetarian." NER/regex can't do conflict resolution.</td><td>—</td></tr>
+        <tr><td>Multi-tenant isolation (PHI/PII)</td><td style="color:var(--accent-cyan);font-weight:500">Namespace partitioning (not DB-per-tenant)</td><td>Every query includes mandatory tenant_id + user_id filter. Row-level security in PostgreSQL, namespace filtering in vector DB. Separate DBs don't scale to 10K+ tenants.</td><td>—</td></tr>
+        <tr><td>Extraction latency off critical path</td><td style="color:var(--accent-cyan);font-weight:500">Async write pipeline (Kafka/SQS)</td><td>memory.add() returns immediately. Extraction happens async. User never waits for the LLM extraction call — it fires after the response is sent.</td><td>Eventual</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">High-Level Architecture</span>
+      <svg viewBox="0 0 780 560" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="arrg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+          <marker id="arrc" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+        </defs>
+        <!-- Layers -->
+        <rect x="28" y="20" width="724" height="64" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+        <text x="40" y="33" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">AI APPLICATIONS (CLIENTS)</text>
+        <rect x="28" y="100" width="724" height="64" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+        <text x="40" y="113" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MEM0 API LAYER</text>
+        <rect x="28" y="180" width="354" height="150" rx="8" fill="rgba(63,185,80,.02)" stroke="rgba(63,185,80,.12)" stroke-dasharray="4 2"/>
+        <text x="40" y="193" fill="#3fb950" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">WRITE PLANE (ASYNC)</text>
+        <rect x="398" y="180" width="354" height="150" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+        <text x="410" y="193" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">READ PLANE (SYNC, &lt;50ms)</text>
+        <rect x="28" y="350" width="724" height="64" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+        <text x="40" y="363" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">HYBRID DATASTORE</text>
+        <rect x="28" y="434" width="724" height="60" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+        <text x="40" y="447" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">LLM PROVIDERS</text>
+        <!-- Nodes -->
+        <g class="svg-node"><rect x="60" y="36" width="120" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="120" y="52" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Python SDK</text><text x="120" y="62" fill="#6e7681" font-size="7" text-anchor="middle">memory.add / .search</text></g>
+        <g class="svg-node"><rect x="210" y="36" width="120" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="270" y="52" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">JS/TS SDK</text><text x="270" y="62" fill="#6e7681" font-size="7" text-anchor="middle">Vercel AI SDK</text></g>
+        <g class="svg-node"><rect x="360" y="36" width="120" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="420" y="52" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">REST API</text><text x="420" y="62" fill="#6e7681" font-size="7" text-anchor="middle">api.mem0.ai/v1</text></g>
+        <g class="svg-node"><rect x="510" y="36" width="120" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="570" y="52" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">MCP Server</text><text x="570" y="62" fill="#6e7681" font-size="7" text-anchor="middle">Claude / ChatGPT</text></g>
+        <!-- API layer -->
+        <g class="svg-node"><rect x="120" y="116" width="160" height="36" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="200" y="132" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">API Gateway</text><text x="200" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Auth, rate limit, routing</text></g>
+        <g class="svg-node"><rect x="340" y="116" width="160" height="36" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="420" y="132" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Memory Service</text><text x="420" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Orchestrates read + write</text></g>
+        <g class="svg-node"><rect x="560" y="116" width="160" height="36" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="640" y="132" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Tenant Manager</text><text x="640" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Org/project/user scoping</text></g>
+        <!-- Write plane -->
+        <g class="svg-node"><rect x="48" y="210" width="140" height="36" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="118" y="226" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Extraction Queue</text><text x="118" y="236" fill="#6e7681" font-size="7" text-anchor="middle">Kafka / SQS</text></g>
+        <g class="svg-node"><rect x="218" y="210" width="140" height="36" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="288" y="226" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Extraction Worker</text><text x="288" y="236" fill="#6e7681" font-size="7" text-anchor="middle">LLM → facts</text></g>
+        <g class="svg-node"><rect x="48" y="272" width="140" height="36" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="118" y="288" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Consolidation</text><text x="118" y="298" fill="#6e7681" font-size="7" text-anchor="middle">Dedup + conflict resolve</text></g>
+        <g class="svg-node"><rect x="218" y="272" width="140" height="36" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="288" y="288" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Embedding Service</text><text x="288" y="298" fill="#6e7681" font-size="7" text-anchor="middle">text-embedding-3-small</text></g>
+        <!-- Read plane -->
+        <g class="svg-node"><rect x="418" y="210" width="140" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="488" y="226" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Query Embedder</text><text x="488" y="236" fill="#6e7681" font-size="7" text-anchor="middle">Embed search query</text></g>
+        <g class="svg-node"><rect x="588" y="210" width="140" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="658" y="226" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Vector Search</text><text x="658" y="236" fill="#6e7681" font-size="7" text-anchor="middle">ANN top-k retrieval</text></g>
+        <g class="svg-node"><rect x="418" y="272" width="140" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="488" y="288" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Graph Traversal</text><text x="488" y="298" fill="#6e7681" font-size="7" text-anchor="middle">Entity→relation→entity</text></g>
+        <g class="svg-node"><rect x="588" y="272" width="140" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="658" y="288" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Reranker</text><text x="658" y="298" fill="#6e7681" font-size="7" text-anchor="middle">Cross-encoder scoring</text></g>
+        <!-- Datastore -->
+        <g class="svg-node"><rect x="50" y="366" width="140" height="36" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="120" y="382" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Vector DB</text><text x="120" y="392" fill="#6e7681" font-size="7" text-anchor="middle">Qdrant / pgvector</text></g>
+        <g class="svg-node"><rect x="220" y="366" width="140" height="36" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="290" y="382" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Graph DB</text><text x="290" y="392" fill="#6e7681" font-size="7" text-anchor="middle">Neo4j / Neptune</text></g>
+        <g class="svg-node"><rect x="390" y="366" width="140" height="36" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="460" y="382" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">PostgreSQL</text><text x="460" y="392" fill="#6e7681" font-size="7" text-anchor="middle">Metadata + audit log</text></g>
+        <g class="svg-node"><rect x="560" y="366" width="140" height="36" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="630" y="382" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Redis</text><text x="630" y="392" fill="#6e7681" font-size="7" text-anchor="middle">Cache + session state</text></g>
+        <!-- LLM providers -->
+        <g class="svg-node"><rect x="100" y="450" width="130" height="32" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="165" y="469" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">OpenAI</text></g>
+        <g class="svg-node"><rect x="260" y="450" width="130" height="32" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="325" y="469" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">Anthropic</text></g>
+        <g class="svg-node"><rect x="420" y="450" width="130" height="32" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="485" y="469" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">Embedding Models</text></g>
+        <g class="svg-node"><rect x="580" y="450" width="130" height="32" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="645" y="469" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">Self-Hosted LLM</text></g>
+        <!-- Key connections -->
+        <line x1="200" y1="152" x2="420" y2="116" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="420" y1="152" x2="118" y2="210" stroke="#3fb950" stroke-width="1" marker-end="url(#arrg)"/>
+        <line x1="420" y1="152" x2="488" y2="210" stroke="#39d2c0" stroke-width="1" marker-end="url(#arrc)"/>
+        <line x1="188" y1="228" x2="218" y2="228" stroke="#3fb950" stroke-width="1" marker-end="url(#arrg)"/>
+        <line x1="288" y1="246" x2="118" y2="272" stroke="#3fb950" stroke-width="1" marker-end="url(#arrg)"/>
+        <line x1="288" y1="246" x2="288" y2="272" stroke="#3fb950" stroke-width="1" marker-end="url(#arrg)"/>
+        <line x1="118" y1="308" x2="120" y2="366" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="288" y1="308" x2="290" y2="366" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="658" y1="246" x2="120" y2="366" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+        <line x1="488" y1="308" x2="290" y2="366" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+
+    <div class="sub">Flow 1: memory.add(messages, user_id) — Write Path</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Memory Write Pipeline</span>
+      <svg viewBox="0 0 780 380" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="me1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="me2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Client SDK -->
+        <rect x="40" y="20" width="140" height="34" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="110" y="41" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Client SDK</text>
+        <line x1="180" y1="37" x2="250" y2="37" stroke="#58a6ff" stroke-width="1" marker-end="url(#me1)"/>
+        <text x="215" y="30" fill="#58a6ff" font-size="7" text-anchor="middle">POST</text>
+
+        <!-- Memory Service -->
+        <rect x="250" y="20" width="160" height="34" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="330" y="41" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Memory Service</text>
+        <line x1="410" y1="37" x2="490" y2="37" stroke="#3fb950" stroke-width="1" marker-end="url(#me2)"/>
+        <text x="450" y="30" fill="#6e7681" font-size="7" text-anchor="middle">enqueue</text>
+
+        <!-- Queue -->
+        <rect x="490" y="20" width="160" height="34" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+        <text x="570" y="41" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Extraction Queue</text>
+
+        <!-- 202 Accepted -->
+        <text x="110" y="68" fill="#6e7681" font-size="8" text-anchor="middle">returns 202 Accepted immediately</text>
+
+        <!-- Worker -->
+        <line x1="570" y1="54" x2="570" y2="80" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+        <rect x="460" y="80" width="220" height="28" rx="5" fill="#161b22" stroke="#d29922" stroke-width="1"/>
+        <text x="570" y="98" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Extraction Worker (async)</text>
+
+        <!-- Branch: LLM + Graph -->
+        <line x1="510" y1="108" x2="230" y2="140" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+        <line x1="630" y1="108" x2="580" y2="140" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+
+        <!-- LLM Extraction -->
+        <rect x="60" y="140" width="300" height="80" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="210" y="158" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">LLM Extraction</text>
+        <text x="74" y="176" fill="#6e7681" font-size="8">"Extract salient facts from this conversation"</text>
+        <rect x="74" y="186" width="270" height="26" rx="4" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.2)" stroke-width=".6"/>
+        <text x="78" y="198" fill="#d29922" font-size="7" font-weight="600">Candidate facts:</text>
+        <text x="78" y="209" fill="#6e7681" font-size="7">["User is vegetarian", "User allergic to nuts"]</text>
+
+        <!-- Graph Extraction -->
+        <rect x="420" y="140" width="300" height="80" rx="6" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="570" y="158" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Graph Extraction</text>
+        <text x="434" y="176" fill="#6e7681" font-size="8">"Extract entities + relationships"</text>
+        <rect x="434" y="186" width="270" height="26" rx="4" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.2)" stroke-width=".6"/>
+        <text x="438" y="198" fill="#d29922" font-size="7" font-weight="600">Triples:</text>
+        <text x="438" y="209" fill="#6e7681" font-size="7">[(User, prefers, vegetarian), (User, allergic_to, nuts)]</text>
+
+        <!-- Consolidation + Graph Merge -->
+        <line x1="210" y1="220" x2="210" y2="252" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+        <line x1="570" y1="220" x2="570" y2="252" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+
+        <rect x="60" y="252" width="300" height="50" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="210" y="270" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Consolidation (LLM tool call)</text>
+        <text x="74" y="286" fill="#6e7681" font-size="8">Search existing memories → ADD / UPDATE / DELETE / NOOP</text>
+
+        <rect x="420" y="252" width="300" height="50" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="570" y="270" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Graph Merge</text>
+        <text x="434" y="286" fill="#6e7681" font-size="8">Upsert nodes + edges in graph DB</text>
+
+        <!-- Final stores -->
+        <line x1="210" y1="302" x2="210" y2="326" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+        <line x1="570" y1="302" x2="570" y2="326" stroke="#6e7681" stroke-width="1" marker-end="url(#me1)"/>
+
+        <rect x="100" y="326" width="220" height="28" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="210" y="344" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">Embed + Store (Vector DB + Postgres)</text>
+
+        <rect x="440" y="326" width="220" height="28" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/>
+        <text x="550" y="344" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Neo4j / Neptune (Graph DB)</text>
+      </svg>
+    </div>
+
+    <div class="sub">Flow 2: memory.search(query, user_id) — Read Path</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Memory Read Path</span>
+      <svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="mr1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Client SDK → Memory Service -->
+        <rect x="40" y="20" width="140" height="34" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="110" y="41" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Client SDK</text>
+        <line x1="180" y1="37" x2="280" y2="37" stroke="#58a6ff" stroke-width="1" marker-end="url(#mr1)"/>
+        <text x="230" y="30" fill="#58a6ff" font-size="7" text-anchor="middle">GET</text>
+        <rect x="280" y="20" width="180" height="34" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="370" y="41" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Memory Service</text>
+
+        <!-- Branch -->
+        <line x1="330" y1="54" x2="200" y2="90" stroke="#6e7681" stroke-width="1" marker-end="url(#mr1)"/>
+        <line x1="420" y1="54" x2="560" y2="90" stroke="#6e7681" stroke-width="1" marker-end="url(#mr1)"/>
+
+        <!-- Vector search -->
+        <rect x="60" y="90" width="260" height="68" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="190" y="108" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">Query Embedder → Vector Search</text>
+        <text x="74" y="126" fill="#6e7681" font-size="8">Embed search query</text>
+        <text x="74" y="140" fill="#6e7681" font-size="8">ANN top-k, filtered by user_id + org_id</text>
+
+        <!-- Graph traversal -->
+        <rect x="420" y="90" width="300" height="68" rx="6" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="570" y="108" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Graph Traversal (optional)</text>
+        <text x="434" y="126" fill="#6e7681" font-size="8">If entities detected in query →</text>
+        <text x="434" y="140" fill="#6e7681" font-size="8">traverse relationships in graph DB</text>
+
+        <!-- Merge -->
+        <line x1="190" y1="158" x2="370" y2="190" stroke="#6e7681" stroke-width="1" marker-end="url(#mr1)"/>
+        <line x1="570" y1="158" x2="410" y2="190" stroke="#6e7681" stroke-width="1" marker-end="url(#mr1)"/>
+
+        <rect x="240" y="190" width="300" height="50" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="390" y="210" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Merge + Rerank</text>
+        <text x="390" y="228" fill="#6e7681" font-size="8" text-anchor="middle">Cross-encoder scores both vector and graph results</text>
+
+        <!-- Return -->
+        <line x1="390" y1="240" x2="390" y2="264" stroke="#3fb950" stroke-width="1" marker-end="url(#mr1)"/>
+        <rect x="140" y="264" width="500" height="44" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="390" y="282" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Return top-k memories</text>
+        <text x="390" y="298" fill="#6e7681" font-size="8" text-anchor="middle" font-family="'JetBrains Mono',monospace">[{"memory": "User is vegetarian", "score": 0.94}, {"memory": "User allergic to nuts", "score": 0.87}]</text>
+        <rect x="550" y="258" width="70" height="16" rx="8" fill="rgba(63,185,80,.1)" stroke="#3fb950" stroke-width=".6"/>
+        <text x="585" y="269" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">&lt;50ms</text>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4: DEEP DIVES ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4);color:var(--bg)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div class="sub" id="dd-pipeline">Deep Dive 1: Memory Extraction &amp; Consolidation Pipeline (~12 min)</div>
+
+    <div class="callout goal"><strong>The core innovation:</strong> Mem0 doesn't store raw chat chunks (that's RAG). It uses an LLM to extract atomic facts, then consolidates them against existing memories using a four-operation tool-calling interface: ADD, UPDATE, DELETE, NOOP.</div>
+
+    <div class="callout decision"><strong>Why LLM-based extraction over heuristics?</strong> Consider: "I stopped eating meat last month after watching that documentary." A regex/NER approach extracts entities: "meat," "last month," "documentary." But it misses the semantic meaning: this is an UPDATE — the user's dietary preference changed from whatever it was to vegetarian. The LLM understands: (1) extract fact: "User is now vegetarian," (2) search existing memories → find "User enjoys chicken wings," (3) tool call: UPDATE memory to "User is vegetarian (changed recently, was previously a meat eater)." No rule-based system can do this kind of contextual consolidation.</div>
+
+    <table>
+      <thead><tr><th>Operation</th><th>When</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>ADD</td><td>New fact, no existing similar memory</td><td>"User has a 3-year-old daughter named Emma" — first mention, no related memory exists.</td></tr>
+        <tr><td>UPDATE</td><td>New info augments or modifies existing memory</td><td>Existing: "User lives in NYC." New: "User moved to SF last week." → UPDATE to "User lives in SF (moved from NYC recently)."</td></tr>
+        <tr><td>DELETE</td><td>New info contradicts existing memory entirely</td><td>Existing: "User is single." New: "I just got married!" → DELETE old memory, ADD new one.</td></tr>
+        <tr><td>NOOP</td><td>Fact already captured or not worth storing</td><td>"Nice weather today" — not a persistent user fact. Or "I'm vegetarian" when memory already says "User is vegetarian."</td></tr>
+      </tbody>
+    </table>
+
+    <div class="schema"><span class="comment">// Extraction phase: LLM prompt structure</span>
+
+<span class="table-name">System prompt</span> = """
+You are a memory extraction agent. Given a conversation,
+extract ONLY salient, persistent facts about the user.
+
+<span class="pk">DO extract:</span> preferences, biographical facts, goals, constraints
+<span class="fk">DO NOT extract:</span> transient info, pleasantries, generic knowledge
+
+Context: {conversation_summary}
+Recent messages: {last_10_messages}
+
+<span class="pk">Output format:</span> list of facts, each a concise statement.
+"""
+
+<span class="comment">// Consolidation phase: LLM tool-calling prompt</span>
+
+<span class="table-name">System prompt</span> = """
+You are a memory manager. For each new fact, compare against
+existing similar memories and decide which operation to apply.
+
+New fact: "{extracted_fact}"
+Existing similar memories:
+  1. "{memory_1}" (similarity: 0.87)
+  2. "{memory_2}" (similarity: 0.72)
+
+<span class="pk">Available tools:</span>
+  - add_memory(text): Store as new memory
+  - update_memory(id, new_text): Modify existing memory
+  - delete_memory(id): Remove contradicted memory
+  - noop(): No action needed
+"""</div>
+
+    <div class="callout tip">The extraction + consolidation is a two-LLM-call process: Call 1 extracts candidate facts. Call 2 (per fact) decides the operation by comparing against similar existing memories retrieved via vector search. This is why the write path is expensive ($0.001-0.01 per memory operation) but is off the critical path — it runs asynchronously after the user's response is already sent.</div>
+
+    <!-- DD2 -->
+    <div class="sub" id="dd-hybrid">Deep Dive 2: Hybrid Datastore Architecture (~8 min)</div>
+
+    <div class="callout goal"><strong>Three stores, three access patterns.</strong> Vector DB for semantic search (find similar memories). Graph DB for relational traversal (navigate entity relationships). PostgreSQL for metadata, audit, and CRUD operations. Each optimized for its workload.</div>
+
+    <table>
+      <thead><tr><th>Store</th><th>What It Holds</th><th>Access Pattern</th><th>Why This Store</th></tr></thead>
+      <tbody>
+        <tr><td>Vector DB (Qdrant)</td><td>Memory text + 1536-dim embedding</td><td>ANN search: "find memories similar to this query"</td><td>Semantic similarity at sub-10ms. Can't do this with PostgreSQL full-text search — "dinner suggestions" wouldn't match "vegetarian."</td></tr>
+        <tr><td>Graph DB (Neo4j)</td><td>Entity nodes + relationship edges</td><td>Traversal: "User → knows → Python → related_to → ?"</td><td>Multi-hop reasoning. Vector search returns isolated facts; graph connects them relationally.</td></tr>
+        <tr><td>PostgreSQL</td><td>Memory metadata, tenants, audit log</td><td>CRUD: list all memories, filter by date, version history</td><td>ACID transactions for tenant management. Rich filtering (created_at &gt; X AND user_id = Y). Audit trail for compliance.</td></tr>
+        <tr><td>Redis</td><td>Recent memory cache, rate limit counters</td><td>Hot path cache for frequently accessed user memories</td><td>Sub-ms reads for users with active sessions. Avoids vector DB round-trip for recent memories.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why not just a vector DB?</strong> Vector search finds semantically similar memories but can't answer relational queries. "What does the user know about their manager's preferences?" requires: (1) find "manager" entity in graph, (2) traverse "manages" edge to the user, (3) find preferences linked to the manager entity. Vector search would return the user's own preferences (semantically similar to "preferences"), not the manager's. The graph captures structure that embeddings flatten.</div>
+
+    <div class="callout decision"><strong>Why not just a graph DB?</strong> Graph traversal requires knowing the starting node. For open-ended queries like "anything relevant about food?" there's no clear entity to start from. Vector search handles fuzzy, semantic matching where graph traversal needs a precise starting point. The hybrid approach: vector search for open-ended relevance, graph traversal for structured relational queries, merged and reranked.</div>
+
+    <!-- DD3 -->
+    <div class="sub" id="dd-graph">Deep Dive 3: Graph Memory (Mem0ᵍ) (~5 min)</div>
+
+    <div class="callout goal"><strong>Mem0ᵍ extends the base architecture with entity-relationship triples.</strong> Each conversation message is processed not just for facts (vector memory) but for entities and their relationships. The graph enables multi-hop reasoning that vector search alone can't support.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Graph Memory — Why Relationships Matter</span>
+      <svg viewBox="0 0 780 360" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="mg1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="mg2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Input -->
+        <rect x="40" y="10" width="700" height="28" rx="5" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.2)" stroke-width="1"/>
+        <text x="54" y="28" fill="#d29922" font-size="9" font-weight="600">Conversation:</text>
+        <text x="165" y="28" fill="#6e7681" font-size="9">"My manager Sarah recommended I learn Rust for the systems project."</text>
+
+        <!-- Entity Extraction -->
+        <rect x="40" y="50" width="340" height="34" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/>
+        <text x="210" y="71" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Entity Extraction (LLM)</text>
+
+        <!-- Graph nodes -->
+        <circle cx="120" cy="130" r="30" fill="rgba(88,166,255,.08)" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="120" y="134" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">Sarah</text>
+
+        <circle cx="300" cy="130" r="30" fill="rgba(63,185,80,.08)" stroke="#3fb950" stroke-width="1.2"/>
+        <text x="300" y="134" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">User</text>
+
+        <circle cx="480" cy="130" r="30" fill="rgba(248,81,73,.08)" stroke="#f85149" stroke-width="1.2"/>
+        <text x="480" y="134" fill="#f85149" font-size="9" text-anchor="middle" font-weight="600">Rust</text>
+
+        <circle cx="660" cy="130" r="36" fill="rgba(210,153,34,.08)" stroke="#d29922" stroke-width="1.2"/>
+        <text x="660" y="126" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">systems</text>
+        <text x="660" y="138" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">project</text>
+
+        <!-- Edges -->
+        <line x1="150" y1="125" x2="268" y2="125" stroke="#6e7681" stroke-width="1" marker-end="url(#mg1)"/>
+        <text x="210" y="118" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">manages</text>
+
+        <line x1="150" y1="140" x2="448" y2="140" stroke="#6e7681" stroke-width="1" marker-end="url(#mg1)"/>
+        <text x="300" y="158" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">recommended</text>
+
+        <line x1="330" y1="130" x2="448" y2="130" stroke="#6e7681" stroke-width="1" stroke-dasharray="4 2"/>
+
+        <line x1="510" y1="130" x2="622" y2="130" stroke="#6e7681" stroke-width="1" marker-end="url(#mg1)"/>
+        <text x="566" y="123" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">used_for</text>
+
+        <line x1="316" y1="158" x2="636" y2="158" stroke="#6e7681" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#mg1)"/>
+        <text x="480" y="172" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">working_on</text>
+
+        <!-- Query example -->
+        <rect x="40" y="196" width="340" height="64" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="54" y="214" fill="#3fb950" font-size="9" font-weight="600">Graph Query: "What did Sarah suggest?"</text>
+        <text x="54" y="232" fill="#6e7681" font-size="8">Traversal: (Sarah) ──recommended──▶ (Rust) ──used_for──▶ (project)</text>
+        <text x="54" y="248" fill="#3fb950" font-size="8">Answer: "Sarah recommended learning Rust for the systems project."</text>
+
+        <!-- Why vector fails -->
+        <rect x="400" y="196" width="340" height="64" rx="6" fill="rgba(248,81,73,.04)" stroke="rgba(248,81,73,.15)" stroke-width="1"/>
+        <text x="414" y="214" fill="#f85149" font-size="9" font-weight="600">Why vector search fails here:</text>
+        <text x="414" y="232" fill="#6e7681" font-size="8">Vector search for "What did Sarah suggest?" returns</text>
+        <text x="414" y="246" fill="#6e7681" font-size="8">memories semantically similar to "suggestions" — might</text>
+        <text x="414" y="258" fill="#6e7681" font-size="8">return user's own preferences, not Sarah's recommendation.</text>
+
+        <!-- Bottom insight -->
+        <rect x="40" y="276" width="700" height="28" rx="5" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.15)" stroke-width="1"/>
+        <text x="390" y="294" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">The graph captures WHO recommended WHAT — structure that embedding similarity cannot express.</text>
+      </svg>
+    </div>
+
+    <div class="callout tip">Graph memory shines for multi-hop questions: "What programming languages are relevant to the project my manager recommended?" requires traversing: manager → recommended → language → project. On the LOCOMO benchmark, Mem0ᵍ scores ~2% higher than base Mem0, with the largest gains on multi-hop questions specifically.</div>
+
+    <!-- DD4 -->
+    <div class="sub" id="dd-data">Deep Dive 4: Data Model &amp; APIs (~5 min)</div>
+
+    <div class="schema"><span class="table-name">memories</span>
+  <span class="pk">id</span>              <span class="type">UUID</span>          <span class="comment">-- Primary key</span>
+  <span class="fk">org_id</span>          <span class="type">UUID</span>          <span class="comment">-- Tenant isolation (mandatory in every query)</span>
+  <span class="fk">project_id</span>      <span class="type">UUID</span>          <span class="comment">-- Project within org</span>
+  <span class="fk">user_id</span>         <span class="type">TEXT</span>          <span class="comment">-- User scope (who this memory belongs to)</span>
+  <span class="fk">agent_id</span>        <span class="type">TEXT</span>          <span class="comment">-- Agent scope (optional, for per-agent memory)</span>
+  <span class="fk">session_id</span>      <span class="type">TEXT</span>          <span class="comment">-- Session scope (optional, ephemeral within session)</span>
+  memory          <span class="type">TEXT</span>          <span class="comment">-- "User is vegetarian and avoids dairy"</span>
+  hash            <span class="type">TEXT</span>          <span class="comment">-- SHA-256 of memory text (dedup key)</span>
+  metadata        <span class="type">JSONB</span>         <span class="comment">-- Custom tags, source_conversation_id, etc.</span>
+  created_at      <span class="type">TIMESTAMPTZ</span>   <span class="comment">-- First extracted</span>
+  updated_at      <span class="type">TIMESTAMPTZ</span>   <span class="comment">-- Last modified</span>
+  expires_at      <span class="type">TIMESTAMPTZ</span>   <span class="comment">-- TTL for session-scoped memories</span>
+  version         <span class="type">INT</span>           <span class="comment">-- Incremented on UPDATE (audit trail)</span>
+
+<span class="table-name">memory_versions</span> <span class="comment">-- Append-only audit log (SOC 2 / HIPAA)</span>
+  <span class="pk">id</span>              <span class="type">UUID</span>
+  <span class="fk">memory_id</span>       <span class="type">UUID</span>
+  operation       <span class="type">TEXT</span>          <span class="comment">-- ADD, UPDATE, DELETE</span>
+  old_value       <span class="type">TEXT</span>          <span class="comment">-- Previous memory text (null for ADD)</span>
+  new_value       <span class="type">TEXT</span>          <span class="comment">-- New memory text (null for DELETE)</span>
+  created_at      <span class="type">TIMESTAMPTZ</span>
+
+<span class="table-name">graph_entities</span> <span class="comment">-- Node table (also stored in Neo4j)</span>
+  <span class="pk">id</span>              <span class="type">UUID</span>
+  <span class="fk">org_id</span>          <span class="type">UUID</span>
+  <span class="fk">user_id</span>         <span class="type">TEXT</span>
+  name            <span class="type">TEXT</span>          <span class="comment">-- "Sarah", "Rust", "systems project"</span>
+  entity_type     <span class="type">TEXT</span>          <span class="comment">-- PERSON, TECHNOLOGY, PROJECT, PREFERENCE</span>
+
+<span class="table-name">graph_relations</span> <span class="comment">-- Edge table</span>
+  <span class="pk">id</span>              <span class="type">UUID</span>
+  <span class="fk">source_id</span>       <span class="type">UUID</span>          <span class="comment">-- FK → graph_entities</span>
+  <span class="fk">target_id</span>       <span class="type">UUID</span>
+  relation        <span class="type">TEXT</span>          <span class="comment">-- "manages", "recommended", "allergic_to"</span>
+  created_at      <span class="type">TIMESTAMPTZ</span></div>
+
+    <div class="sub">API Design</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/memories</span><span class="desc">Add memories from conversation</span></div>
+      <div class="api-body">Body: { messages: [...], user_id, agent_id?, session_id?, metadata? }<br>Returns: 202 Accepted + { extraction_id } — async, fires extraction pipeline</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/memories/search?q=...&amp;user_id=...</span><span class="desc">Search memories semantically</span></div>
+      <div class="api-body">Query params: q (query text), user_id, agent_id?, limit?, filters?<br>Returns: [{ id, memory, score, created_at, metadata }] — &lt;50ms</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/memories?user_id=...</span><span class="desc">List all memories for a user</span></div>
+      <div class="api-body">Paginated list with cursor. Filterable by metadata, date range. Used for admin dashboards and debugging.</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb put">PUT</span><span class="path">/v1/memories/{id}</span><span class="desc">Update a specific memory</span></div>
+      <div class="api-body">Body: { memory: "updated text" }. Creates new version in audit log. Re-embeds and updates vector DB.</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb delete">DELETE</span><span class="path">/v1/memories?user_id=...</span><span class="desc">Delete all user memories (GDPR)</span></div>
+      <div class="api-body">Deletes from all three stores: vector DB, graph DB, PostgreSQL. Audit log entry created. Irreversible.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5: CROSS-CUTTING ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5);color:var(--bg)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Storage Architecture Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+        <tr><td>Memory embeddings</td><td style="color:var(--accent-cyan)">Qdrant / pgvector</td><td>ANN search at &lt;10ms. Filtered by user_id namespace. HNSW index for approximate nearest neighbor.</td></tr>
+        <tr><td>Entity-relationship graph</td><td style="color:var(--accent-cyan)">Neo4j / Neptune</td><td>Cypher queries for multi-hop traversal. Property graph model. Indexed by entity name + user_id.</td></tr>
+        <tr><td>Memory metadata + audit</td><td style="color:var(--accent-cyan)">PostgreSQL</td><td>ACID for CRUD, version history, tenant management. Rich SQL filtering for admin dashboards.</td></tr>
+        <tr><td>Hot memory cache</td><td style="color:var(--accent-cyan)">Redis (with TTL)</td><td>Recently accessed user memories cached for sub-ms reads. Invalidated on memory update.</td></tr>
+        <tr><td>Extraction queue</td><td style="color:var(--accent-cyan)">Kafka / SQS</td><td>Async write path. Decouples API response from expensive LLM extraction. At-least-once delivery.</td></tr>
+        <tr><td>Conversation context</td><td style="color:var(--accent-cyan)">Redis (session-scoped TTL)</td><td>Recent 10 messages for extraction context. Expires with session. Not durable — reconstructable.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">LLM extraction fails (timeout, rate limit)</span><span class="mitigation">Extraction queue retries with exponential backoff (3 retries, max 30s). Dead letter queue for persistent failures. Memory is not lost — the conversation is reprocessed when the LLM recovers. User never sees this failure (extraction is async).</span></div>
+    <div class="failure-row"><span class="scenario">Vector DB down during search</span><span class="mitigation">Graceful degradation: return empty memory list. The LLM responds without personalization — suboptimal but functional. Health check triggers alerts. Redis cache serves recently accessed memories as fallback.</span></div>
+    <div class="failure-row"><span class="scenario">Memory hallucination (LLM extracts wrong fact)</span><span class="mitigation">Confidence scoring: extraction LLM assigns confidence per fact. Low-confidence facts stored with a flag. User-facing "memory dashboard" shows stored memories with edit/delete controls. Feedback loop: user corrections improve extraction quality over time.</span></div>
+    <div class="failure-row"><span class="scenario">Memory conflict (user provides contradictory info)</span><span class="mitigation">Consolidation LLM resolves conflicts using recency and context. "I'm vegetarian" + later "I ate steak last night" → UPDATE: "User was vegetarian but may have changed. Recently ate steak." Timestamp metadata provides temporal ordering.</span></div>
+    <div class="failure-row"><span class="scenario">Tenant data leak (user A's memories returned to user B)</span><span class="mitigation">Defense in depth: (1) mandatory user_id + org_id filter on every query (enforced at API gateway, not just application code), (2) row-level security in PostgreSQL, (3) namespace isolation in vector DB (separate collections per org), (4) integration tests that verify cross-tenant queries return empty.</span></div>
+    <div class="failure-row"><span class="scenario">GDPR deletion request</span><span class="mitigation">Coordinated delete across all stores: PostgreSQL (memories + audit log, except deletion audit entry), vector DB (delete all vectors for user_id), graph DB (delete all nodes + edges for user_id), Redis (invalidate cache). Confirmation webhook to the requesting application. Deletion is verified by a background job that searches for any remaining traces.</span></div>
+
+    <div class="sub">Security Architecture</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Memories contain PHI/PII (medical preferences, dietary restrictions, financial info). SOC 2 Type II compliance: all data encrypted at rest (AES-256) and in transit (TLS 1.3). BYOK: enterprise customers bring their own encryption keys — Mem0 never holds the master key. API authentication via org-scoped API keys with project-level permissions. Audit log captures every memory operation (who, what, when) in an append-only table — required for HIPAA. For self-hosted deployments: all data stays in the customer's infrastructure. The managed platform runs in isolated VPCs per enterprise customer. Memory content is never used for training Mem0's own models (contractual guarantee).</div>
+
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Read path scales horizontally: vector DB sharded by org_id. Each org's memories are co-located for efficient search. Redis cache absorbs hot-path reads for active users. Write path scales via Kafka partitions: one partition per org ensures ordering within a tenant. Extraction workers auto-scale based on queue depth. The LLM provider (OpenAI, etc.) is the actual bottleneck on the write path — rate limits cap extraction throughput. Mitigation: batch extraction (process 10 conversation turns in one LLM call instead of 10 separate calls), model routing (use cheaper models for simple extractions, expensive models for complex consolidation).</div>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> Key SLOs: search p95 &lt;50ms, extraction queue lag &lt;30 seconds, memory accuracy (human eval sample) &gt;90%. Metrics: memories per user (growth rate, detect bloat), extraction precision/recall (sampled evaluation), search latency histogram (p50, p95, p99), LLM cost per extraction ($), queue depth (lag = extraction workers falling behind). Alerting: queue depth &gt;10K (workers need scaling), search latency p95 &gt;100ms (vector DB overloaded), extraction error rate &gt;5% (LLM issues), cross-tenant query detected (security incident).</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="evolution">What I'd Build Next</div>
+    <ul class="items">
+      <li><strong>Memory decay &amp; relevance scoring:</strong> Memories accessed frequently retain high relevance. Memories not accessed in 6 months decay in ranking. Analogous to human forgetting curve — keeps the memory store lean and relevant.</li>
+      <li><strong>Multimodal memory:</strong> Extract facts from images ("User shared a photo of their golden retriever named Max") and audio. Store visual embeddings alongside text embeddings for cross-modal retrieval.</li>
+      <li><strong>Hierarchical memory (episodic → semantic):</strong> Short-term: raw conversation events (episodic). Long-term: consolidated facts (semantic). Procedural: learned task patterns ("User always wants code in Python"). Mirrors human memory taxonomy.</li>
+      <li><strong>On-device memory:</strong> Privacy-sensitive use cases: memories stored on-device (phone, laptop), never sent to cloud. Smaller embedding models (384-dim) for edge inference. Syncs with cloud store when user opts in.</li>
+      <li><strong>Memory-aware fine-tuning:</strong> Use accumulated memories as training data to fine-tune a per-user LoRA adapter. The model itself learns the user's style and preferences, not just the prompt. Orders of magnitude more efficient than injecting 100 memories into every prompt.</li>
+      <li><strong>Collaborative memory:</strong> Team-level memories shared across an organization. "Our team uses Next.js for frontend" — shared fact available to all team members' AI agents. Conflict resolution when team members provide contradictory information.</li>
+    </ul>
+
+    <div class="callout say">"Mem0 solves the fundamental problem of LLM statelessness: it extracts, consolidates, and retrieves memories using a hybrid vector + graph architecture. The key tradeoffs: LLM-based extraction is expensive but produces high-quality, deduplicated facts. The async write path keeps extraction off the critical path. The hybrid datastore combines semantic search (vector) with relational reasoning (graph). Multi-tenant isolation is enforced at every layer. The result: AI agents that remember, adapt, and personalize — without stuffing entire chat histories into every prompt."</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7: Q&A ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div style="margin:8px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How is Mem0 different from RAG? When would you use each?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">RAG retrieves chunks of existing documents — it's stateless. You ingest a PDF, chunk it, embed the chunks, and retrieve relevant passages. The documents don't change based on user interaction. Mem0 is stateful: it extracts facts FROM conversations, consolidates them (dedup, conflict resolution), and builds a persistent knowledge base PER USER that evolves over time. The key difference: RAG answers "what does this document say?" Mem0 answers "what do I know about this user?" Use RAG for: knowledge bases, documentation search, customer support with fixed answers. Use Mem0 for: personalization, remembering user preferences, multi-session context, AI assistants that improve over time. They're complementary — a healthcare agent might use RAG for medical literature and Mem0 for patient history.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why use an LLM for extraction instead of just embedding raw conversation chunks?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Three reasons: (1) Compression: a 20-turn conversation about dinner preferences compresses to "User is vegetarian, avoids dairy, loves Italian food" — 3 atomic facts instead of 20 raw chunks. This means 90%+ token savings when injecting memories into prompts. (2) Deduplication: if the user mentions being vegetarian in 10 different conversations, embedding raw chunks gives you 10 near-duplicate vectors. The LLM recognizes it's the same fact and stores it once. (3) Conflict resolution: raw chunks can't resolve "I love steak" from January and "I became vegetarian" from March. The LLM understands temporal ordering and updates the memory. The cost: $0.001-0.01 per extraction call. But the savings — fewer tokens per prompt, cleaner retrieval, no duplicates — more than compensate at scale. The paper shows 90% token cost reduction vs. full-context approaches.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What happens if the LLM hallucinates during extraction — stores a fact the user never said?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is the biggest risk in the architecture. Mitigations: (1) Extraction prompt engineering: instruct the LLM to only extract explicitly stated facts, never infer. "User mentioned they have a dog" is valid; "User probably likes dogs" is not. (2) Confidence scoring: the extraction LLM assigns a confidence score per fact. Low-confidence facts are stored but flagged — they're deprioritized in retrieval scoring. (3) Source linking: every memory stores the source_conversation_id. On retrieval, the application can verify the memory against the original conversation. (4) User memory dashboard: users can view, edit, and delete their memories. This is both a product feature and a hallucination correction mechanism. (5) Feedback loop: when a user corrects or deletes a memory, that signal feeds back into extraction quality metrics. The honest answer: hallucinated memories will occasionally happen. The system is designed to make them discoverable, correctable, and low-impact (ranked lower than high-confidence memories).</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you handle memory search at 10B+ memories without every query scanning the entire vector index?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Tenant-scoped partitioning eliminates the 10B problem entirely. Every query includes a mandatory user_id + org_id. In Qdrant, each org gets its own collection (or partition). A user with 500 memories searches 500 vectors — an HNSW lookup over 500 points is microseconds, not milliseconds. The 10B total is distributed across millions of users. Even the largest individual user (say, a power user with 10K memories) searches 10K vectors — still sub-10ms. The only time cross-user search is needed is for admin analytics ("how many users mention competitor X?"), which is a batch job, not a real-time query. For the managed platform: Qdrant clusters are sharded by org_id. Large enterprise tenants get dedicated shards. Small tenants are co-located with namespace isolation. The scaling unit is the tenant, not the total memory count.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why do you need both a vector DB and a graph DB? Can't you just use one?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">They solve different retrieval problems. Vector search answers: "find memories semantically similar to this query." It's great for fuzzy, open-ended retrieval — "anything about food preferences?" returns dietary memories even if the word "food" never appears in them. Graph traversal answers: "navigate relationships between entities." It's great for structured queries — "what did my manager recommend?" requires following the edge (manager)→recommended→(thing). Vector search would return YOUR recommendations (semantically similar to "recommend"), not your manager's. You could use only vector — that's what base Mem0 does, and it works well. Graph adds ~2% accuracy on the LOCOMO benchmark, with the biggest gains on multi-hop questions. For simple use cases (chatbot personalization), vector-only is sufficient. For complex agent workflows (enterprise assistants that model org relationships), graph memory is essential. The architecture supports both: graph is optional and can be enabled per project.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+</body>
+</html>

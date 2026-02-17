@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Prove AI — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes flowPulse{0%{stroke-dashoffset:12}100%{stroke-dashoffset:0}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Prove AI</h1><span>GenAI Observability & Remediation · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-trace">Trace-to-Metric Conversion</a>
+  <a href="#dd-remediation">Agentic Remediation Engine</a>
+  <a href="#dd-sovereignty">Data Sovereignty Architecture</a>
+  <a href="#dd-case">Case Management & Knowledge Base</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing an observability and remediation platform purpose-built for generative AI systems. The fundamental insight: GenAI systems are NONDETERMINISTIC. The same input can produce different outputs. This breaks the testing and monitoring assumptions that every existing observability tool (Datadog, Splunk, Grafana) was built on. Those tools can tell you latency, throughput, and error rates — but they can't tell you WHY your RAG pipeline started returning irrelevant context, or WHAT changed when your model outputs became less coherent. Prove AI bridges this gap with a two-layer architecture: an open-source telemetry foundation (OTel Collector + Prometheus + VictoriaMetrics) that teams self-host on their own infrastructure, and a proprietary control plane that turns those traces into guided diagnosis and remediation. The open-source layer collects; the proprietary layer thinks."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What outcome are we optimizing for?</strong> <em>→ Mean Time to Remediate (MTTR) for GenAI-specific failures: hallucinations, retrieval drift, coherence degradation, agent loops. Current state: teams spend dozens of engineer-hours per incident manually correlating traces across 3-5 dashboards. Target state: guided diagnosis in minutes, not days. Secondary: time-to-first-metric (how fast can a team go from "no observability" to "seeing useful data"). This shapes the two-phase product: v0.1 solves time-to-first-metric, v1.0 solves MTTR.</em></li>
+      <li><strong>Why can't Datadog/Splunk solve this?</strong> <em>→ Three reasons: (1) They track infrastructure metrics (latency, throughput) but not AI-specific quality signals (hallucination rate, retrieval relevance, coherence). (2) GenAI telemetry contains prompts and model outputs — sensitive data that many enterprises CAN'T send to third-party SaaS without compliance violations. (3) GenAI failures are nondeterministic — the same trace pattern can have different root causes, and the same root cause can produce different trace patterns. Traditional alerting rules don't work.</em></li>
+      <li><strong>What AI workloads does this cover?</strong> <em>→ LLM inference (vLLM, Ollama), RAG pipelines, agentic AI systems (multi-agent orchestration), fine-tuned models, embedding services. Any system that produces OTLP-compatible traces. Not limited to one framework — it's protocol-level (OpenTelemetry), not SDK-level.</em></li>
+      <li><strong>Deployment model?</strong> <em>→ SELF-HOSTED FIRST. The telemetry pipeline runs entirely in the customer's VPC/infrastructure. Data never leaves. This is a hard requirement for enterprises dealing with regulated AI workloads. The Prove AI control plane (dashboard, case management, remediation) can be SaaS or self-hosted depending on customer tier.</em></li>
+      <li><strong>What's the open-source vs. proprietary split?</strong> <em>→ Open source: OTel Collector + Prometheus + VictoriaMetrics + Envoy auth proxy = telemetry collection and storage. Proprietary: control plane dashboard, case management, guided troubleshooting, agentic remediation engine, GitHub/Jira integration, audit logging. The open-source layer is the "on-ramp" — it earns trust and adoption. The proprietary layer is the revenue engine.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Telemetry ingestion (OTLP traces + metrics)</td><td>Model training / fine-tuning infrastructure</td></tr>
+        <tr><td>Trace-to-metric conversion (spanmetrics)</td><td>LLM hosting (vLLM/Ollama are external)</td></tr>
+        <tr><td>Self-hosted storage (Prometheus + VictoriaMetrics)</td><td>Prompt engineering / prompt management</td></tr>
+        <tr><td>Auth gateway (Envoy proxy)</td><td>Model evaluation benchmarks (e.g., MMLU)</td></tr>
+        <tr><td>Control plane: dashboard, case management</td><td>Data labeling / annotation tooling</td></tr>
+        <tr><td>Agentic remediation engine (v1.0)</td><td>Cost optimization for LLM API spend</td></tr>
+        <tr><td>Data sovereignty architecture</td><td>Multi-cloud orchestration of models</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (Instrument Once, Observe Twice):</strong> Team instruments their RAG pipeline with standard OpenTelemetry SDK → sends traces to Prove AI's OTel Collector → spanmetrics connector automatically derives Prometheus metrics (calls_total, latency histograms) → team sees request rate, error rate, and latency in Prometheus within 10 seconds — WITHOUT writing any metrics instrumentation. Traces and metrics from a single instrumentation path.</li>
+      <li><strong>UC2 (Hallucination Detection):</strong> RAG pipeline starts returning irrelevant context. Traditional monitoring shows: latency normal, error rate zero, throughput normal — everything looks "green." But output quality has degraded. Prove AI's control plane captures the full execution chain: prompt → retrieved chunks → model output → evaluation score. The remediation engine traces the failure back to a stale embedding index that wasn't refreshed after a document update.</li>
+      <li><strong>UC3 (Agentic Workflow Debugging):</strong> Multi-agent system: Planning Agent delegates to Research Agent and Synthesis Agent. Research Agent enters a loop (calls the same API 50 times). Traditional tracing shows a long trace with repeated spans — but doesn't tell you WHETHER this is a problem or HOW to fix it. Prove AI's case management creates a case, the remediation engine identifies the loop pattern, correlates it with a recent prompt template change, and suggests reverting the template.</li>
+      <li><strong>UC4 (Compliance Audit):</strong> Enterprise needs to prove to auditors that their AI system's outputs meet quality thresholds, that failures are detected and remediated within SLA, and that all telemetry is stored in their infrastructure. Prove AI's audit log provides an immutable trail: what happened, when, what was the quality score, who investigated, what was the fix, and when was it verified.</li>
+      <li><strong>UC5 (Zero-to-Dashboard):</strong> New team, no existing observability. They run <code>docker compose --profile full up -d</code> → send a test trace with <code>otel-cli</code> → see their first metric in Prometheus within 15 seconds. Total setup time: under 5 minutes. This is the "time-to-first-metric" experience that the v0.1 open-source stack is built for.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Data sovereignty:</strong> ALL telemetry data stays in the customer's infrastructure. No phone-home, no cloud dependencies at runtime. Container images pulled at build time; after that, the stack runs air-gapped. GenAI telemetry can contain prompts and model outputs — this is PII-adjacent data that cannot leave the customer's environment.</li>
+      <li><strong>Time-to-first-metric: &lt;5 minutes:</strong> From <code>git clone</code> to seeing live metrics. This is the open-source on-ramp that drives adoption. If setup takes days, teams will defer observability (which is exactly the problem Prove AI exists to solve).</li>
+      <li><strong>Ingestion latency: &lt;30 seconds:</strong> From trace emission to queryable metric. Prometheus scrapes every 10 seconds. Total pipeline latency: trace → OTel Collector → spanmetrics → Prometheus scrape → queryable. Must be fast enough for near-real-time dashboards.</li>
+      <li><strong>12-month retention:</strong> VictoriaMetrics stores metrics for 12 months. Essential for trend analysis, seasonal pattern detection, and compliance audits. Prometheus handles short-term (~15 days) for real-time queries.</li>
+      <li><strong>Zero lock-in:</strong> OTLP protocol, Prometheus exposition format, standard TSDB storage. If a customer leaves, their instrumentation code and historical data are fully portable. No proprietary data formats anywhere in the telemetry path.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: OBSERVING nondeterminism vs. REMEDIATING it. Traditional observability tells you WHAT happened and WHEN. For deterministic software, that's often enough — the same error pattern has the same root cause. For GenAI, the same symptom (hallucinated output) can have completely different root causes (stale embeddings, prompt drift, model degradation, retrieval failure, context window overflow). And the same root cause can produce different symptoms. Observation alone is insufficient — the system must actively REASON about failure patterns, correlate across the full execution chain, and guide the engineer to the specific point where the pipeline broke. This is why the product is two-phase: v0.1 solves observation (the prerequisite), v1.0 solves remediation (the actual value).</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Traces per Customer per Day</div><div class="value">~1M–100M</div><div class="detail">Highly variable. A single vLLM instance handles ~1K req/sec = ~86M spans/day. A small RAG pipeline: ~100K spans/day.</div></div>
+      <div class="est-card"><div class="label">Span Size (avg)</div><div class="value">~1-5 KB</div><div class="detail">Standard span: ~500B. GenAI span with prompt/output capture: 2-5KB+ (prompts can be large). This is why self-hosting matters — telemetry volume is MUCH higher than traditional apps.</div></div>
+      <div class="est-card"><div class="label">Derived Metrics / Span</div><div class="value">2</div><div class="detail">Spanmetrics generates: 1 counter (calls_total) + 1 histogram (latency_bucket with 9 buckets). Per unique label combination.</div></div>
+      <div class="est-card"><div class="label">Prometheus Scrape Interval</div><div class="value">10 sec</div><div class="detail">Collector exposes metrics on :8889. Prometheus scrapes every 10 seconds. This determines the minimum granularity of time-series data.</div></div>
+      <div class="est-card"><div class="label">Storage (1 year, 1 customer)</div><div class="value">~50-500 GB</div><div class="detail">VictoriaMetrics with 12-month retention. Highly compressed time-series. A busy customer: ~500GB. Small deployment: ~50GB.</div></div>
+      <div class="est-card"><div class="label">Remediation Cases / Week</div><div class="value">~5-50</div><div class="detail">v1.0 metric. Per customer: ~5-50 GenAI-specific incidents per week requiring investigation. Each case: dozens of engineer-hours without tooling, minutes with guided remediation.</div></div>
+      <div class="est-card"><div class="label">Setup Time Target</div><div class="value">&lt;5 min</div><div class="detail">docker compose --profile full up -d --build. 4 containers: Envoy, OTel Collector, Prometheus, VictoriaMetrics. All preconfigured.</div></div>
+      <div class="est-card"><div class="label">GenAI Pilot-to-Production Rate</div><div class="value">&lt;5%</div><div class="detail">Industry-wide. The market pain. &gt;95% of GenAI pilots never reach production — most fail due to the "hard 20%": observability, governance, debugging.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1 — GenAI telemetry is MUCH larger than traditional app telemetry.</strong> A standard web request span: ~500 bytes. A GenAI span with captured prompt + retrieved context + model output: 5-50 KB. At scale, this means 10-100× more data volume than equivalent traditional workloads. This is why sending GenAI telemetry to Datadog/Splunk is prohibitively expensive (they charge per GB ingested), and why self-hosting is a requirement, not a preference. The architecture must handle high-volume ingestion while keeping storage costs manageable (hence VictoriaMetrics's aggressive compression).</div>
+
+    <div class="callout decision"><strong>Key insight #2 — The observation:remediation ratio is inverted from traditional ops.</strong> In traditional ops, 80% of the effort is observation (building dashboards, configuring alerts) and 20% is remediation (the fix is usually obvious once you see the data). In GenAI ops, it's the opposite: teams can observe the failure quickly (the output is obviously wrong) but spend 80% of their time figuring out WHY and HOW TO FIX IT. Mile-long traces show what happened without telling you whether it matters, whether it'll repeat, or whether the fix is a 30-minute tweak or a two-week investigation. This inverted ratio is why the remediation engine (v1.0) is the real product — the telemetry stack (v0.1) is the prerequisite.</div>
+
+    <div class="callout decision"><strong>Key insight #3 — "Instrument once, observe twice" is the wedge.</strong> The trace-to-metric conversion via the spanmetrics connector is the architectural insight that reduces adoption friction to near-zero. Teams instrument with the OTel SDK (one SDK, one config) and get both traces AND derived metrics. No dual instrumentation. This is especially powerful for GenAI workloads where teams are already overwhelmed — asking them to instrument twice (tracing SDK + metrics SDK) is a non-starter.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"I'll organize this around the two-layer architecture: the TELEMETRY FOUNDATION (open source, self-hosted, customer VPC) and the CONTROL PLANE (proprietary, the intelligence layer). The telemetry foundation collects and stores data. The control plane turns that data into understanding and action. Between them is the key interface: the control plane READS from the telemetry foundation but the telemetry foundation has ZERO dependency on the control plane. This is what makes the open-source layer standalone and the proprietary layer additive."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>All telemetry stays in customer infrastructure</td><td style="color:var(--accent-cyan);font-weight:500">Self-hosted Docker Compose (not SaaS)</td><td>GenAI traces contain prompts, model outputs — potentially proprietary IP. Zero data egress by design. Control plane reads metrics only (aggregated, not raw).</td><td>—</td></tr>
+      <tr><td>Instrument once, observe twice</td><td style="color:var(--accent-cyan);font-weight:500">OTel spanmetrics connector (not dual instrumentation)</td><td>Single OTLP trace SDK produces both traces AND derived Prometheus metrics automatically. Dual instrumentation doubles maintenance burden and adoption friction.</td><td>—</td></tr>
+      <tr><td>Remediation needs structured reasoning, not just alerts</td><td style="color:var(--accent-cyan);font-weight:500">Agentic LLM analysis (not rule-based)</td><td>8 GenAI failure types require contextual reasoning (prompt regression vs context overflow). Rules can detect anomalies but can't diagnose root cause across failure types.</td><td>—</td></tr>
+      <tr><td>Audit trail must be tamper-evident</td><td style="color:var(--accent-cyan);font-weight:500">Append-only log anchored to Hedera (distributed ledger)</td><td>SOC 2 / HIPAA require immutable audit trail. Hedera provides cryptographic proof that records haven't been modified.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Customers may already have Prometheus/Grafana</td><td style="color:var(--accent-cyan);font-weight:500">Modular deployment profiles (BYO components)</td><td>Deployment profiles allow excluding components. "BYO Prometheus" profile skips bundled Prometheus. Reduces footprint and avoids conflicts.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Architecture Overview</div>
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">Architecture Overview</span>
+      <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ah1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.5"/></marker>
+          <marker id="ah2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#39d2c0" stroke-width="1.5"/></marker>
+        </defs>
+
+        <!-- YOUR AI APPS row -->
+        <rect x="20" y="20" width="760" height="70" rx="8" fill="#1c2129" stroke="#2d333b"/>
+        <text x="40" y="45" fill="#6e7681" font-size="9" letter-spacing=".1em" text-transform="uppercase" font-weight="600">Your AI Applications</text>
+        <rect class="svg-node" x="40" y="52" width="140" height="28" rx="5" fill="rgba(248,81,73,.08)" stroke="rgba(248,81,73,.3)"/>
+        <text x="110" y="70" fill="#f85149" font-size="11" text-anchor="middle">LLM Runners</text>
+        <rect class="svg-node" x="200" y="52" width="140" height="28" rx="5" fill="rgba(188,140,255,.08)" stroke="rgba(188,140,255,.3)"/>
+        <text x="270" y="70" fill="#bc8cff" font-size="11" text-anchor="middle">RAG Pipelines</text>
+        <rect class="svg-node" x="360" y="52" width="140" height="28" rx="5" fill="rgba(210,153,34,.08)" stroke="rgba(210,153,34,.3)"/>
+        <text x="430" y="70" fill="#d29922" font-size="11" text-anchor="middle">Agentic Systems</text>
+        <rect class="svg-node" x="520" y="52" width="140" height="28" rx="5" fill="rgba(63,185,80,.08)" stroke="rgba(63,185,80,.3)"/>
+        <text x="590" y="70" fill="#3fb950" font-size="11" text-anchor="middle">Fine-tuned Models</text>
+
+        <!-- Arrow: Apps → Foundation -->
+        <line x1="400" y1="90" x2="400" y2="132" stroke="#6e7681" stroke-width="1.5" marker-end="url(#ah1)"/>
+        <text x="415" y="115" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">OTLP traces &amp; metrics</text>
+
+        <!-- TELEMETRY FOUNDATION -->
+        <rect x="20" y="135" width="760" height="110" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.2)" stroke-dasharray="4 2"/>
+        <text x="40" y="157" fill="#3fb950" font-size="9" letter-spacing=".1em" font-weight="600">TELEMETRY FOUNDATION — OPEN SOURCE (self-hosted)</text>
+
+        <rect class="svg-node" x="50" y="170" width="130" height="58" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.35)"/>
+        <text x="115" y="192" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Envoy</text>
+        <text x="115" y="208" fill="#6e7681" font-size="9" text-anchor="middle">Auth Gateway</text>
+        <text x="115" y="220" fill="#5c6575" font-size="8" text-anchor="middle">:4317 :4318 :9090 :8428</text>
+
+        <line x1="180" y1="199" x2="218" y2="199" stroke="#6e7681" stroke-width="1.2" marker-end="url(#ah1)"/>
+
+        <rect class="svg-node" x="220" y="170" width="150" height="58" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.35)"/>
+        <text x="295" y="192" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">OTel Collector</text>
+        <text x="295" y="208" fill="#6e7681" font-size="9" text-anchor="middle">spanmetrics connector</text>
+        <text x="295" y="220" fill="#5c6575" font-size="8" text-anchor="middle">traces → metrics</text>
+
+        <line x1="370" y1="199" x2="408" y2="199" stroke="#6e7681" stroke-width="1.2" marker-end="url(#ah1)"/>
+
+        <rect class="svg-node" x="410" y="170" width="150" height="58" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.35)"/>
+        <text x="485" y="192" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Prometheus</text>
+        <text x="485" y="208" fill="#6e7681" font-size="9" text-anchor="middle">Query engine</text>
+        <text x="485" y="220" fill="#5c6575" font-size="8" text-anchor="middle">scrapes every 10s</text>
+
+        <line x1="560" y1="199" x2="598" y2="199" stroke="#6e7681" stroke-width="1.2" marker-end="url(#ah1)"/>
+
+        <rect class="svg-node" x="600" y="170" width="160" height="58" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.35)"/>
+        <text x="680" y="192" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">VictoriaMetrics</text>
+        <text x="680" y="208" fill="#6e7681" font-size="9" text-anchor="middle">Long-term storage</text>
+        <text x="680" y="220" fill="#5c6575" font-size="8" text-anchor="middle">12-month retention</text>
+
+        <!-- Arrow: Foundation → Control Plane -->
+        <line x1="400" y1="245" x2="400" y2="282" stroke="#39d2c0" stroke-width="1.5" marker-end="url(#ah2)"/>
+        <text x="415" y="268" fill="#39d2c0" font-size="9" font-family="'JetBrains Mono',monospace">collected telemetry</text>
+
+        <!-- CONTROL PLANE -->
+        <rect x="20" y="285" width="760" height="115" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.2)" stroke-dasharray="4 2"/>
+        <text x="40" y="307" fill="#58a6ff" font-size="9" letter-spacing=".1em" font-weight="600">CONTROL PLANE — PROPRIETARY (Prove AI platform)</text>
+
+        <rect class="svg-node" x="50" y="318" width="155" height="58" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.35)"/>
+        <text x="128" y="340" fill="#e3b341" font-size="12" font-weight="600" text-anchor="middle">Dashboard</text>
+        <text x="128" y="356" fill="#6e7681" font-size="9" text-anchor="middle">GenAI-native views</text>
+        <text x="128" y="368" fill="#5c6575" font-size="8" text-anchor="middle">unified metrics + quality</text>
+
+        <rect class="svg-node" x="220" y="318" width="155" height="58" rx="6" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.35)"/>
+        <text x="298" y="340" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Case Management</text>
+        <text x="298" y="356" fill="#6e7681" font-size="9" text-anchor="middle">GitHub / Jira integration</text>
+        <text x="298" y="368" fill="#5c6575" font-size="8" text-anchor="middle">full context capture</text>
+
+        <rect class="svg-node" x="390" y="318" width="175" height="58" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.35)"/>
+        <text x="478" y="340" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Remediation Engine</text>
+        <text x="478" y="356" fill="#6e7681" font-size="9" text-anchor="middle">Agentic root-cause analysis</text>
+        <text x="478" y="368" fill="#5c6575" font-size="8" text-anchor="middle">guided fixes + confidence</text>
+
+        <rect class="svg-node" x="580" y="318" width="180" height="58" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.35)"/>
+        <text x="670" y="340" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Audit Logging</text>
+        <text x="670" y="356" fill="#6e7681" font-size="9" text-anchor="middle">Immutable trail (SQL+Hedera)</text>
+        <text x="670" y="368" fill="#5c6575" font-size="8" text-anchor="middle">SOC 2, HIPAA, FedRAMP</text>
+      </svg>
+    </div>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 456" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_57" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_57h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">TELEMETRY FOUNDATION (self-hosted · open source)</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">METRICS STORAGE (self-hosted)</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CONTROL PLANE (proprietary)</text>
+    <line x1="390" y1="94" x2="332" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <text x="365" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">OTLP</text>
+    <line x1="332" y1="154" x2="448" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <line x1="448" y1="194" x2="333" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <line x1="333" y1="254" x2="447" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <text x="394" y="272" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">remote_write</text>
+    <line x1="333" y1="294" x2="216" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <line x1="447" y1="294" x2="216" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <line x1="216" y1="354" x2="332" y2="394" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <line x1="332" y1="354" x2="448" y2="394" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" opacity=".5"/>
+    <line x1="448" y1="354" x2="332" y2="394" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_57)" stroke-dasharray="4 3" opacity=".5"/>
+    <text x="394" y="372" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">suggestions</text>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">🤖 Customer AI App</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">RAG · vLLM · agents</text>
+    <rect class="svg-node" x="281" y="154" width="102" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="332" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🛡️ Envoy Proxy</text>
+    <text x="332" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth gateway</text>
+    <rect class="svg-node" x="397" y="154" width="102" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="448" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">📡 OTel Collector</text>
+    <text x="448" y="184" fill="#6e7681" font-size="8" text-anchor="middle">spanmetrics connector</text>
+    <rect class="svg-node" x="283" y="254" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="333" y="271" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📊 Prometheus</text>
+    <text x="333" y="284" fill="#6e7681" font-size="8" text-anchor="middle">short-term · PromQL</text>
+    <rect class="svg-node" x="397" y="254" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="447" y="271" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">💾 VictoriaMetrics</text>
+    <text x="447" y="284" fill="#6e7681" font-size="8" text-anchor="middle">12-month retention</text>
+    <rect class="svg-node" x="165" y="354" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="216" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Dashboard</text>
+    <text x="216" y="384" fill="#6e7681" font-size="8" text-anchor="middle">GenAI-native views</text>
+    <rect class="svg-node" x="281" y="354" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="332" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📋 Case Management</text>
+    <text x="332" y="384" fill="#6e7681" font-size="8" text-anchor="middle">GitHub · Jira</text>
+    <rect class="svg-node" x="397" y="354" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="448" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔧 Remediation Engine</text>
+    <text x="448" y="384" fill="#6e7681" font-size="8" text-anchor="middle">agentic analysis</text>
+    <rect class="svg-node" x="513" y="354" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="564" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📜 Audit Log</text>
+    <text x="564" y="384" fill="#6e7681" font-size="8" text-anchor="middle">Hedera · immutable</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🛡️ Envoy Auth Proxy <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">GATEWAY</span></h4>
+        <ul>
+          <li>All external traffic enters here</li>
+          <li>API Key or Basic Auth (Lua filter)</li>
+          <li>4 listeners: gRPC :4317, HTTP :4318, Prometheus :9090, VM :8428</li>
+          <li>Internal traffic unauthenticated (Docker network)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📡 OTel Collector <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">INGEST</span></h4>
+        <ul>
+          <li>Receives OTLP traces (gRPC + HTTP)</li>
+          <li>Batch processor for efficiency</li>
+          <li>spanmetrics connector (traces → metrics)</li>
+          <li>Prometheus exporter on :8889</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 Prometheus <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">SHORT-TERM</span></h4>
+        <ul>
+          <li>Scrapes Collector :8889 every 10 sec</li>
+          <li>PromQL query engine for dashboards</li>
+          <li>Remote-writes to VictoriaMetrics</li>
+          <li>~15 day TSDB retention</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>💾 VictoriaMetrics <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">LONG-TERM</span></h4>
+        <ul>
+          <li>12-month metric retention</li>
+          <li>Prometheus-compatible API on :8428</li>
+          <li>Aggressive compression (10-20× vs. raw)</li>
+          <li>Receives via Prometheus remote_write</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🧠 Remediation Engine <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">v1.0 CORE</span></h4>
+        <ul>
+          <li>Agentic root-cause analysis</li>
+          <li>Pattern matching across historical failures</li>
+          <li>Full execution chain reconstruction</li>
+          <li>Suggested fix paths + confidence scores</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📋 Case Management <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">WORKFLOW</span></h4>
+        <ul>
+          <li>Automatic case creation on anomaly detection</li>
+          <li>Full context: prompts, embeddings, outputs, scores</li>
+          <li>GitHub/Jira integration for ticket creation</li>
+          <li>Resolution tracking → knowledge base feedback</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📈 Dashboard & UI <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">CONTROL PLANE</span></h4>
+        <ul>
+          <li>Pre-built GenAI dashboards (token throughput, TTFT, latency)</li>
+          <li>Unified view: infra metrics + AI quality signals</li>
+          <li>Custom metric definition per customer</li>
+          <li>Reads from Prometheus/VM via PromQL</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📝 Audit Logging <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">COMPLIANCE</span></h4>
+        <ul>
+          <li>Immutable event log (SQL + optional Hedera)</li>
+          <li>Every detection, investigation, remediation</li>
+          <li>SOC 2, HIPAA-compatible audit trail</li>
+          <li>Proves AI governance to auditors</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Telemetry Ingestion (Trace → Metric)</div>
+<div class="svg-diagram" data-anim>
+      <span class="dia-title">Telemetry Ingestion Pipeline</span>
+      <svg viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="af1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#58a6ff" stroke-width="1.2"/></marker>
+          <marker id="af1g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#3fb950" stroke-width="1.2"/></marker>
+          <marker id="af1o" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#d29922" stroke-width="1.2"/></marker>
+        </defs>
+
+        <!-- Step 1: Customer App -->
+        <rect class="svg-node" x="240" y="16" width="320" height="48" rx="8" fill="rgba(248,81,73,.07)" stroke="rgba(248,81,73,.35)"/>
+        <text x="400" y="36" fill="#f85149" font-size="13" font-weight="600" text-anchor="middle">Customer AI App</text>
+        <text x="400" y="52" fill="#6e7681" font-size="9" text-anchor="middle">RAG pipeline · vLLM · agentic system</text>
+        <text x="400" y="14" fill="#5c6575" font-size="8" text-anchor="middle" font-family="'JetBrains Mono',monospace">Instrumented with OpenTelemetry SDK</text>
+
+        <line x1="400" y1="64" x2="400" y2="96" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#af1)"/>
+        <text x="418" y="84" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">OTLP gRPC / HTTP</text>
+
+        <!-- Step 2: Envoy -->
+        <rect class="svg-node" x="260" y="100" width="280" height="48" rx="8" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.35)"/>
+        <text x="400" y="120" fill="#39d2c0" font-size="13" font-weight="600" text-anchor="middle">Envoy Proxy</text>
+        <text x="400" y="136" fill="#6e7681" font-size="9" text-anchor="middle">Lua filter validates X-API-Key or Basic Auth</text>
+        <!-- Auth badge -->
+        <rect x="548" y="108" width="42" height="16" rx="4" fill="rgba(63,185,80,.15)"/>
+        <text x="569" y="120" fill="#3fb950" font-size="8" font-weight="600" text-anchor="middle">AUTH</text>
+        <!-- Reject arrow -->
+        <line x1="548" y1="130" x2="620" y2="130" stroke="rgba(248,81,73,.4)" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="635" y="134" fill="#f85149" font-size="8" font-family="'JetBrains Mono',monospace">401</text>
+
+        <line x1="400" y1="148" x2="400" y2="180" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#af1)"/>
+
+        <!-- Step 3: OTel Collector -->
+        <rect class="svg-node" x="160" y="184" width="480" height="140" rx="8" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.3)"/>
+        <text x="400" y="206" fill="#58a6ff" font-size="13" font-weight="600" text-anchor="middle">OTel Collector</text>
+
+        <!-- Traces Pipeline box -->
+        <rect x="180" y="214" width="210" height="94" rx="6" fill="rgba(210,153,34,.05)" stroke="rgba(210,153,34,.25)" stroke-dasharray="3 2"/>
+        <text x="285" y="230" fill="#d29922" font-size="9" font-weight="600" text-anchor="middle" letter-spacing=".06em">TRACES PIPELINE</text>
+        <text x="285" y="248" fill="#8b949e" font-size="10" text-anchor="middle">receivers: [otlp]</text>
+        <text x="285" y="264" fill="#8b949e" font-size="10" text-anchor="middle">processors: [batch]</text>
+        <text x="285" y="280" fill="#8b949e" font-size="10" text-anchor="middle">exporters: [spanmetrics, debug]</text>
+        <text x="285" y="296" fill="#6e7681" font-size="8" text-anchor="middle">→ feeds spans to connector</text>
+
+        <!-- spanmetrics bridge -->
+        <line x1="390" y1="260" x2="420" y2="260" stroke="#3fb950" stroke-width="2" marker-end="url(#af1g)"/>
+
+        <!-- Metrics Pipeline box -->
+        <rect x="422" y="214" width="200" height="94" rx="6" fill="rgba(63,185,80,.05)" stroke="rgba(63,185,80,.25)" stroke-dasharray="3 2"/>
+        <text x="522" y="230" fill="#3fb950" font-size="9" font-weight="600" text-anchor="middle" letter-spacing=".06em">METRICS PIPELINE</text>
+        <text x="522" y="248" fill="#8b949e" font-size="10" text-anchor="middle">receivers: [spanmetrics]</text>
+        <text x="522" y="264" fill="#8b949e" font-size="10" text-anchor="middle">processors: [batch]</text>
+        <text x="522" y="280" fill="#8b949e" font-size="10" text-anchor="middle">exporters: [prometheus]</text>
+        <text x="522" y="296" fill="#6e7681" font-size="8" text-anchor="middle">exposed on :8889</text>
+
+        <!-- spanmetrics label -->
+        <rect x="370" y="238" width="70" height="16" rx="3" fill="rgba(57,210,192,.15)"/>
+        <text x="405" y="250" fill="#39d2c0" font-size="8" font-weight="600" text-anchor="middle">spanmetrics</text>
+
+        <line x1="400" y1="324" x2="400" y2="356" stroke="#d29922" stroke-width="1.5" marker-end="url(#af1o)"/>
+        <text x="418" y="344" fill="#6e7681" font-size="9" font-family="'JetBrains Mono',monospace">scrapes :8889 / 10s</text>
+
+        <!-- Step 4: Prometheus -->
+        <rect class="svg-node" x="270" y="360" width="260" height="48" rx="8" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.35)"/>
+        <text x="400" y="380" fill="#d29922" font-size="13" font-weight="600" text-anchor="middle">Prometheus</text>
+        <text x="400" y="396" fill="#6e7681" font-size="9" text-anchor="middle">Short-term TSDB · ~15 day retention · PromQL</text>
+
+        <line x1="400" y1="408" x2="400" y2="440" stroke="#bc8cff" stroke-width="1.5" marker-end="url(#af1)"/>
+        <text x="418" y="428" fill="#6e7681" font-size="9" font-family="'JetBrains Mono',monospace">remote_write</text>
+
+        <!-- Step 5: VictoriaMetrics -->
+        <rect class="svg-node" x="260" y="444" width="280" height="48" rx="8" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.35)"/>
+        <text x="400" y="464" fill="#bc8cff" font-size="13" font-weight="600" text-anchor="middle">VictoriaMetrics</text>
+        <text x="400" y="480" fill="#6e7681" font-size="9" text-anchor="middle">Long-term storage · 12-month retention · PromQL-compatible</text>
+
+        <!-- Latency badge -->
+        <rect x="270" y="500" width="260" height="16" rx="4" fill="rgba(227,179,65,.1)"/>
+        <text x="400" y="512" fill="#e3b341" font-size="9" font-weight="600" text-anchor="middle" font-family="'JetBrains Mono',monospace">PIPELINE LATENCY: ~10-15 sec end-to-end</text>
+      </svg>
+    </div>
+
+    <div class="sub">Flow 2: Remediation Workflow (v1.0)</div>
+<div class="svg-diagram" data-anim>
+      <span class="dia-title">Remediation Workflow (v1.0)</span>
+      <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ar1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#f85149" stroke-width="1.2"/></marker>
+          <marker id="ar2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#3fb950" stroke-width="1.2"/></marker>
+          <marker id="ar3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#d29922" stroke-width="1.2"/></marker>
+        </defs>
+
+        <!-- Anomaly Detection -->
+        <rect class="svg-node" x="220" y="12" width="360" height="44" rx="8" fill="rgba(248,81,73,.08)" stroke="rgba(248,81,73,.35)"/>
+        <text x="400" y="30" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">⚠ Anomaly Detection</text>
+        <text x="400" y="46" fill="#8b949e" font-size="9" text-anchor="middle">"Retrieval relevance score dropped 40%"</text>
+        <line x1="400" y1="56" x2="400" y2="80" stroke="#f85149" stroke-width="1.5" marker-end="url(#ar1)"/>
+
+        <!-- Case Management -->
+        <rect class="svg-node" x="200" y="84" width="400" height="64" rx="8" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+        <text x="400" y="104" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">📋 Case #247 Created</text>
+        <text x="400" y="120" fill="#8b949e" font-size="9" text-anchor="middle">Captures: traces · prompts · retrieved chunks · model outputs</text>
+        <text x="400" y="134" fill="#8b949e" font-size="9" text-anchor="middle">eval scores · infra metrics · recent config changes</text>
+        <line x1="400" y1="148" x2="400" y2="172" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ar2)"/>
+
+        <!-- Remediation Engine steps -->
+        <rect x="140" y="176" width="520" height="194" rx="8" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.2)" stroke-dasharray="4 2"/>
+        <text x="160" y="196" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".08em">REMEDIATION ENGINE</text>
+
+        <!-- Step 1 -->
+        <rect class="svg-node" x="168" y="206" width="220" height="36" rx="5" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.25)"/>
+        <text x="278" y="220" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">1. Pattern Match</text>
+        <text x="278" y="234" fill="#6e7681" font-size="8" text-anchor="middle">3 similar past cases (similarity &gt;0.85)</text>
+
+        <line x1="388" y1="224" x2="412" y2="224" stroke="#6e7681" stroke-width="1"/>
+
+        <!-- Step 2 -->
+        <rect class="svg-node" x="414" y="206" width="220" height="36" rx="5" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.25)"/>
+        <text x="524" y="220" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">2. Correlation</text>
+        <text x="524" y="234" fill="#6e7681" font-size="8" text-anchor="middle">Embedding index stale 6 days · 47 new docs</text>
+
+        <!-- Arrow down -->
+        <line x1="400" y1="242" x2="400" y2="260" stroke="#6e7681" stroke-width="1"/>
+
+        <!-- Step 3 -->
+        <rect class="svg-node" x="168" y="258" width="220" height="44" rx="5" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.25)"/>
+        <text x="278" y="274" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">3. Root Cause Hypothesis</text>
+        <text x="278" y="290" fill="#6e7681" font-size="8" text-anchor="middle">"Stale embedding index"</text>
+        <rect x="200" y="293" width="60" height="14" rx="3" fill="rgba(63,185,80,.12)"/>
+        <text x="230" y="303" fill="#3fb950" font-size="8" font-weight="600" text-anchor="middle">87%</text>
+
+        <line x1="388" y1="280" x2="412" y2="280" stroke="#6e7681" stroke-width="1"/>
+
+        <!-- Step 4 -->
+        <rect class="svg-node" x="414" y="258" width="220" height="44" rx="5" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.25)"/>
+        <text x="524" y="274" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">4. Suggested Remediation</text>
+        <text x="524" y="290" fill="#6e7681" font-size="8" text-anchor="middle">"Re-index embedding store"</text>
+        <text x="524" y="300" fill="#5c6575" font-size="8" text-anchor="middle">Estimated effort: 30 min</text>
+
+        <!-- Step labels -->
+        <text x="400" y="356" fill="#d29922" font-size="9" text-anchor="middle" font-family="'JetBrains Mono',monospace">↓ engineer reviews + applies fix</text>
+
+        <!-- Engineer -->
+        <rect class="svg-node" x="260" y="376" width="280" height="40" rx="8" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+        <text x="400" y="400" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">👩‍💻 Engineer Reviews &amp; Fixes</text>
+        <line x1="400" y1="416" x2="400" y2="440" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ar2)"/>
+
+        <!-- Knowledge Base feedback -->
+        <rect class="svg-node" x="220" y="444" width="360" height="40" rx="8" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+        <text x="400" y="462" fill="#d29922" font-size="11" font-weight="600" text-anchor="middle">📚 Resolution → Knowledge Base</text>
+        <text x="400" y="477" fill="#6e7681" font-size="8" text-anchor="middle">Feeds back → system gets smarter next time</text>
+
+        <!-- Feedback loop arrow -->
+        <path d="M 580 464 Q 700 464 700 280 Q 700 196 634 196" fill="none" stroke="#d29922" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar3)" opacity=".5"/>
+        <text x="714" y="336" fill="#d29922" font-size="8" transform="rotate(-90 714 336)" text-anchor="middle" opacity=".6">reinforcement loop</text>
+      </svg>
+    </div>
+
+    <div class="callout say">"Deep dives: (1) Trace-to-metric conversion — how the spanmetrics connector works and why it's the architectural wedge for GenAI observability. (2) The agentic remediation engine — how to reason about nondeterministic failures. (3) Data sovereignty architecture — why self-hosting is a requirement, not a feature, and how the deployment profiles work. (4) Case management and the knowledge base — how resolved cases create a reinforcement loop that makes the system smarter over time."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-trace">
+    <div class="sub">Deep Dive 1: Trace-to-Metric Conversion (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> GenAI teams are already overwhelmed. Asking them to instrument twice (tracing SDK for traces, metrics SDK for metrics) is a non-starter. The spanmetrics connector solves this: a single OTLP trace instrumentation path that AUTOMATICALLY derives Prometheus-format metrics. This is the "instrument once, observe twice" principle. Understanding how this connector works — and its limitations — is essential to understanding the entire platform's value proposition.</div>
+
+    <div class="schema"><span class="comment">── The spanmetrics Connector: How It Works ──</span>
+
+<span class="pk">Architecture position:</span>
+  The spanmetrics connector is unique in the OTel Collector:
+  It acts as BOTH an exporter (in the traces pipeline)
+  AND a receiver (in the metrics pipeline).
+  Traces flow in one side. Metrics come out the other.
+
+  traces pipeline:
+    receivers: [otlp]
+    processors: [batch]
+    exporters: [<span class="fk">spanmetrics</span>, debug]    ← trace data flows INTO spanmetrics
+
+  metrics pipeline:
+    receivers: [otlp, <span class="fk">spanmetrics</span>]     ← metric data flows OUT of spanmetrics
+    processors: [batch]
+    exporters: [prometheus, debug]
+
+<span class="pk">Per-span processing:</span>
+
+  INPUT: a single OTLP span
+    {
+      service_name: "rag-pipeline",
+      span_name: "retrieve_context",
+      span_kind: SPAN_KIND_CLIENT,
+      duration: 145ms,
+      status_code: STATUS_CODE_OK,
+      attributes: {
+        env: "prod",
+        component: "vector_db",
+        model: "text-embedding-3-large"
+      }
+    }
+
+  EXTRACT automatically:
+    • service_name  (from resource)
+    • span_name     (from span)
+    • span_kind     (from span)
+    • status_code   (from span)
+
+  EXTRACT from configured dimensions:
+    • env           (from span attributes)
+    • component     (from span attributes)
+    • model         (from span attributes)
+
+  GENERATE two metrics:
+
+    <span class="table-name">llm_traces_span_metrics_calls_total</span>{
+      service_name="rag-pipeline",
+      span_name="retrieve_context",
+      span_kind="SPAN_KIND_CLIENT",
+      status_code="STATUS_CODE_OK",
+      env="prod",
+      component="vector_db",
+      model="text-embedding-3-large"
+    } += 1
+
+    <span class="table-name">llm_traces_span_metrics_latency_bucket</span>{
+      le="0.05",  ...labels...
+    } += 0    <span class="comment">// 145ms &gt; 50ms, doesn't fit in this bucket</span>
+
+    <span class="table-name">llm_traces_span_metrics_latency_bucket</span>{
+      le="0.5",   ...labels...
+    } += 1    <span class="comment">// 145ms &lt; 500ms, fits in this bucket</span>
+
+    <span class="comment">... (across all configured buckets)</span>
+
+<span class="pk">Histogram buckets (configurable):</span>
+  Default: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10]
+           1ms    5ms    10ms   50ms   100ms 500ms 1s  5s  10s
+
+  For GenAI workloads (LLM inference can take seconds to minutes):
+  Recommended: [0.1, 0.5, 1, 5, 10, 30, 60, 120, 300]
+               100ms 500ms 1s  5s  10s  30s  1m   2m   5m
+
+<span class="pk">The "llm" namespace prefix:</span>
+  Comes from the Prometheus exporter config:
+    exporters:
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: "llm"     ← this prefix
+  
+  All derived metrics get this namespace:
+    llm_traces_span_metrics_calls_total
+    llm_traces_span_metrics_latency_bucket</span>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">What You Can Derive Without Custom Instrumentation</strong></p>
+    <table>
+      <thead><tr><th>Metric</th><th>PromQL Query</th><th>What It Tells You</th></tr></thead>
+      <tbody>
+        <tr><td>Request rate</td><td>rate(llm_traces_span_metrics_calls_total[5m])</td><td>Requests per second by service/operation</td></tr>
+        <tr><td>Error rate</td><td>rate(...{status_code="ERROR"}[5m]) / rate(...[5m])</td><td>% of requests failing, broken down by service/operation</td></tr>
+        <tr><td>p50/p95/p99 latency</td><td>histogram_quantile(0.95, rate(llm_..._latency_bucket[5m]))</td><td>Latency distribution — critical for LLM TTFT monitoring</td></tr>
+        <tr><td>Per-model throughput</td><td>rate(...{model="gpt-4"}[5m])</td><td>If model is a span attribute, derived automatically</td></tr>
+        <tr><td>Per-agent calls</td><td>rate(...{service_name="research-agent"}[5m])</td><td>In agentic systems: call rate per agent</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why not skip traces entirely and just do metrics?</strong> Because traces provide the EXECUTION CHAIN that metrics cannot. A metric tells you "p95 latency spiked to 5 seconds." A trace tells you "the latency spike was in the embedding retrieval step, specifically the call to Pinecone, which timed out because of a batch-too-large request." The spanmetrics connector gives you BOTH from a single instrumentation: metrics for dashboards and alerting (what happened, when), traces for diagnosis (why, and where in the chain). This duality is what makes the remediation engine possible — it needs traces for root-cause analysis but metrics for anomaly detection.</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-remediation">
+    <div class="sub">Deep Dive 2: Agentic Remediation Engine (v1.0) (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Traditional alerting rule: "IF error_rate > 5% THEN page engineer." This works for deterministic systems where the same error pattern has the same root cause. GenAI breaks this: a hallucinated output might be caused by stale embeddings, a prompt template regression, a model version change, context window overflow, or a retrieval relevance drop — and the trace pattern can look DIFFERENT each time for the SAME root cause. The remediation engine must REASON about failures, not just pattern-match.</div>
+
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">Remediation Engine · 4-Stage Pipeline</span>
+      <svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arp" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker>
+        </defs>
+
+        <!-- Mode badges -->
+        <rect x="30" y="12" width="340" height="32" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.25)"/>
+        <text x="50" y="32" fill="#f85149" font-size="10" font-weight="600">Mode 1: REACTIVE</text>
+        <text x="155" y="32" fill="#6e7681" font-size="9">Anomaly fires → case → analyze → suggest fix</text>
+
+        <rect x="390" y="12" width="380" height="32" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.25)"/>
+        <text x="410" y="32" fill="#bc8cff" font-size="10" font-weight="600">Mode 2: PROACTIVE</text>
+        <text x="520" y="32" fill="#6e7681" font-size="9">Background drift detection → advisory case</text>
+
+        <!-- Stage 1: Context Assembly -->
+        <rect class="svg-node" x="60" y="64" width="680" height="100" rx="8" fill="rgba(88,166,255,.05)" stroke="rgba(88,166,255,.3)"/>
+        <rect x="70" y="70" width="18" height="18" rx="4" fill="rgba(88,166,255,.2)"/>
+        <text x="79" y="83" fill="#58a6ff" font-size="11" font-weight="600" text-anchor="middle">1</text>
+        <text x="100" y="84" fill="#58a6ff" font-size="13" font-weight="600">Context Assembly</text>
+        <text x="80" y="104" fill="#8b949e" font-size="10">Gather ALL relevant data: traces that triggered anomaly · actual prompts, retrieved chunks, model outputs</text>
+        <text x="80" y="120" fill="#8b949e" font-size="10">eval scores (relevance, coherence, groundedness) · infra metrics (latency, GPU, cache)</text>
+        <text x="80" y="136" fill="#8b949e" font-size="10">recent changes (model version, config, prompt template) · historical baselines</text>
+        <text x="80" y="152" fill="#5c6575" font-size="9" font-style="italic">Everything needed to reconstruct the full execution chain</text>
+
+        <line x1="400" y1="164" x2="400" y2="186" stroke="#6e7681" stroke-width="1.5" marker-end="url(#arp)"/>
+
+        <!-- Stage 2: Failure Classification -->
+        <rect class="svg-node" x="60" y="190" width="680" height="100" rx="8" fill="rgba(210,153,34,.05)" stroke="rgba(210,153,34,.3)"/>
+        <rect x="70" y="196" width="18" height="18" rx="4" fill="rgba(210,153,34,.2)"/>
+        <text x="79" y="209" fill="#d29922" font-size="11" font-weight="600" text-anchor="middle">2</text>
+        <text x="100" y="210" fill="#d29922" font-size="13" font-weight="600">Failure Classification</text>
+        <!-- Failure type badges -->
+        <rect x="80" y="222" width="115" height="18" rx="4" fill="rgba(248,81,73,.08)"/>
+        <text x="138" y="235" fill="#f85149" font-size="9" font-weight="600" text-anchor="middle">HALLUCINATION</text>
+        <rect x="205" y="222" width="120" height="18" rx="4" fill="rgba(210,153,34,.08)"/>
+        <text x="265" y="235" fill="#d29922" font-size="9" font-weight="600" text-anchor="middle">RETRIEVAL_DRIFT</text>
+        <rect x="335" y="222" width="155" height="18" rx="4" fill="rgba(188,140,255,.08)"/>
+        <text x="413" y="235" fill="#bc8cff" font-size="9" font-weight="600" text-anchor="middle">COHERENCE_DEGRADATION</text>
+        <rect x="500" y="222" width="100" height="18" rx="4" fill="rgba(57,210,192,.08)"/>
+        <text x="550" y="235" fill="#39d2c0" font-size="9" font-weight="600" text-anchor="middle">AGENT_LOOP</text>
+        <rect x="610" y="222" width="115" height="18" rx="4" fill="rgba(63,185,80,.08)"/>
+        <text x="668" y="235" fill="#3fb950" font-size="9" font-weight="600" text-anchor="middle">LATENCY_REGRESS</text>
+        <rect x="80" y="248" width="125" height="18" rx="4" fill="rgba(227,179,65,.08)"/>
+        <text x="143" y="261" fill="#e3b341" font-size="9" font-weight="600" text-anchor="middle">CONTEXT_OVERFLOW</text>
+        <rect x="215" y="248" width="140" height="18" rx="4" fill="rgba(247,120,186,.08)"/>
+        <text x="285" y="261" fill="#f778ba" font-size="9" font-weight="600" text-anchor="middle">PROMPT_REGRESSION</text>
+        <rect x="365" y="248" width="125" height="18" rx="4" fill="rgba(88,166,255,.08)"/>
+        <text x="428" y="261" fill="#58a6ff" font-size="9" font-weight="600" text-anchor="middle">TOKEN_EXPLOSION</text>
+        <text x="80" y="280" fill="#5c6575" font-size="9" font-style="italic">Classification: trace patterns + eval scores + domain heuristics + learned patterns</text>
+
+        <line x1="400" y1="290" x2="400" y2="312" stroke="#6e7681" stroke-width="1.5" marker-end="url(#arp)"/>
+
+        <!-- Stage 3: Root Cause Analysis -->
+        <rect class="svg-node" x="60" y="316" width="680" height="100" rx="8" fill="rgba(63,185,80,.05)" stroke="rgba(63,185,80,.3)"/>
+        <rect x="70" y="322" width="18" height="18" rx="4" fill="rgba(63,185,80,.2)"/>
+        <text x="79" y="335" fill="#3fb950" font-size="11" font-weight="600" text-anchor="middle">3</text>
+        <text x="100" y="336" fill="#3fb950" font-size="13" font-weight="600">Root Cause Analysis</text>
+        <text x="80" y="356" fill="#8b949e" font-size="10">For RETRIEVAL_DRIFT, candidate causes:</text>
+        <text x="100" y="372" fill="#8b949e" font-size="10">→ Stale embedding index (check last refresh)   → Embedding model changed (check config diffs)</text>
+        <text x="100" y="388" fill="#8b949e" font-size="10">→ Source documents changed (check versions)    → Chunk size misconfigured (check retrieval params)</text>
+        <text x="80" y="406" fill="#5c6575" font-size="9" font-style="italic">Score by: temporal correlation · similarity to past cases · metric anomaly at each pipeline stage</text>
+
+        <line x1="400" y1="416" x2="400" y2="438" stroke="#6e7681" stroke-width="1.5" marker-end="url(#arp)"/>
+
+        <!-- Stage 4: Remediation Suggestion -->
+        <rect class="svg-node" x="60" y="442" width="680" height="100" rx="8" fill="rgba(248,81,73,.05)" stroke="rgba(248,81,73,.3)"/>
+        <rect x="70" y="448" width="18" height="18" rx="4" fill="rgba(248,81,73,.2)"/>
+        <text x="79" y="461" fill="#f85149" font-size="11" font-weight="600" text-anchor="middle">4</text>
+        <text x="100" y="462" fill="#f85149" font-size="13" font-weight="600">Remediation Suggestion</text>
+        <text x="80" y="482" fill="#8b949e" font-size="10">Concrete actions with effort estimates:</text>
+        <text x="100" y="498" fill="#8b949e" font-size="10">"Re-index embedding store" (30 min, auto)  ·  "Revert prompt template to v3.2" (5 min)</text>
+        <text x="80" y="518" fill="#5c6575" font-size="9" font-style="italic">Each includes: confidence_score · estimated_effort · similar_past_case · verification_query</text>
+        <!-- Confidence badge -->
+        <rect x="630" y="474" width="96" height="20" rx="4" fill="rgba(63,185,80,.12)"/>
+        <text x="678" y="488" fill="#3fb950" font-size="9" font-weight="600" text-anchor="middle">conf: 0.87</text>
+      </svg>
+    </div>
+
+    <div class="callout decision"><strong>Why agentic reasoning, not rule-based alerts?</strong> Rule-based systems work when failure modes are enumerable and stable. GenAI failures are COMBINATORIAL — the interaction between prompt, retrieval, model, and context creates a failure space too large for hand-written rules. The remediation engine uses an LLM-based reasoning loop (itself a GenAI system!) that can: (1) read and understand trace data in natural language, (2) correlate across multiple data sources (metrics + traces + config changes), (3) leverage the knowledge base of past resolutions, and (4) generate human-readable hypotheses and suggestions. The irony: using GenAI to debug GenAI. But the remediation engine operates on STRUCTURED telemetry (not open-ended generation), which constrains nondeterminism. And it suggests — it doesn't autonomously fix.</div>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-sovereignty">
+    <div class="sub">Deep Dive 3: Data Sovereignty Architecture (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> GenAI telemetry is fundamentally different from traditional application logs. A trace from a customer support chatbot contains: the customer's question (PII), the retrieved knowledge base chunks (proprietary), the model's response (potentially containing customer data), and evaluation scores. Sending this to a third-party SaaS observability platform violates most enterprise security policies. The entire telemetry foundation MUST run in the customer's infrastructure with zero data egress.</div>
+
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">Self-Hosted Deployment</span>
+      <svg viewBox="0 0 800 440" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ad1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker>
+        </defs>
+
+        <!-- Customer VPC outer box -->
+        <rect x="16" y="12" width="768" height="360" rx="10" fill="rgba(63,185,80,.02)" stroke="rgba(63,185,80,.2)"/>
+        <text x="36" y="34" fill="#3fb950" font-size="10" font-weight="600" letter-spacing=".08em">CUSTOMER VPC / ON-PREM INFRASTRUCTURE</text>
+
+        <!-- Docker Compose inner box -->
+        <rect x="40" y="48" width="500" height="240" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.2)" stroke-dasharray="4 2"/>
+        <text x="60" y="68" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".08em">DOCKER COMPOSE · observability network</text>
+
+        <!-- Envoy -->
+        <rect class="svg-node" x="64" y="82" width="130" height="80" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.35)"/>
+        <text x="129" y="100" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">🛡 Envoy</text>
+        <text x="129" y="116" fill="#6e7681" font-size="8" text-anchor="middle">Auth Gateway</text>
+        <text x="129" y="130" fill="#5c6575" font-size="8" text-anchor="middle">:4317 :4318</text>
+        <text x="129" y="142" fill="#5c6575" font-size="8" text-anchor="middle">:9090 :8428</text>
+        <rect x="72" y="148" width="114" height="12" rx="2" fill="rgba(63,185,80,.1)"/>
+        <text x="129" y="158" fill="#3fb950" font-size="7" font-weight="600" text-anchor="middle">ALWAYS INCLUDED</text>
+
+        <!-- OTel Collector -->
+        <rect class="svg-node" x="220" y="82" width="140" height="80" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.35)"/>
+        <text x="290" y="100" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">📡 Collector</text>
+        <text x="290" y="116" fill="#6e7681" font-size="8" text-anchor="middle">OTel + spanmetrics</text>
+        <text x="290" y="130" fill="#5c6575" font-size="8" text-anchor="middle">traces → metrics</text>
+        <text x="290" y="144" fill="#5c6575" font-size="8" text-anchor="middle">:8889 :8888</text>
+
+        <!-- Arrow Envoy → Collector -->
+        <line x1="194" y1="122" x2="218" y2="122" stroke="#6e7681" stroke-width="1.2" marker-end="url(#ad1)"/>
+
+        <!-- Prometheus -->
+        <rect class="svg-node" x="64" y="184" width="150" height="80" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.35)"/>
+        <text x="139" y="202" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">📊 Prometheus</text>
+        <text x="139" y="218" fill="#6e7681" font-size="8" text-anchor="middle">Short-term query engine</text>
+        <text x="139" y="232" fill="#5c6575" font-size="8" text-anchor="middle">~15 day TSDB retention</text>
+        <text x="139" y="246" fill="#5c6575" font-size="8" text-anchor="middle">PromQL API · :9090</text>
+
+        <!-- VictoriaMetrics -->
+        <rect class="svg-node" x="240" y="184" width="160" height="80" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.35)"/>
+        <text x="320" y="202" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">💾 VictoriaMetrics</text>
+        <text x="320" y="218" fill="#6e7681" font-size="8" text-anchor="middle">Long-term storage</text>
+        <text x="320" y="232" fill="#5c6575" font-size="8" text-anchor="middle">12-month retention</text>
+        <text x="320" y="246" fill="#5c6575" font-size="8" text-anchor="middle">Prom-compatible · :8428</text>
+
+        <!-- Arrows: Collector → Storage -->
+        <line x1="250" y1="162" x2="139" y2="182" stroke="#6e7681" stroke-width="1" marker-end="url(#ad1)"/>
+        <line x1="310" y1="162" x2="320" y2="182" stroke="#6e7681" stroke-width="1" marker-end="url(#ad1)"/>
+        <!-- Prom → VM -->
+        <line x1="214" y1="224" x2="238" y2="224" stroke="#6e7681" stroke-width="1" marker-end="url(#ad1)"/>
+        <text x="226" y="218" fill="#5c6575" font-size="7" text-anchor="middle">remote_write</text>
+
+        <!-- Volumes -->
+        <rect x="420" y="184" width="100" height="36" rx="4" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.2)" stroke-dasharray="3 2"/>
+        <text x="470" y="200" fill="#e3b341" font-size="8" font-weight="600" text-anchor="middle">prometheus_data</text>
+        <text x="470" y="212" fill="#5c6575" font-size="7" text-anchor="middle">Docker volume</text>
+        <rect x="420" y="228" width="100" height="36" rx="4" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.2)" stroke-dasharray="3 2"/>
+        <text x="470" y="244" fill="#e3b341" font-size="8" font-weight="600" text-anchor="middle">vm_data</text>
+        <text x="470" y="256" fill="#5c6575" font-size="7" text-anchor="middle">Docker volume</text>
+
+        <!-- NO DATA EGRESS box -->
+        <rect x="570" y="48" width="190" height="230" rx="8" fill="rgba(248,81,73,.04)" stroke="rgba(248,81,73,.25)"/>
+        <text x="665" y="70" fill="#f85149" font-size="10" font-weight="700" text-anchor="middle">🚫 NO DATA EGRESS</text>
+        <text x="665" y="92" fill="#f85149" font-size="9" text-anchor="middle">✗ No phone-home</text>
+        <text x="665" y="110" fill="#f85149" font-size="9" text-anchor="middle">✗ No cloud dependencies</text>
+        <text x="665" y="128" fill="#f85149" font-size="9" text-anchor="middle">✗ No telemetry upstream</text>
+        <line x1="588" y1="142" x2="742" y2="142" stroke="rgba(248,81,73,.15)"/>
+        <text x="665" y="162" fill="#3fb950" font-size="9" text-anchor="middle">✓ Images pulled at build</text>
+        <text x="665" y="180" fill="#3fb950" font-size="9" text-anchor="middle">✓ Runs air-gapped</text>
+        <text x="665" y="198" fill="#3fb950" font-size="9" text-anchor="middle">✓ All data on your disks</text>
+        <text x="665" y="220" fill="#6e7681" font-size="8" text-anchor="middle" font-style="italic">Prompts + outputs = PII</text>
+        <text x="665" y="236" fill="#6e7681" font-size="8" text-anchor="middle" font-style="italic">Can't leave your infra</text>
+        <!-- X through arrow -->
+        <line x1="556" y1="250" x2="580" y2="270" stroke="rgba(248,81,73,.4)" stroke-width="2"/>
+        <line x1="580" y1="250" x2="556" y2="270" stroke="rgba(248,81,73,.4)" stroke-width="2"/>
+
+        <!-- Deployment Profiles table -->
+        <rect x="40" y="300" width="720" height="60" rx="6" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.15)"/>
+        <text x="60" y="318" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".06em">DEPLOYMENT PROFILES (mutually exclusive)</text>
+
+        <text x="60" y="336" fill="#8b949e" font-size="9" font-family="'JetBrains Mono',monospace">full</text>
+        <text x="130" y="336" fill="#8b949e" font-size="9" font-family="'JetBrains Mono',monospace">no-prometheus</text>
+        <text x="260" y="336" fill="#8b949e" font-size="9" font-family="'JetBrains Mono',monospace">no-vm</text>
+        <text x="350" y="336" fill="#8b949e" font-size="9" font-family="'JetBrains Mono',monospace">no-collector</text>
+        <text x="470" y="336" fill="#8b949e" font-size="9" font-family="'JetBrains Mono',monospace">vm-only</text>
+        <text x="560" y="336" fill="#8b949e" font-size="9" font-family="'JetBrains Mono',monospace">prom-only</text>
+
+        <text x="60" y="352" fill="#5c6575" font-size="8">All 4</text>
+        <text x="130" y="352" fill="#5c6575" font-size="8">BYO Prometheus</text>
+        <text x="260" y="352" fill="#5c6575" font-size="8">BYO VM</text>
+        <text x="350" y="352" fill="#5c6575" font-size="8">BYO Collector</text>
+        <text x="470" y="352" fill="#5c6575" font-size="8">Storage only</text>
+        <text x="560" y="352" fill="#5c6575" font-size="8">Prom only</text>
+
+        <!-- Auth note -->
+        <text x="40" y="390" fill="#6e7681" font-size="9"><tspan fill="#39d2c0" font-weight="600">Auth:</tspan> Template-based config generation at startup · .env → generate-envoy-config.sh → envoy.yaml</text>
+        <text x="40" y="406" fill="#6e7681" font-size="9">API Key mode: X-API-Key header → Lua filter  ·  Basic Auth: Authorization header → Lua + htpasswd</text>
+      </svg>
+    </div>
+
+    <div class="callout decision"><strong>Why self-hosted instead of SaaS?</strong> Three reasons, each sufficient alone: (1) DATA SENSITIVITY: GenAI traces contain prompts and outputs. A customer support chatbot's traces contain customer PII. A legal AI's traces contain privileged documents. Sending this to ANY third party — even encrypted — is a non-starter for most enterprises. (2) COST: GenAI spans are 10-100× larger than traditional spans (prompt + context + output). At Datadog's per-GB pricing, a busy vLLM instance would cost $50K+/year just for trace ingestion. Self-hosted cost: a single EC2 instance. (3) COMPLIANCE: SOC 2, HIPAA, FedRAMP all have data residency requirements. Self-hosted satisfies them automatically. The deployment profiles (no-prometheus, vm-only, etc.) exist because many enterprises ALREADY have parts of the observability stack — forcing them to replace working infrastructure would increase friction, which is the opposite of the product's purpose.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-case">
+    <div class="sub">Deep Dive 4: Case Management & Knowledge Base (~6 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Observation without action is just expensive logging. The case management system is the bridge between "we see a problem" and "we fixed the problem." More importantly, each RESOLVED case feeds back into the knowledge base, making the remediation engine smarter over time. This is the reinforcement loop that creates compounding value — the system improves with every incident it helps resolve.</div>
+
+    <div class="schema"><span class="comment">── Case Lifecycle ──</span>
+
+<span class="pk">Case creation triggers:</span>
+  1. Automatic: anomaly detection fires on metric threshold breach
+  2. Automatic: quality evaluation score drops below baseline
+  3. Manual: engineer creates case from suspicious trace
+  4. Proactive: drift detection identifies slow degradation trend
+
+<span class="pk">Case states:</span>
+  DETECTED → TRIAGED → INVESTIGATING → REMEDIATION_SUGGESTED →
+  FIX_APPLIED → VERIFYING → RESOLVED
+
+<span class="pk">Case payload (what gets captured):</span>
+  {
+    case_id: "CASE-247",
+    created_at: "2026-02-14T10:30:00Z",
+    trigger: "anomaly_detection",
+    failure_class: "RETRIEVAL_DRIFT",
+
+    <span class="fk">context_snapshot</span>: {
+      traces: [...],           <span class="comment">// full spans from failure window</span>
+      prompts: [...],          <span class="comment">// actual prompts sent to model</span>
+      retrieved_chunks: [...], <span class="comment">// what the retriever returned</span>
+      model_outputs: [...],    <span class="comment">// what the model generated</span>
+      eval_scores: {           <span class="comment">// quality metrics at time of failure</span>
+        relevance: 0.42,       <span class="comment">// normally 0.85+</span>
+        coherence: 0.78,
+        groundedness: 0.51
+      },
+      infra_metrics: {
+        latency_p95: "2.3s",
+        gpu_utilization: "73%",
+        cache_hit_rate: "0.61"
+      }
+    },
+
+    <span class="fk">recent_changes</span>: [
+      {type: "config", detail: "embedding_index last refreshed 6 days ago"},
+      {type: "deploy", detail: "prompt template v3.4 deployed 2 days ago"},
+      {type: "data",   detail: "47 new documents added to knowledge base"}
+    ],
+
+    <span class="fk">remediation_suggestions</span>: [
+      {hypothesis: "Stale embedding index", confidence: 0.87,
+       action: "Re-index with new documents", effort: "30 min",
+       similar_case: "CASE-198"},
+      {hypothesis: "Prompt template regression", confidence: 0.34,
+       action: "Revert to template v3.3", effort: "5 min",
+       similar_case: null}
+    ],
+
+    <span class="fk">resolution</span>: {  <span class="comment">// filled by engineer after fix</span>
+      root_cause: "Stale embedding index",
+      fix_applied: "Re-indexed with 47 new documents",
+      verified_at: "2026-02-14T11:15:00Z",
+      verification_query: "avg(retrieval_relevance_score) > 0.80",
+      time_to_remediate: "45 minutes"
+    }
+  }
+
+<span class="pk">Knowledge base feedback loop:</span>
+
+  Resolved case → extract:
+    (failure_signature, root_cause, successful_remediation)
+  
+  Store as embedding in knowledge base.
+  
+  Next time a similar failure signature appears:
+    → Remediation engine retrieves this past case
+    → Suggests the same fix with higher confidence
+    → Links to past case for engineer reference
+  
+  Over time: the knowledge base becomes a bespoke, customer-specific
+  "playbook" of GenAI failure modes and proven fixes.
+  <span class="comment">This is the compounding value — the system gets smarter with each incident.</span></span>
+
+    <div class="callout decision"><strong>Why capture the full execution state, not just metrics?</strong> Metrics tell you WHAT happened (relevance score dropped). Traces tell you WHERE in the chain it happened (the retrieval step). But to know WHY, you need the actual DATA: what prompt was sent, what chunks were retrieved, what the model output. For traditional software, you rarely need the actual request/response payload to debug — the error code and stack trace are sufficient. For GenAI, the payload IS the bug. A hallucination isn't a stack trace error — it's a semantically wrong output that looks correct to the computer. You can only diagnose it by reading the actual prompt, context, and output. This is why the case captures the full state — and it's why data sovereignty is non-negotiable (this captured state is extraordinarily sensitive).</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Raw traces (spans)</td>
+        <td style="color:var(--accent-cyan)">OTel Collector → export</td>
+        <td>OTLP traces stored via configured exporter. 1-5KB per span (10-100x traditional due to prompts/outputs). Retained per policy.</td>
+      </tr>
+      <tr>
+        <td>Derived metrics</td>
+        <td style="color:var(--accent-cyan)">Prometheus → VictoriaMetrics</td>
+        <td>Auto-generated by spanmetrics connector. calls_total counter + latency histogram. Prometheus 15-day hot, VM 12-month cold.</td>
+      </tr>
+      <tr>
+        <td>Case data</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL (control plane)</td>
+        <td>Full case lifecycle: context snapshots, remediation suggestions, resolution details. Linked to trace IDs.</td>
+      </tr>
+      <tr>
+        <td>Knowledge base</td>
+        <td style="color:var(--accent-cyan)">Vector DB (control plane)</td>
+        <td>Resolved case embeddings. (failure_signature, root_cause, fix) tuples. Searched by cosine similarity for new incidents.</td>
+      </tr>
+      <tr>
+        <td>Audit trail</td>
+        <td style="color:var(--accent-cyan)">Append-only store + Hedera</td>
+        <td>Every case action, every remediation suggestion, every fix applied. Immutable. Anchored to Hedera for tamper evidence.</td>
+      </tr>
+      <tr>
+        <td>Configuration</td>
+        <td style="color:var(--accent-cyan)">Docker Compose .env</td>
+        <td>API keys, endpoints, profile selection. Template-generated at startup. Lives in customer infrastructure.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">OTel Collector crashes mid-ingestion</span><span class="mitigation">The Collector does NOT persist data. Traces being processed at the time of crash are LOST. This is documented and accepted — the Collector is stateless by design. Mitigation: (1) After restart, new traces flow normally within seconds. (2) Prometheus has its own TSDB — metrics already scraped are safe. (3) VictoriaMetrics has remote-written data safe. (4) For high-reliability needs: run multiple Collector instances behind a load balancer. The gap in metrics will appear as a brief flat line in Prometheus graphs.</span></div>
+    <div class="failure-row"><span class="scenario">VictoriaMetrics disk fills (12 months of data)</span><span class="mitigation">VictoriaMetrics compresses aggressively (10-20× vs. raw), but at high cardinality (many unique label combinations), storage grows faster. Mitigation: (1) Monitor disk usage via Collector internal metrics. (2) Adjust -retentionPeriod flag (reduce from 12 to 6 months). (3) Use recording rules in Prometheus to pre-aggregate high-cardinality metrics before remote-writing. (4) Reduce custom dimensions on the spanmetrics connector (fewer labels = lower cardinality).</span></div>
+    <div class="failure-row"><span class="scenario">Cardinality explosion in spanmetrics</span><span class="mitigation">If a span attribute used as a dimension has unbounded values (e.g., user_id with millions of unique values), the number of unique time series explodes → Prometheus OOM. This is the most common operational issue. Mitigation: (1) Only configure LOW-CARDINALITY dimensions (env, component, model — not user_id, request_id). (2) Monitor otelcol_exporter_sent_metric_points for abnormal growth. (3) Document cardinality guidance prominently.</span></div>
+    <div class="failure-row"><span class="scenario">Remediation engine suggests wrong fix</span><span class="mitigation">The engine SUGGESTS — it does not auto-apply. The engineer reviews and decides. If a suggestion is wrong: (1) engineer marks it as "not helpful" in the case, (2) this negative signal feeds back into the knowledge base (reduces confidence for this pattern), (3) the engineer's actual resolution becomes the new ground truth. The system learns from both correct AND incorrect suggestions.</span></div>
+    <div class="failure-row"><span class="scenario">Customer's existing Prometheus conflicts with Prove AI's</span><span class="mitigation">This is exactly why deployment profiles exist. If the customer already runs Prometheus: use no-prometheus profile (deploy only Envoy + Collector + VictoriaMetrics). Point customer's existing Prometheus at Collector's :8889 endpoint. No conflict — Prove AI adapts to existing infrastructure rather than replacing it.</span></div>
+    <div class="failure-row"><span class="scenario">Auth credentials leaked (API key exposed)</span><span class="mitigation">Envoy supports multiple comma-separated API keys. Rotate: (1) add a new key to ENVOY_API_KEYS, (2) update all clients to use the new key, (3) remove the old key, (4) restart Envoy. The old key immediately stops working. Because auth is centralized at the Envoy layer (not per-service), rotation is a single config change.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> The telemetry foundation scales with standard observability patterns: OTel Collector handles batching and sampling, Prometheus handles short-term queries, VictoriaMetrics handles long-term storage. The GenAI-specific challenge is span SIZE: traditional spans are ~500 bytes, GenAI spans are 1-5KB (containing prompts and outputs) — this is 10-100x more data volume. At 1M traces/day per customer, that's 1-5GB/day of trace data, which is manageable on a single VM. At 100M traces/day (enterprise scale), the OTel Collector needs horizontal scaling via a load balancer distributing across multiple collector instances, and VictoriaMetrics needs clustered mode with separate storage and query nodes. The control plane (proprietary) scales independently: the remediation engine's agentic reasoning is the most expensive operation but runs asynchronously per-case, not per-trace. A busy customer might generate 10-50 cases/day, each taking 30-60 seconds of LLM reasoning — well within a single service instance.</div>
+
+    <div class="sub">Why GenAI Observability ≠ Traditional Observability</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>Traditional (Datadog/Splunk)</th><th>GenAI (Prove AI)</th></tr></thead>
+      <tbody>
+        <tr><td>Failure mode</td><td>Deterministic: same input → same error</td><td>Nondeterministic: same input → different outputs, some correct, some not</td></tr>
+        <tr><td>Detection signal</td><td>Error rate, latency, HTTP status codes</td><td>Output quality scores, relevance, coherence, groundedness — semantic metrics, not just infra metrics</td></tr>
+        <tr><td>Root cause</td><td>Usually singular: a bug, a config error, a resource limit</td><td>Often emergent: interaction between prompt + context + model + retrieval. Multiple plausible causes.</td></tr>
+        <tr><td>Trace content</td><td>HTTP headers, status codes, stack traces (~500B)</td><td>Prompts, retrieved documents, model outputs, eval scores (~5-50KB per span). Sensitive data.</td></tr>
+        <tr><td>Fix verification</td><td>"Error rate returned to zero" — binary</td><td>"Output quality returned to baseline" — continuous, probabilistic</td></tr>
+        <tr><td>Debugging effort</td><td>80% observation, 20% remediation</td><td>20% observation, 80% remediation. The failure is obvious — the fix is not.</td></tr>
+        <tr><td>Hosting model</td><td>SaaS-first (send data to vendor)</td><td>Self-hosted-first (data cannot leave customer infra)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Open Source as Go-to-Market</div>
+    <ul class="items">
+      <li><strong>The wedge:</strong> The open-source telemetry stack (v0.1) is not the product — it's the ON-RAMP. It solves time-to-first-metric (the "easy problem" that teams defer). Once teams have telemetry flowing, they discover the "hard problem" (remediation) — which is where the proprietary platform (v1.0) delivers value.</li>
+      <li><strong>Trust before revenue:</strong> Self-hosted, open-source, zero-lock-in builds trust with security-conscious enterprises. They can inspect every line of code. This trust converts to paid adoption when the remediation engine (proprietary) proves its MTTR reduction.</li>
+      <li><strong>Community feedback loop:</strong> Open-source users report issues, contribute configurations for different AI frameworks, and surface GenAI-specific failure patterns. This community intelligence feeds the proprietary remediation engine's knowledge base.</li>
+      <li><strong>Lock-in avoidance as positioning:</strong> Whalen (CTO) explicitly warns against proprietary lock-in for GenAI telemetry. The market is early and evolving — getting locked into a vendor that charges per-GB when GenAI spans are 10-100× larger than traditional spans is an "expensive trap." Open standards (OTLP, PromQL) are the antidote.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Data sovereignty is the foundational security requirement. The entire telemetry stack runs in the customer's VPC with zero data egress — prompts and model outputs in traces are PII-adjacent and often contain customer data, privileged documents, or proprietary IP. The Envoy proxy handles authentication (API key or Basic Auth) at the ingestion boundary, preventing unauthorized telemetry submission. Within the customer's infrastructure: all data at rest is encrypted via volume-level encryption (EBS/disk encryption), data in transit uses TLS between all components. The control plane (Prove AI platform) accesses metrics via PromQL queries — it reads aggregated metrics, not raw traces. For audit compliance: every case action is logged to an immutable audit trail anchored to Hedera (distributed ledger), providing tamper-evidence for SOC 2 and HIPAA examinations. Deployment profiles allow customers to exclude components they already have (BYO Prometheus, BYO Collector), reducing attack surface.</div>
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: Prove AI addresses the 95% failure rate of GenAI pilots reaching production by tackling the 'hard 20%' — observability, governance, and debugging for nondeterministic systems. The architecture is two-layered: an OPEN-SOURCE TELEMETRY FOUNDATION (OTel Collector + Prometheus + VictoriaMetrics + Envoy) that self-hosts in the customer's infrastructure with zero data egress, and a PROPRIETARY CONTROL PLANE (dashboard, case management, agentic remediation) that turns telemetry into understanding and action. The key architectural innovation is the spanmetrics connector: 'instrument once, observe twice' — a single OTLP trace instrumentation path that automatically derives Prometheus metrics, eliminating the dual-SDK burden that makes teams defer observability. Data sovereignty is a REQUIREMENT, not a feature — GenAI traces contain prompts and outputs that are PII-adjacent and cannot leave the customer's environment. The remediation engine (v1.0) inverts the traditional observability paradigm: instead of telling engineers WHAT happened and leaving them to figure out WHY, it uses agentic reasoning over the full execution chain (prompts, retrieval, outputs, scores, config changes) to generate ranked root-cause hypotheses and concrete fix suggestions. Each resolved case feeds back into a customer-specific knowledge base, creating a reinforcement loop where the system gets smarter with every incident."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Automated Evaluation Pipeline</td><td>Move beyond relying on customer-defined eval scores. Build a built-in evaluation layer: LLM-as-judge for relevance/coherence/groundedness, factual consistency checking against retrieved context, and semantic drift detection. Runs as an additional OTel Collector processor that enriches spans with eval scores before they reach spanmetrics. These scores become first-class metric labels, enabling evaluation-based alerting out of the box.</td></tr>
+        <tr><td>Prompt Regression Testing</td><td>When a prompt template changes, automatically run the new template against a cached set of recent inputs, compare outputs to the previous template's outputs, and flag regressions BEFORE deployment. This is the GenAI equivalent of unit testing — but for nondeterministic systems. Architecture: a "shadow mode" that runs both old and new templates in parallel and compares.</td></tr>
+        <tr><td>Multi-Cluster Federation</td><td>Large enterprises run GenAI across multiple clusters/regions. A federation layer that aggregates metrics and cases across clusters while keeping raw telemetry in each cluster (data sovereignty). The control plane provides a unified view. Architecture: each cluster runs its own telemetry stack; the control plane queries across clusters via PromQL federation.</td></tr>
+        <tr><td>Cost Attribution</td><td>Map every LLM API call to its cost (tokens × price per token) and attribute costs to teams, features, or customers. Requires: token counting in the OTel span attributes, price lookup table per model provider, and aggregation by arbitrary dimensions. Output: "The RAG pipeline for customer support cost $4,200 last month, up 30% due to increased context window usage."</td></tr>
+        <tr><td>Compliance Report Generator</td><td>Auto-generate audit-ready reports: "In Q4, the AI system processed 2.3M requests, maintained a 94% quality score, experienced 12 incidents (avg MTTR: 43 min), and all telemetry remained within customer infrastructure." Pulls from: case management (incidents), metrics (quality scores), audit log (compliance trail). Output: PDF report suitable for SOC 2 auditors or board presentation.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> What makes Prove AI architecturally distinct is that it addresses the specific failure mode of GenAI adoption: not model incapability, but operational immaturity. The 95% of GenAI pilots that never reach production don't fail because the model is bad — they fail because teams skip the observability and governance work needed to make nondeterministic systems reliable in production. Prove AI makes that work EASIER rather than asking teams to do more. The open-source telemetry stack reduces time-to-first-metric from weeks to minutes. The remediation engine reduces time-to-root-cause from dozens of engineer-hours to minutes. And the self-hosted architecture eliminates the data sovereignty objection that blocks many enterprises from even starting. The product strategy mirrors the architecture: the open-source foundation earns trust and adoption (solve the easy problem first), and the proprietary remediation engine captures value (solve the hard problem that teams discover once they can see). As Whalen puts it: "The future belongs to organizations that stop pretending this is just software as usual, and start building the infrastructure that makes nondeterministic systems dependable." Prove AI is that infrastructure.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why the spanmetrics connector instead of dual instrumentation?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The spanmetrics connector is the architectural wedge that makes the entire system practical. Without it, customers would need to instrument their GenAI applications twice: once with OTel for traces and once with a Prometheus client for metrics. Dual instrumentation means double the maintenance burden, double the risk of configuration drift, and double the chance of one being forgotten. The spanmetrics connector eliminates this: you instrument once (OTLP traces), and the connector automatically derives Prometheus metrics (calls_total counter + latency histogram) for every span. The &quot;instrument once, observe twice&quot; pattern means the barrier to adoption is a single SDK integration. Once traces flow, metrics appear automatically — time-to-first-metric drops from days to minutes. The tradeoff: derived metrics have less flexibility than custom metrics (you can't create arbitrary counters), but for the observability use case, the auto-derived metrics (request rate, error rate, latency percentiles) cover 80%+ of what teams need.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does the remediation engine avoid hallucinating root causes?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The engine operates on STRUCTURED telemetry, not open-ended text — this significantly constrains the hallucination space. The analysis pipeline is: (1) Context Assembly gathers hard data: actual trace spans, metric values, config change timestamps — these are facts, not interpretations, (2) Failure Classification uses a fixed taxonomy of 8 GenAI failure types — the engine classifies into known categories, it doesn't invent new ones, (3) Root Cause Analysis scores candidates against factual evidence: temporal correlation (did a change precede the failure?), metric anomaly scores (is there a measurable degradation?), and similarity to resolved past cases. Each hypothesis has a confidence score — if the highest confidence is below 0.5, the engine says &quot;unable to determine root cause&quot; rather than guessing. (4) The knowledge base acts as grounding: suggestions are based on what actually worked for similar failures, not generated from scratch. The irony is using GenAI to debug GenAI — but the remediation engine's nondeterminism is constrained by the structured data it operates on.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Interview — Complete Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=DM+Sans:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0d11;--surface:#12161d;--surface-raised:#181d26;--surface-hover:#1e2430;--border:#252b36;--border-light:#2e3542;--text:#e8ecf1;--text-muted:#8c95a4;--text-dim:#5c6575;--accent:#58a6ff;--green:#3fb950;--orange:#d29922;--red:#f85149;--purple:#bc8cff;--cyan:#39d2c0;--yellow:#e3b341;--pink:#f778ba;--font-body:'DM Sans',sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* Grain overlay */
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;opacity:.03;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Header */
+.hero{padding:80px 48px 60px;max-width:1200px;margin:0 auto;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:48px;right:48px;height:1px;background:linear-gradient(90deg,transparent,var(--border-light) 20%,var(--border-light) 80%,transparent)}
+.hero-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-label::before{content:'';width:24px;height:1px;background:var(--accent)}
+.hero h1{font-family:var(--font-display);font-size:clamp(36px,5vw,56px);font-weight:900;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px;background:linear-gradient(135deg,var(--text) 0%,var(--text-muted) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:17px;color:var(--text-muted);max-width:640px;line-height:1.65}
+.hero-stats{display:flex;gap:32px;margin-top:32px;flex-wrap:wrap}
+.hero-stat{display:flex;flex-direction:column;gap:2px}
+.hero-stat .num{font-family:var(--font-mono);font-size:28px;font-weight:600;color:var(--yellow)}
+.hero-stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim)}
+
+/* Playbook CTA */
+.playbook-cta{margin:48px 48px 0;max-width:1104px;margin-left:auto;margin-right:auto;padding:0 48px}
+.playbook-card{display:flex;align-items:center;gap:24px;padding:24px 28px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,rgba(88,166,255,.04),rgba(188,140,255,.04));text-decoration:none;transition:all .2s ease;position:relative;overflow:hidden}
+.playbook-card:hover{border-color:var(--accent);background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(188,140,255,.08));transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.playbook-icon{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.playbook-text h3{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.playbook-text p{font-size:13.5px;color:var(--text-muted);line-height:1.5}
+.playbook-arrow{margin-left:auto;font-family:var(--font-mono);font-size:20px;color:var(--text-dim);transition:transform .2s,color .2s}
+.playbook-card:hover .playbook-arrow{transform:translateX(4px);color:var(--accent)}
+
+/* Category sections */
+.section{padding:40px 48px 0;max-width:1200px;margin:0 auto}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.section-line{height:1px;flex:1;background:var(--border)}
+.section-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;padding:4px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface)}
+
+/* Card grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;padding:20px;border:1px solid var(--border);border-radius:10px;background:var(--surface);text-decoration:none;transition:all .2s ease;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity .2s}
+.card:hover{border-color:var(--border-light);background:var(--surface-hover);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card:hover::before{opacity:1}
+.card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.card-name{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text)}
+.card-tag{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;padding:2px 7px;border-radius:4px;text-transform:uppercase;margin-left:auto;flex-shrink:0}
+.card-desc{font-size:13px;color:var(--text-muted);line-height:1.55;margin-bottom:14px;flex:1}
+.card-tension{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);line-height:1.5;padding:10px 12px;border-radius:6px;background:var(--surface-raised);border:1px solid var(--border)}
+.card-tension strong{color:var(--text-muted);font-weight:600}
+.card-meta{display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--text-dim)}
+.card-meta span{display:flex;align-items:center;gap:4px}
+
+/* Footer */
+.footer{padding:60px 48px 40px;max-width:1200px;margin:0 auto;text-align:center}
+.footer p{font-size:12px;color:var(--text-dim)}
+.footer a{color:var(--text-muted);text-decoration:none}
+
+@media(max-width:768px){
+  .hero{padding:48px 20px 40px}
+  .hero::after{left:20px;right:20px}
+  .playbook-cta{padding:0 20px}
+  .section{padding:32px 20px 0}
+  .grid{grid-template-columns:1fr}
+  .hero-stats{gap:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">Complete Collection</div>
+  <h1>System Design<br>Interview Prep</h1>
+  <p>30 full system designs, a 6-phase playbook, and 157 interview Q&A pairs. Each design is a 75-minute walkthrough with architecture diagrams, deep dives, failure analysis, and the hardest questions interviewers ask.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="num">28</span><span class="lbl">System Designs</span></div>
+    <div class="hero-stat"><span class="num">6</span><span class="lbl">Categories</span></div>
+    <div class="hero-stat"><span class="num">89</span><span class="lbl">Deep Dives</span></div>
+    <div class="hero-stat"><span class="num">145</span><span class="lbl">Interview Q&As</span></div>
+  </div>
+</div>
+
+<div class="playbook-cta">
+  <a class="playbook-card" href="system-design-playbook.html">
+    <div class="playbook-icon">📐</div>
+    <div class="playbook-text">
+      <h3>The 6-Phase Playbook</h3>
+      <p>The framework behind every design: Clarify → Estimate → High-Level → Deep Dives → Cross-Cutting → Wrap-Up. Read this first.</p>
+    </div>
+    <span class="playbook-arrow">→</span>
+  </a>
+  <a class="playbook-card" href="common-concepts.html" style="margin-top:12px;background:linear-gradient(135deg,rgba(57,210,192,.04),rgba(227,179,65,.04))">
+    <div class="playbook-icon" style="background:linear-gradient(135deg,var(--cyan),var(--green))">🧱</div>
+    <div class="playbook-text">
+      <h3>Common Concepts Q&A</h3>
+      <p>36 foundational questions every interviewer asks: SQL vs NoSQL, caching, sharding, CAP theorem, idempotency, circuit breakers, consistency patterns, and more.</p>
+    </div>
+    <span class="playbook-arrow">→</span>
+  </a>
+</div>
+
+<!-- MARKETPLACES & CONSUMER -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Marketplaces & Consumer Platforms</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-uber.html" style="--c:var(--green)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(63,185,80,.1);color:var(--green)">🚗</div>
+        <span class="card-name">Uber</span>
+        <span class="card-tag" style="background:rgba(63,185,80,.1);color:var(--green)">Marketplace</span>
+      </div>
+      <div class="card-desc">Real-time ride-hailing: geo-spatial matching, dynamic pricing, ETA prediction, and location tracking at 500K writes/sec.</div>
+      <div class="card-tension"><strong>Tension:</strong> 500K location writes/sec → in-memory spatial index with matching speed vs. trip completion reliability</div>
+    </a>
+    <a class="card" href="design-facebook.html" style="--c:var(--accent)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(88,166,255,.1);color:var(--accent)">👥</div>
+        <span class="card-name">Facebook</span>
+        <span class="card-tag" style="background:rgba(88,166,255,.1);color:var(--accent)">Social</span>
+      </div>
+      <div class="card-desc">Social graph + news feed: fan-out strategies, ranked feed generation, and the celebrity problem at 2B+ users.</div>
+      <div class="card-tension"><strong>Tension:</strong> 17:1 read:write ratio, celebrity fan-out → hybrid push/pull feed architecture</div>
+    </a>
+    <a class="card" href="design-amazon.html" style="--c:var(--orange)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(210,153,34,.1);color:var(--orange)">📦</div>
+        <span class="card-name">Amazon</span>
+        <span class="card-tag" style="background:rgba(210,153,34,.1);color:var(--orange)">E-Commerce</span>
+      </div>
+      <div class="card-desc">E-commerce at scale: product catalog, cart, checkout, multi-warehouse inventory, and the browse-vs-buy consistency split.</div>
+      <div class="card-tension"><strong>Tension:</strong> Browsing speed vs. buying correctness → two-level inventory (soft reserve + hard commit)</div>
+    </a>
+    <a class="card" href="design-youtube.html" style="--c:var(--red)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(248,81,73,.1);color:var(--red)">▶️</div>
+        <span class="card-name">YouTube</span>
+        <span class="card-tag" style="background:rgba(248,81,73,.1);color:var(--red)">Video</span>
+      </div>
+      <div class="card-desc">Video platform: upload transcoding pipeline, adaptive bitrate streaming, CDN architecture, and recommendation engine.</div>
+      <div class="card-tension"><strong>Tension:</strong> Petabytes of storage + 1000:1 watch:upload ratio → cost-optimized streaming with CDN edge caching</div>
+    </a>
+    <a class="card" href="design-weather.html" style="--c:var(--cyan)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(57,210,192,.1);color:var(--cyan)">🌦️</div>
+        <span class="card-name">Weather App</span>
+        <span class="card-tag" style="background:rgba(57,210,192,.1);color:var(--cyan)">Consumer</span>
+      </div>
+      <div class="card-desc">Weather platform: multi-source data ingestion, forecast blending &amp; precomputation, CDN-first serving at 200K QPS, and life-safety severe weather alerts.</div>
+      <div class="card-tension"><strong>Tension:</strong> 100,000:1 read:write ratio with extreme cacheability → precompute + CDN-first serving + separate alert push path</div>
+    </a>
+    <a class="card" href="design-netflix.html" style="--c:var(--red)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(248,81,73,.1);color:var(--red)">🎬</div>
+        <span class="card-name">Netflix</span>
+        <span class="card-tag" style="background:rgba(248,81,73,.1);color:var(--red)">Streaming</span>
+      </div>
+      <div class="card-desc">Global video streaming: Control Plane (AWS) vs. Data Plane (Open Connect CDN), per-title shot-based encoding with VMAF, ISP-embedded OCAs, and ML-driven personalization.</div>
+      <div class="card-tension"><strong>Tension:</strong> Browse latency (sub-200ms APIs) vs. stream quality (73 Tbps zero-rebuffer) → Control/Data plane separation with proactive CDN caching</div>
+    </a>
+  </div>
+</div>
+
+<!-- AGGREGATION PLATFORMS -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Aggregation Platforms</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-expedia.html" style="--c:var(--cyan)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(57,210,192,.1);color:var(--cyan)">✈️</div>
+        <span class="card-name">Expedia</span>
+        <span class="card-tag" style="background:rgba(57,210,192,.1);color:var(--cyan)">Travel</span>
+      </div>
+      <div class="card-desc">Travel booking aggregator: scatter-gather search across 100+ suppliers, pricing cache, and multi-supplier booking sagas.</div>
+      <div class="card-tension"><strong>Tension:</strong> Search speed (&lt;3s) vs. inventory freshness → two-phase: cached search + real-time booking</div>
+    </a>
+    <a class="card" href="design-zillow.html" style="--c:var(--green)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(63,185,80,.1);color:var(--green)">🏠</div>
+        <span class="card-name">Zillow</span>
+        <span class="card-tag" style="background:rgba(63,185,80,.1);color:var(--green)">Real Estate</span>
+      </div>
+      <div class="card-desc">Real estate data platform: 110M property graph, Zestimate ML pipeline, geo-spatial search, and Premier Agent marketplace.</div>
+      <div class="card-tension"><strong>Tension:</strong> Every home (110M) vs. just listings (2M) → comprehensive property graph + entity resolution</div>
+    </a>
+    <a class="card" href="design-google-search.html" style="--c:var(--yellow)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(227,179,65,.1);color:var(--yellow)">🔍</div>
+        <span class="card-name">Google Search</span>
+        <span class="card-tag" style="background:rgba(227,179,65,.1);color:var(--yellow)">Search</span>
+      </div>
+      <div class="card-desc">Web search engine: crawler, inverted index, PageRank, query serving, and ranking at billions of pages and 100K QPS.</div>
+      <div class="card-tension"><strong>Tension:</strong> Index freshness vs. serving speed → offline crawl/index plane + online query serving plane</div>
+    </a>
+  </div>
+</div>
+
+<!-- FINANCIAL SYSTEMS -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Financial Systems</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-robinhood.html" style="--c:var(--green)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(63,185,80,.1);color:var(--green)">📈</div>
+        <span class="card-name">Robinhood</span>
+        <span class="card-tag" style="background:rgba(63,185,80,.1);color:var(--green)">Trading</span>
+      </div>
+      <div class="card-desc">Retail brokerage: order execution, real-time market data streaming, portfolio management with consumer UX + institutional correctness.</div>
+      <div class="card-tension"><strong>Tension:</strong> Consumer traffic patterns + institutional correctness → separated read/write paths</div>
+    </a>
+    <a class="card" href="design-bofa.html" style="--c:var(--red)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(248,81,73,.1);color:var(--red)">🏦</div>
+        <span class="card-name">Bank of America</span>
+        <span class="card-tag" style="background:rgba(248,81,73,.1);color:var(--red)">Banking</span>
+      </div>
+      <div class="card-desc">Core banking: double-entry ledger, card authorization, check deposit, ACH/wire transfers, fraud detection with zero financial errors.</div>
+      <div class="card-tension"><strong>Tension:</strong> Real-time + batch coexistence → snapshot isolation with reconciliation as immune system</div>
+    </a>
+    <a class="card" href="design-stripe.html" style="--c:var(--accent)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(88,166,255,.1);color:var(--accent)">💳</div>
+        <span class="card-name">Stripe</span>
+        <span class="card-tag" style="background:rgba(88,166,255,.1);color:var(--accent)">Payments</span>
+      </div>
+      <div class="card-desc">Payment processing: card network integration, double-entry ledger, PCI-scoped card vault, idempotent API design, fraud detection, and T+2 settlement pipeline.</div>
+      <div class="card-tension"><strong>Tension:</strong> Speed (&lt;1s checkout) vs. correctness (every cent must balance) → sync auth + async settlement + append-only ledger</div>
+    </a>
+  </div>
+</div>
+
+<!-- INFRASTRUCTURE & OBSERVABILITY -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Infrastructure & Observability</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-cloudflare.html" style="--c:var(--orange)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(210,153,34,.1);color:var(--orange)">🌐</div>
+        <span class="card-name">Cloudflare</span>
+        <span class="card-tag" style="background:rgba(210,153,34,.1);color:var(--orange)">CDN/Security</span>
+      </div>
+      <div class="card-desc">Edge network: anycast routing, CDN caching, DDoS mitigation, WAF, and Workers serverless — all with zero centralized hot path.</div>
+      <div class="card-tension"><strong>Tension:</strong> Zero centralized hot path → anycast + edge-local processing at 330+ PoPs</div>
+    </a>
+    <a class="card" href="design-splunk.html" style="--c:var(--green)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(63,185,80,.1);color:var(--green)">🔎</div>
+        <span class="card-name">Splunk</span>
+        <span class="card-tag" style="background:rgba(63,185,80,.1);color:var(--green)">Log Search</span>
+      </div>
+      <div class="card-desc">Log analytics: schema-on-read indexing, time-bucketed inverted index, SPL query language, and 10 TB/day sustained ingestion.</div>
+      <div class="card-tension"><strong>Tension:</strong> Write-optimized ingestion vs. read-optimized search → time-bucketed inverted index</div>
+    </a>
+    <a class="card" href="design-datadog.html" style="--c:var(--purple)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(188,140,255,.1);color:var(--purple)">📊</div>
+        <span class="card-name">Datadog</span>
+        <span class="card-tag" style="background:rgba(188,140,255,.1);color:var(--purple)">Monitoring</span>
+      </div>
+      <div class="card-desc">Cloud monitoring: metrics, logs, and traces ingestion, time-series storage, dashboards, and alerting across millions of hosts.</div>
+      <div class="card-tension"><strong>Tension:</strong> Millions of data points/sec ingestion vs. sub-second dashboard queries → TSDB architecture</div>
+    </a>
+    <a class="card" href="design-docker.html" style="--c:var(--red)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(248,81,73,.1);color:var(--red)">🐳</div>
+        <span class="card-name">Docker</span>
+        <span class="card-tag" style="background:rgba(248,81,73,.1);color:var(--red)">Containers</span>
+      </div>
+      <div class="card-desc">Container platform: Linux namespaces + cgroups for process isolation, OverlayFS for layered copy-on-write storage, content-addressable registry for image distribution.</div>
+      <div class="card-tension"><strong>Tension:</strong> VM-level isolation vs. container-level speed → shared kernel with defense-in-depth security layers</div>
+    </a>
+    <a class="card" href="design-bitly.html" style="--c:var(--cyan)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(57,210,192,.1);color:var(--cyan)">🔗</div>
+        <span class="card-name">bit.ly</span>
+        <span class="card-tag" style="background:rgba(57,210,192,.1);color:var(--cyan)">URL Shortener</span>
+      </div>
+      <div class="card-desc">URL shortener: short code generation, &lt;10ms redirect hot path, click analytics pipeline, and 100:1 read:write ratio.</div>
+      <div class="card-tension"><strong>Tension:</strong> Redirect speed (&lt;10ms) vs. analytics accuracy → fast redirect path + async analytics pipeline</div>
+    </a>
+  </div>
+</div>
+
+<!-- DEVELOPER TOOLS -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Developer Tools</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-github.html" style="--c:var(--text-muted)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(140,149,164,.1);color:var(--text-muted)">🐙</div>
+        <span class="card-name">GitHub</span>
+        <span class="card-tag" style="background:rgba(140,149,164,.1);color:var(--text-muted)">DevTools</span>
+      </div>
+      <div class="card-desc">Code hosting: distributed Git at centralized scale, Spokes replication, pull requests, Actions CI/CD, and 200M+ repositories.</div>
+      <div class="card-tension"><strong>Tension:</strong> Distributed VCS → centralized hosting → Spokes replication for strong consistency</div>
+    </a>
+    <a class="card" href="design-claude-code.html" style="--c:var(--orange)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(210,153,34,.1);color:var(--orange)">🤖</div>
+        <span class="card-name">Claude Code</span>
+        <span class="card-tag" style="background:rgba(210,153,34,.1);color:var(--orange)">AI Agent</span>
+      </div>
+      <div class="card-desc">Agentic coding: autonomous code generation with permission classification, tool orchestration, and the autonomy-vs-safety tension.</div>
+      <div class="card-tension"><strong>Tension:</strong> Autonomy vs. safety → permission classification balances speed with trust</div>
+    </a>
+    <a class="card" href="design-coderabbit.html" style="--c:var(--purple)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(188,140,255,.1);color:var(--purple)">🐰</div>
+        <span class="card-name">CodeRabbit</span>
+        <span class="card-tag" style="background:rgba(188,140,255,.1);color:var(--purple)">Code Review</span>
+      </div>
+      <div class="card-desc">AI code review: model cascade, ephemeral sandbox execution, precision-over-recall philosophy for PR review at scale.</div>
+      <div class="card-tension"><strong>Tension:</strong> Context depth vs. review latency → model cascade + ephemeral sandboxes</div>
+    </a>
+    <a class="card" href="design-mcp.html" style="--c:var(--green)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(63,185,80,.1);color:var(--green)">🔌</div>
+        <span class="card-name">MCP</span>
+        <span class="card-tag" style="background:rgba(63,185,80,.1);color:var(--green)">Protocol</span>
+      </div>
+      <div class="card-desc">Model Context Protocol: JSON-RPC 2.0 wire format, host-client-server architecture, STDIO/HTTP transports, capability negotiation, and OAuth 2.1 auth.</div>
+      <div class="card-tension"><strong>Tension:</strong> M×N integration problem → M+N via universal protocol with host-mediated security boundary</div>
+    </a>
+    <a class="card" href="design-a2a.html" style="--c:var(--cyan)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(57,210,192,.1);color:var(--cyan)">🤝</div>
+        <span class="card-name">A2A</span>
+        <span class="card-tag" style="background:rgba(57,210,192,.1);color:var(--cyan)">Protocol</span>
+      </div>
+      <div class="card-desc">Agent-to-Agent Protocol: Agent Cards for discovery, task-oriented lifecycle, multimodal Parts, SSE streaming, and signed-card trust model for cross-org agent collaboration.</div>
+      <div class="card-tension"><strong>Tension:</strong> Opaque agent interop across frameworks → task lifecycle + Agent Cards + protobuf-first multi-binding design</div>
+    </a>
+    <a class="card" href="design-crewai.html" style="--c:var(--orange)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(210,153,34,.1);color:var(--orange)">👥</div>
+        <span class="card-name">CrewAI</span>
+        <span class="card-tag" style="background:rgba(210,153,34,.1);color:var(--orange)">Agent Framework</span>
+      </div>
+      <div class="card-desc">Multi-agent orchestration: role-based agents with backstories, Crews for autonomous collaboration, Flows for deterministic control, and the autonomy-vs-control dial.</div>
+      <div class="card-tension"><strong>Tension:</strong> Agent autonomy vs. production determinism → Flows (deterministic backbone) + Crews (intelligence where it matters)</div>
+    </a>
+    <a class="card" href="design-langgraph.html" style="--c:var(--purple)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(188,140,255,.1);color:var(--purple)">🔀</div>
+        <span class="card-name">LangGraph</span>
+        <span class="card-tag" style="background:rgba(188,140,255,.1);color:var(--purple)">Agent Runtime</span>
+      </div>
+      <div class="card-desc">Graph-based agent runtime: Pregel/BSP execution with cyclic graphs, channel-based state with reducers, checkpointing for durability, and first-class human-in-the-loop.</div>
+      <div class="card-tension"><strong>Tension:</strong> Low abstraction + maximum control → Pregel super-steps give deterministic parallelism, checkpointing, and streaming for free</div>
+    </a>
+  </div>
+</div>
+
+<!-- IDENTITY & SECURITY -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">Identity & Security</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-okta.html" style="--c:var(--accent)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(88,166,255,.1);color:var(--accent)">🔐</div>
+        <span class="card-name">Okta</span>
+        <span class="card-tag" style="background:rgba(88,166,255,.1);color:var(--accent)">Identity</span>
+      </div>
+      <div class="card-desc">Identity platform: SSO/SAML/OIDC federation, MFA orchestration, multi-tenant isolation, and the trust platform paradox.</div>
+      <div class="card-tension"><strong>Tension:</strong> Absolute security with maximum availability → SECURITY > AVAILABILITY > CONSISTENCY > LATENCY</div>
+    </a>
+  </div>
+</div>
+
+<!-- AI OBSERVABILITY -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-label">AI Observability</span>
+    <span class="section-line"></span>
+  </div>
+  <div class="grid">
+    <a class="card" href="design-proveai.html" style="--c:var(--pink)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(247,120,186,.1);color:var(--pink)">🧠</div>
+        <span class="card-name">Prove AI</span>
+        <span class="card-tag" style="background:rgba(247,120,186,.1);color:var(--pink)">GenAI Obs</span>
+      </div>
+      <div class="card-desc">GenAI observability: trace-to-metric conversion, agentic remediation engine, self-hosted data sovereignty, and case management for nondeterministic systems.</div>
+      <div class="card-tension"><strong>Tension:</strong> Observing nondeterminism vs. remediating it → two-phase: telemetry foundation + agentic remediation</div>
+    </a>
+    <a class="card" href="design-mem0.html" style="--c:var(--cyan)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(57,210,192,.1);color:var(--cyan)">🧬</div>
+        <span class="card-name">Mem0</span>
+        <span class="card-tag" style="background:rgba(57,210,192,.1);color:var(--cyan)">AI Memory</span>
+      </div>
+      <div class="card-desc">AI memory layer: LLM-based fact extraction, hybrid vector + graph datastore, memory consolidation (dedup/conflict resolution), and multi-tenant retrieval under 50ms.</div>
+      <div class="card-tension"><strong>Tension:</strong> High-quality extraction (expensive LLM calls) vs. low-latency retrieval → async write plane + sync read plane</div>
+    </a>
+    <a class="card" href="design-openfga.html" style="--c:var(--purple)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(188,140,255,.1);color:var(--purple)">🔐</div>
+        <span class="card-name">OpenFGA / Zanzibar</span>
+        <span class="card-tag" style="background:rgba(188,140,255,.1);color:var(--purple)">Authorization</span>
+      </div>
+      <div class="card-desc">Google's global authorization system: relationship-based access control (ReBAC) via tuples, graph traversal check resolution, zookie consistency protocol, Leopard indexing for nested groups, and multi-layer caching at 10M+ checks/sec.</div>
+      <div class="card-tension"><strong>Tension:</strong> Consistency vs. latency — zookies let apps specify freshness per-request, solving the "new enemy" problem while serving most checks from stale cache</div>
+    </a>
+    <a class="card" href="design-bugbot.html" style="--c:var(--green)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(63,185,80,.1);color:var(--green)">🐛</div>
+        <span class="card-name">Cursor BugBot</span>
+        <span class="card-tag" style="background:rgba(63,185,80,.1);color:var(--green)">AI Code Review</span>
+      </div>
+      <div class="card-desc">Agentic AI code reviewer at 2M+ PRs/month: V1 pipeline (8 parallel passes, randomized diff order, majority voting, validator models) → V2 agentic loop (dynamic tool use, aggressive prompting), resolution rate hill-climbing, and Autofix remediation.</div>
+      <div class="card-tension"><strong>Tension:</strong> Precision vs. coverage — false positives erode trust faster than false negatives, so the entire architecture optimizes for high-confidence bugs (70% resolution rate)</div>
+    </a>
+    <a class="card" href="design-genai-arch.html" style="--c:var(--yellow)">
+      <span style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)"></span>
+      <div class="card-top">
+        <div class="card-icon" style="background:rgba(227,179,65,.1);color:var(--yellow)">🏗️</div>
+        <span class="card-name">GenAI Architecture</span>
+        <span class="card-tag" style="background:rgba(227,179,65,.1);color:var(--yellow)">Reference Arch</span>
+      </div>
+      <div class="card-desc">Universal 5-layer blueprint: intake (parser flywheel), generation (composable prompts, model router), evaluation (traces, LLM-as-Judge, golden sets), 5-tier cognitive memory + knowledge graphs + GraphRAG, and adaptive orchestration.</div>
+      <div class="card-tension"><strong>Tension:</strong> Flexibility vs. complexity — progressive enhancement fills architecture slots incrementally; design must be complete from day one but implementation evolves week by week</div>
+    </a>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Built for system design interview preparation · 30 designs × 75 minutes each</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Production GenAI Architecture — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout.warn::before{content:'⚠️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Production GenAI Architecture</h1>
+    <span>Universal 5-Layer Blueprint · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-intake">Intake &amp; Parser Flywheel</a>
+  <a href="#dd-generation">Generation Engine</a>
+  <a href="#dd-eval">Evaluation Layer</a>
+  <a href="#dd-memory">Memory &amp; Knowledge Graphs</a>
+  <a href="#dd-orchestration">Orchestration &amp; Agents</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#data-model">Data Model</a>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#anti-patterns">Anti-Patterns</a>
+  <a href="#patterns">Pattern Catalog</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a <strong>universal, future-proof architecture for production GenAI systems</strong>. The core insight: every production LLM system is a data transformation pipeline with an LLM as one component — not a magic box you throw problems at. The architecture has five layers — Intake, Generation, Evaluation, Memory &amp; Learning, and Orchestration — each independently swappable. The system must handle structured intake from any modality, composable prompt pipelines, multi-speed evaluation with LLM-as-Judge, five-tier cognitive memory, knowledge graphs with GraphRAG, hybrid retrieval, and adaptive agent orchestration. The architecture survives model changes; the components evolve."</div>
+
+    <div class="callout tip">The hospital analogy: no hospital lets a single doctor handle intake, diagnosis, treatment, quality assurance, and record-keeping simultaneously. <strong>Layer 1</strong> is triage (unstructured → structured). <strong>Layer 2</strong> is the doctor (LLM diagnosis). <strong>Layer 3</strong> is the second opinion (evaluation). <strong>Layer 4</strong> is the patient chart (memory). <strong>Layer 5</strong> is the administrator routing complex cases (orchestration).</div>
+
+    <div class="sub">The Three Laws of Future-Proof GenAI</div>
+    <ul class="items">
+      <li><strong>Law 1 — Separate Concerns:</strong> The LLM is a reasoning engine, not the whole system. Retrieval, evaluation, memory, and orchestration are independent, swappable layers.</li>
+      <li><strong>Law 2 — Measure Everything:</strong> If you can't evaluate it, you can't improve it. Traces, evals, and golden sets are first-class citizens.</li>
+      <li><strong>Law 3 — Design for Replacement:</strong> Any model, any prompt, any component should be replaceable without rewriting the system.</li>
+    </ul>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What domain?</strong> → Domain-agnostic reference architecture. We'll use code review, document intelligence, and customer support as concrete instantiations.</li>
+      <li><strong>Input modalities?</strong> → All: text, PDFs, images, code diffs, audio. The Intake Layer normalizes chaos into structured representations before any LLM call.</li>
+      <li><strong>How do we handle model changes?</strong> → Model Abstraction Layer: never call a model directly. A router selects the optimal model per-request based on complexity, latency, cost, and features.</li>
+      <li><strong>How does the system improve over time?</strong> → Experience Database records every strategy + outcome. Episodic memory recalls what worked. Weekly self-improvement cycles auto-fix weak spots.</li>
+      <li><strong>What about retrieval?</strong> → Hybrid: vector search (semantic) + knowledge graph traversal (relationships) + keyword/BM25 (exact match). Reciprocal Rank Fusion merges results. GraphRAG for local entity queries and global thematic analysis.</li>
+      <li><strong>How do we evaluate at scale?</strong> → Five speeds: (1) schema validation on every request, (2) automated metrics, (3) LLM-as-Judge on samples, (4) golden set regression on every deploy, (5) human expert review weekly.</li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>5-layer universal architecture blueprint</td><td>Specific model training / fine-tuning</td></tr>
+        <tr><td>Intake: unstructured → structured + parser flywheel</td><td>MLOps / model deployment infrastructure</td></tr>
+        <tr><td>Generation: composable prompts + model router</td><td>Specific vector DB product selection</td></tr>
+        <tr><td>Evaluation: traces + LLM-as-Judge + golden sets</td><td>Prompt engineering details per domain</td></tr>
+        <tr><td>5-tier cognitive memory architecture</td><td>RLHF / preference optimization</td></tr>
+        <tr><td>Knowledge Graphs + GraphRAG + hybrid retrieval</td><td>Compliance/regulatory frameworks</td></tr>
+        <tr><td>Orchestration: adaptive complexity + agents</td><td>Frontend/UX design</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision">The defining tension: <strong>flexibility vs. complexity</strong>. A future-proof system requires abstraction layers, eval infrastructure, memory tiers, and observability from day one. But you must ship incrementally — Week 1 is "prompt → LLM → validate → output." The architecture has slots for all components; the implementation fills them progressively.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Numbers for a mid-scale production GenAI system — say a code review or document intelligence platform. I'll estimate per-request costs, latency budgets, and storage for memory and knowledge graph layers."</div>
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Requests / Day</div><div class="value">10K–500K</div><div class="detail">Internal tool: ~10K. SaaS platform: ~500K. Burst patterns during business hours.</div></div>
+      <div class="est-card"><div class="label">Latency Budget / Request</div><div class="value">2–10s</div><div class="detail">Intake: ~200ms. Retrieval: ~300ms. LLM: 1–6s (dominates). Evaluation: ~200ms. Total p50: ~2.5s.</div></div>
+      <div class="est-card"><div class="label">Cost / Request</div><div class="value">$0.01–0.10</div><div class="detail">Simple (cheap model): $0.01. Complex (frontier + RAG + refinement): $0.05–0.10. Agent loops: $0.20+.</div></div>
+      <div class="est-card"><div class="label">Context Window Budget</div><div class="value">128K tokens</div><div class="detail">System prompt ~2K. Core memory ~2K. Conversation ~8K. Retrieved context ~20K. Response ~20K. Buffer: ~76K.</div></div>
+      <div class="est-card"><div class="label">Memory Store / User / Year</div><div class="value">~1 GB</div><div class="detail">Core memory: ~2KB always loaded. Archival: ~10KB/session × 250/yr. Episodic: ~5KB × 1K episodes. KG: varies.</div></div>
+      <div class="est-card"><div class="label">Knowledge Graph</div><div class="value">100K–10M nodes</div><div class="detail">Enterprise codebase: ~100K entities. Document corpus: ~1M. Community summaries: 100–500 clusters × 3 hierarchy levels.</div></div>
+      <div class="est-card"><div class="label">Golden Set Size</div><div class="value">100–1000 cases</div><div class="detail">Cover edge, common, adversarial cases. Expert-validated. Run on every deploy. Grows from production failures.</div></div>
+      <div class="est-card"><div class="label">Eval Cost / Deploy</div><div class="value">$5–50</div><div class="detail">100 cases × $0.05 LLM-as-Judge = $5. 1000 cases = $50. Cheap insurance against regressions.</div></div>
+    </div>
+    <div class="callout tip"><strong>Parser Flywheel economics:</strong> Week 1: 100% LLM-parsed ($0.05/doc). Month 3: 90% deterministic parser ($0.0001/doc), 10% LLM fallback. Month 6: 95%/5%. The more you process, the cheaper it gets.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Every GenAI system maps to five layers. They communicate through typed schemas — never raw strings. Each layer is independently deployable, testable, and replaceable. Data flows bottom-up with a feedback loop from orchestration back to generation and from memory into context assembly."</div>
+
+    <!-- ── SVG: Universal 5-Layer Architecture ── -->
+    <div class="svg-diagram">
+      <span class="dia-title">Universal 5-Layer Architecture</span>
+      <svg viewBox="0 0 780 580" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="a1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="a2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+          <marker id="a3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#bc8cff" stroke-width="1"/></marker>
+        </defs>
+        <!-- Layer 1: Intake -->
+        <rect x="40" y="450" width="700" height="68" rx="8" fill="rgba(227,179,65,.04)" stroke="rgba(227,179,65,.2)"/>
+        <text x="54" y="468" fill="#e3b341" font-size="10" font-weight="700" letter-spacing=".03em">LAYER 1 — INTAKE</text>
+        <text x="192" y="468" fill="#6e7681" font-size="8">Unstructured → Structured</text>
+        <rect x="54" y="478" width="90" height="26" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="99" y="495" fill="#e3b341" font-size="7" text-anchor="middle">Raw Input</text>
+        <rect x="154" y="478" width="90" height="26" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="199" y="495" fill="#e3b341" font-size="7" text-anchor="middle">Type Classifier</text>
+        <rect x="254" y="478" width="100" height="26" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="304" y="495" fill="#e3b341" font-size="7" text-anchor="middle">Schema Detector</text>
+        <rect x="364" y="478" width="100" height="26" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="414" y="495" fill="#e3b341" font-size="7" text-anchor="middle">Parser / LLM</text>
+        <rect x="474" y="478" width="90" height="26" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="519" y="495" fill="#e3b341" font-size="7" text-anchor="middle">Validator</text>
+        <rect x="574" y="478" width="150" height="26" rx="4" fill="rgba(227,179,65,.08)" stroke="#e3b341"/>
+        <text x="649" y="495" fill="#e3b341" font-size="7" text-anchor="middle" font-weight="600">Structured Representation</text>
+        <!-- Layer 2: Generation -->
+        <rect x="40" y="358" width="700" height="72" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.15)"/>
+        <text x="54" y="376" fill="#3fb950" font-size="10" font-weight="700" letter-spacing=".03em">LAYER 2 — GENERATION</text>
+        <text x="210" y="376" fill="#6e7681" font-size="8">Composable Pipelines</text>
+        <rect x="54" y="386" width="90" height="28" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="99" y="404" fill="#3fb950" font-size="7" text-anchor="middle">Context Asm</text>
+        <rect x="154" y="386" width="95" height="28" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="201" y="404" fill="#3fb950" font-size="7" text-anchor="middle">Prompt Pipeline</text>
+        <rect x="259" y="386" width="100" height="28" rx="4" fill="rgba(63,185,80,.06)" stroke="#3fb950"/>
+        <text x="309" y="400" fill="#3fb950" font-size="7" text-anchor="middle" font-weight="600">Model Router</text>
+        <text x="309" y="410" fill="#6e7681" font-size="6" text-anchor="middle">→ LLM Call</text>
+        <rect x="369" y="386" width="95" height="28" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="416" y="404" fill="#3fb950" font-size="7" text-anchor="middle">Output Parser</text>
+        <rect x="474" y="386" width="85" height="28" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="516" y="404" fill="#3fb950" font-size="7" text-anchor="middle">Guardrails</text>
+        <rect x="569" y="386" width="155" height="28" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="646" y="400" fill="#3fb950" font-size="7" text-anchor="middle">Refinement Loop</text>
+        <text x="646" y="410" fill="#6e7681" font-size="6" text-anchor="middle">Generate → Critique → Revise</text>
+        <!-- Layer 3: Evaluation -->
+        <rect x="40" y="276" width="700" height="62" rx="8" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.12)"/>
+        <text x="54" y="294" fill="#f85149" font-size="10" font-weight="700" letter-spacing=".03em">LAYER 3 — EVALUATION</text>
+        <text x="208" y="294" fill="#6e7681" font-size="8">Traces, Judges, Golden Sets</text>
+        <rect x="54" y="302" width="120" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="114" y="318" fill="#f85149" font-size="7" text-anchor="middle">Structural Validators</text>
+        <rect x="184" y="302" width="110" height="24" rx="4" fill="rgba(248,81,73,.06)" stroke="#f85149"/>
+        <text x="239" y="318" fill="#f85149" font-size="7" text-anchor="middle" font-weight="600">LLM-as-Judge</text>
+        <rect x="304" y="302" width="110" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="359" y="318" fill="#f85149" font-size="7" text-anchor="middle">Trace Collector</text>
+        <rect x="424" y="302" width="110" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="479" y="318" fill="#f85149" font-size="7" text-anchor="middle">Golden Set Runner</text>
+        <rect x="544" y="302" width="110" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="599" y="318" fill="#f85149" font-size="7" text-anchor="middle">Human Feedback</text>
+        <!-- Layer 4: Memory & Knowledge -->
+        <rect x="40" y="170" width="700" height="86" rx="8" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.12)"/>
+        <text x="54" y="188" fill="#bc8cff" font-size="10" font-weight="700" letter-spacing=".03em">LAYER 4 — MEMORY &amp; KNOWLEDGE</text>
+        <text x="278" y="188" fill="#6e7681" font-size="8">5-Tier Cognitive + Knowledge Graph</text>
+        <rect x="54" y="196" width="75" height="44" rx="4" fill="rgba(248,81,73,.05)" stroke="#f85149" stroke-width=".6"/>
+        <text x="91" y="213" fill="#f85149" font-size="6.5" text-anchor="middle" font-weight="600">Working</text>
+        <text x="91" y="223" fill="#6e7681" font-size="5.5" text-anchor="middle">Context Window</text>
+        <text x="91" y="234" fill="#6e7681" font-size="5" text-anchor="middle">128K tokens</text>
+        <rect x="137" y="196" width="75" height="44" rx="4" fill="rgba(232,116,79,.05)" stroke="#E8744F" stroke-width=".6"/>
+        <text x="174" y="213" fill="#E8744F" font-size="6.5" text-anchor="middle" font-weight="600">Short-Term</text>
+        <text x="174" y="223" fill="#6e7681" font-size="5.5" text-anchor="middle">Session Buffer</text>
+        <text x="174" y="234" fill="#6e7681" font-size="5" text-anchor="middle">1 session</text>
+        <rect x="220" y="196" width="75" height="44" rx="4" fill="rgba(227,179,65,.05)" stroke="#e3b341" stroke-width=".6"/>
+        <text x="257" y="213" fill="#e3b341" font-size="6.5" text-anchor="middle" font-weight="600">Long-Term</text>
+        <text x="257" y="223" fill="#6e7681" font-size="5.5" text-anchor="middle">Core + Archival</text>
+        <text x="257" y="234" fill="#6e7681" font-size="5" text-anchor="middle">Permanent</text>
+        <rect x="303" y="196" width="75" height="44" rx="4" fill="rgba(188,140,255,.05)" stroke="#bc8cff" stroke-width=".6"/>
+        <text x="340" y="213" fill="#bc8cff" font-size="6.5" text-anchor="middle" font-weight="600">Episodic</text>
+        <text x="340" y="223" fill="#6e7681" font-size="5.5" text-anchor="middle">Experience DB</text>
+        <text x="340" y="234" fill="#6e7681" font-size="5" text-anchor="middle">Append-only</text>
+        <rect x="386" y="196" width="75" height="44" rx="4" fill="rgba(88,166,255,.05)" stroke="#58a6ff" stroke-width=".6"/>
+        <text x="423" y="213" fill="#58a6ff" font-size="6.5" text-anchor="middle" font-weight="600">Procedural</text>
+        <text x="423" y="223" fill="#6e7681" font-size="5.5" text-anchor="middle">Learned Skills</text>
+        <text x="423" y="234" fill="#6e7681" font-size="5" text-anchor="middle">Versioned</text>
+        <rect x="475" y="196" width="250" height="44" rx="4" fill="rgba(57,210,192,.05)" stroke="#39d2c0" stroke-width=".8"/>
+        <text x="600" y="211" fill="#39d2c0" font-size="7" text-anchor="middle" font-weight="600">Knowledge Graph + GraphRAG + Hybrid Retrieval</text>
+        <text x="600" y="223" fill="#6e7681" font-size="6" text-anchor="middle">Entities · Relationships · Communities</text>
+        <text x="600" y="234" fill="#6e7681" font-size="6" text-anchor="middle">Vector + Graph Traversal + BM25 → RRF Re-rank</text>
+        <!-- Layer 5: Orchestration -->
+        <rect x="40" y="90" width="700" height="62" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)"/>
+        <text x="54" y="108" fill="#58a6ff" font-size="10" font-weight="700" letter-spacing=".03em">LAYER 5 — ORCHESTRATION</text>
+        <text x="228" y="108" fill="#6e7681" font-size="8">Adaptive Complexity</text>
+        <rect x="54" y="116" width="120" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="114" y="132" fill="#58a6ff" font-size="7" text-anchor="middle">Router / Planner</text>
+        <rect x="184" y="116" width="140" height="24" rx="4" fill="rgba(88,166,255,.06)" stroke="#58a6ff"/>
+        <text x="254" y="132" fill="#58a6ff" font-size="7" text-anchor="middle" font-weight="600">Complexity Estimator</text>
+        <rect x="334" y="116" width="110" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="389" y="132" fill="#58a6ff" font-size="7" text-anchor="middle">Workflow Engine</text>
+        <rect x="454" y="116" width="100" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="504" y="132" fill="#58a6ff" font-size="7" text-anchor="middle">Agent Runtime</text>
+        <rect x="564" y="116" width="110" height="24" rx="4" fill="#161b22" stroke="#2d333b"/>
+        <text x="619" y="132" fill="#58a6ff" font-size="7" text-anchor="middle">Human Escalation</text>
+        <!-- Flow arrows between layers -->
+        <line x1="390" y1="447" x2="390" y2="433" stroke="#6e7681" stroke-width=".8" marker-end="url(#a1)"/>
+        <line x1="390" y1="355" x2="390" y2="341" stroke="#6e7681" stroke-width=".8" marker-end="url(#a1)"/>
+        <line x1="390" y1="273" x2="390" y2="259" stroke="#6e7681" stroke-width=".8" marker-end="url(#a1)"/>
+        <line x1="390" y1="167" x2="390" y2="155" stroke="#6e7681" stroke-width=".8" marker-end="url(#a1)"/>
+        <!-- Feedback: Orchestration → Generation -->
+        <path d="M 740 128 L 755 128 L 755 400 L 728 400" fill="none" stroke="#3fb950" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#a2)"/>
+        <text x="758" y="268" fill="#3fb950" font-size="6" transform="rotate(90,758,268)" text-anchor="middle">feedback loop</text>
+        <!-- Memory → Generation context injection -->
+        <path d="M 40 218 L 25 218 L 25 400 L 50 400" fill="none" stroke="#bc8cff" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#a3)"/>
+        <text x="16" y="310" fill="#bc8cff" font-size="6" transform="rotate(-90,16,310)" text-anchor="middle">context injection</text>
+        <!-- Input/Output labels -->
+        <rect x="310" y="535" width="160" height="22" rx="5" fill="rgba(227,179,65,.06)" stroke="#e3b341"/>
+        <text x="390" y="550" fill="#e3b341" font-size="8" text-anchor="middle" font-weight="600">Raw User Input</text>
+        <line x1="390" y1="535" x2="390" y2="521" stroke="#e3b341" stroke-width="1" marker-end="url(#a1)"/>
+        <rect x="310" y="50" width="160" height="22" rx="5" fill="rgba(63,185,80,.06)" stroke="#3fb950"/>
+        <text x="390" y="65" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">Response to User</text>
+        <line x1="390" y1="87" x2="390" y2="75" stroke="#3fb950" stroke-width="1" marker-end="url(#a2)"/>
+      </svg>
+    </div>
+
+    <div class="sub">The Abstraction Sandwich</div>
+    <div class="schema"><span class="comment">// The architecture that protects you from model churn</span>
+
+┌──────────────────────────────────────────────┐
+│  <span class="table-name">APPLICATION LOGIC</span> (Yours forever)              │
+│  Business rules, workflows, domain knowledge │
+├──────────────────────────────────────────────┤
+│  <span class="pk">ABSTRACTION LAYER</span> (Your insurance)               │
+│  Model router, prompt assembler, eval runner │
+├──────────────────────────────────────────────┤
+│  <span class="fk">FOUNDATION LAYER</span> (Will change)                  │
+│  Specific models, APIs, embedding services   │
+└──────────────────────────────────────────────┘</div>
+
+    <div class="sub">Key Architectural Decisions</div>
+    <table>
+      <thead><tr><th>Decision</th><th>Choice</th><th>Why Not Alternative</th></tr></thead>
+      <tbody>
+        <tr><td>Model coupling</td><td>Abstraction Layer (never call directly)</td><td>Direct API calls → vendor lock-in; model deprecations break production</td></tr>
+        <tr><td>Prompt management</td><td>Composable versioned components</td><td>Monolithic prompts are untestable; can't identify which piece regressed</td></tr>
+        <tr><td>Output format</td><td>Schema-first (Pydantic/JSON Schema)</td><td>Free-form text is unparseable; format varies by model version</td></tr>
+        <tr><td>Retrieval</td><td>Hybrid (vector + graph + keyword)</td><td>Vector-only misses exact matches and relationships; keyword-only misses semantics</td></tr>
+        <tr><td>Memory</td><td>5-tier cognitive model</td><td>Flat store can't differentiate critical facts from stale trivia</td></tr>
+        <tr><td>Memory control</td><td>Self-managed (LLM decides via tools)</td><td>External-only management misses semantic nuance of what's worth remembering</td></tr>
+        <tr><td>Evaluation</td><td>Multi-speed (schema → metrics → judge → golden → human)</td><td>Single eval is either too slow or misses quality issues</td></tr>
+        <tr><td>Orchestration</td><td>Adaptive complexity escalation</td><td>Always-agent wastes cost on simple queries; always-pipeline under-serves complex ones</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- ── DD1: Intake Layer ── -->
+    <div class="sub" id="dd-intake">Deep Dive 1 — Intake Layer &amp; Parser Flywheel (6 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Transform raw chaos (PDFs, code diffs, images, audio) into typed, validated, structured representations before any LLM call.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Intake: Parse → Classify → Schema → Validate + Parser Flywheel</span>
+      <svg viewBox="0 0 780 240" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs><marker id="i1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker></defs>
+        <!-- Main pipeline -->
+        <rect x="40" y="12" width="90" height="32" rx="5" fill="rgba(227,179,65,.06)" stroke="#e3b341"/>
+        <text x="85" y="32" fill="#e3b341" font-size="8" text-anchor="middle" font-weight="600">Raw Input</text>
+        <line x1="130" y1="28" x2="150" y2="28" stroke="#6e7681" marker-end="url(#i1)"/>
+        <rect x="150" y="12" width="100" height="32" rx="5" fill="#161b22" stroke="#2d333b"/>
+        <text x="200" y="28" fill="#e3b341" font-size="7" text-anchor="middle">Type Classifier</text>
+        <text x="200" y="38" fill="#6e7681" font-size="5.5" text-anchor="middle">Text · Doc · Code · Image · Audio</text>
+        <line x1="250" y1="28" x2="270" y2="28" stroke="#6e7681" marker-end="url(#i1)"/>
+        <rect x="270" y="12" width="100" height="32" rx="5" fill="#161b22" stroke="#2d333b"/>
+        <text x="320" y="28" fill="#e3b341" font-size="7" text-anchor="middle">Schema Detector</text>
+        <text x="320" y="38" fill="#6e7681" font-size="5.5" text-anchor="middle">Known? → Map. Unknown? → LLM infer</text>
+        <line x1="370" y1="28" x2="390" y2="28" stroke="#6e7681" marker-end="url(#i1)"/>
+        <rect x="390" y="12" width="100" height="32" rx="5" fill="#161b22" stroke="#2d333b"/>
+        <text x="440" y="28" fill="#e3b341" font-size="7" text-anchor="middle">Parser</text>
+        <text x="440" y="38" fill="#6e7681" font-size="5.5" text-anchor="middle">Deterministic or LLM fallback</text>
+        <line x1="490" y1="28" x2="510" y2="28" stroke="#6e7681" marker-end="url(#i1)"/>
+        <rect x="510" y="12" width="100" height="32" rx="5" fill="#161b22" stroke="#2d333b"/>
+        <text x="560" y="28" fill="#e3b341" font-size="7" text-anchor="middle">Validator</text>
+        <text x="560" y="38" fill="#6e7681" font-size="5.5" text-anchor="middle">Schema + cross-validate</text>
+        <line x1="610" y1="28" x2="630" y2="28" stroke="#6e7681" marker-end="url(#i1)"/>
+        <rect x="630" y="12" width="110" height="32" rx="5" fill="rgba(63,185,80,.06)" stroke="#3fb950"/>
+        <text x="685" y="32" fill="#3fb950" font-size="7" text-anchor="middle" font-weight="600">✓ Structured Output</text>
+        <!-- Parser Flywheel -->
+        <rect x="40" y="70" width="700" height="80" rx="6" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.12)"/>
+        <text x="54" y="88" fill="#bc8cff" font-size="9" font-weight="600">Parser Flywheel: "LLM as Parser Generator"</text>
+        <text x="54" y="104" fill="#6e7681" font-size="7">Instead of running an LLM on every document ($0.05/doc), use the LLM to <tspan fill="#bc8cff" font-weight="600">write a deterministic parser</tspan> from 20 examples.</text>
+        <text x="54" y="118" fill="#6e7681" font-size="7">Deploy the parser — process millions for pennies. For the 5% the parser can't handle, fall back to the LLM.</text>
+        <text x="54" y="132" fill="#6e7681" font-size="7">Week 1: 100% LLM → Month 3: 90% parser → Month 6: 95% parser. Insight: "We need the LLM to teach us how to read documents."</text>
+        <text x="54" y="146" fill="#6e7681" font-size="7">Auto-generate when: same doc type seen 20+ times with 95%+ LLM extraction accuracy. Test parser against examples. Register if ≥95% accurate.</text>
+        <!-- Progressive Structuring -->
+        <rect x="40" y="162" width="700" height="66" rx="6" fill="rgba(57,210,192,.03)" stroke="rgba(57,210,192,.12)"/>
+        <text x="54" y="180" fill="#39d2c0" font-size="9" font-weight="600">Progressive Structuring (for truly unstructured data)</text>
+        <rect x="54" y="190" width="100" height="20" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="104" y="203" fill="#6e7681" font-size="6.5" text-anchor="middle">① CLASSIFY type</text>
+        <rect x="168" y="190" width="110" height="20" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="223" y="203" fill="#6e7681" font-size="6.5" text-anchor="middle">② SEGMENT sections</text>
+        <rect x="292" y="190" width="120" height="20" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="352" y="203" fill="#6e7681" font-size="6.5" text-anchor="middle">③ EXTRACT entities</text>
+        <rect x="426" y="190" width="130" height="20" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="491" y="203" fill="#6e7681" font-size="6.5" text-anchor="middle">④ RELATE → knowledge graph</text>
+        <rect x="570" y="190" width="110" height="20" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="625" y="203" fill="#6e7681" font-size="6.5" text-anchor="middle">⑤ VALIDATE quality</text>
+        <text x="54" y="224" fill="#39d2c0" font-size="6.5">Each stage produces structured output feeding the next. If any stage fails validation, you know exactly where the breakdown is.</text>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>Schema-First Extraction:</strong> Define your output schema (Pydantic model) BEFORE writing the prompt. Use JSON Schema constraints in the LLM call. Parse and validate with the schema. Cross-validate (e.g., line items sum = subtotal). This eliminates format drift across model versions.</li>
+      <li><strong>Parser Flywheel economics:</strong> 10,000 invoices/day × $0.05/LLM parse = $500/day. After the flywheel generates deterministic parsers: 9,500 × $0.0001 + 500 × $0.05 = $25.95/day. A 20× cost reduction that accelerates over time.</li>
+      <li><strong>Real-world use case — legal contracts:</strong> 500+ contracts/day. LLM classifies contract type, tries deterministic parser first, falls back to LLM extraction with schema enforcement. When a doc type accumulates 20+ examples, an LLM auto-generates a new parser, tests it, registers if ≥95% accurate.</li>
+    </ul>
+
+    <!-- ── DD2: Generation Engine ── -->
+    <div class="sub" id="dd-generation">Deep Dive 2 — Generation Engine: Composable Pipelines (7 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Build a generation layer that's model-agnostic, prompt-versionable, and self-refining.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Generation Pipeline</span>
+      <svg viewBox="0 0 780 210" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs><marker id="g1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker></defs>
+        <!-- Prompt Assembly -->
+        <rect x="40" y="10" width="700" height="50" rx="6" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.12)"/>
+        <text x="54" y="26" fill="#d29922" font-size="8" font-weight="600">PROMPT ASSEMBLY (Composable, versioned, testable components)</text>
+        <rect x="54" y="34" width="95" height="18" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="101" y="46" fill="#6e7681" font-size="6.5" text-anchor="middle">System Role v2.1</text>
+        <rect x="157" y="34" width="95" height="18" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="204" y="46" fill="#6e7681" font-size="6.5" text-anchor="middle">Context v1.0</text>
+        <rect x="260" y="34" width="95" height="18" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="307" y="46" fill="#6e7681" font-size="6.5" text-anchor="middle">Few-Shot v3.2</text>
+        <rect x="363" y="34" width="100" height="18" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="413" y="46" fill="#6e7681" font-size="6.5" text-anchor="middle">Output Schema v1.1</text>
+        <rect x="471" y="34" width="110" height="18" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="526" y="46" fill="#6e7681" font-size="6.5" text-anchor="middle">Task Instruction v4.0</text>
+        <rect x="589" y="34" width="90" height="18" rx="3" fill="#161b22" stroke="#2d333b"/>
+        <text x="634" y="46" fill="#6e7681" font-size="6.5" text-anchor="middle">Custom Rules</text>
+        <line x1="390" y1="60" x2="390" y2="75" stroke="#6e7681" marker-end="url(#g1)"/>
+        <!-- Model Router -->
+        <rect x="200" y="75" width="380" height="40" rx="5" fill="rgba(63,185,80,.04)" stroke="#3fb950"/>
+        <text x="390" y="91" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">Model Router → selects optimal provider per-request</text>
+        <text x="390" y="105" fill="#6e7681" font-size="6.5" text-anchor="middle">Simple → Haiku/GPT-4o-mini ($0.01) | Complex → Opus/GPT-5 ($0.10) | Vision, structured output, latency SLA</text>
+        <line x1="390" y1="115" x2="390" y2="130" stroke="#6e7681" marker-end="url(#g1)"/>
+        <!-- Parse + Validate + Refine -->
+        <rect x="80" y="130" width="200" height="32" rx="4" fill="rgba(188,140,255,.04)" stroke="#bc8cff"/>
+        <text x="180" y="146" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">Output Parser + Schema Validate</text>
+        <text x="180" y="157" fill="#6e7681" font-size="6" text-anchor="middle">JSON → Pydantic + cross-validate</text>
+        <rect x="300" y="130" width="200" height="32" rx="4" fill="rgba(248,81,73,.04)" stroke="#f85149"/>
+        <text x="400" y="146" fill="#f85149" font-size="7" text-anchor="middle" font-weight="600">Guardrails (Safety + Policy)</text>
+        <text x="400" y="157" fill="#6e7681" font-size="6" text-anchor="middle">PII · toxicity · brand safety · hallucination</text>
+        <rect x="520" y="130" width="220" height="32" rx="4" fill="rgba(57,210,192,.04)" stroke="#39d2c0"/>
+        <text x="630" y="146" fill="#39d2c0" font-size="7" text-anchor="middle" font-weight="600">Recursive Refinement Loop</text>
+        <text x="630" y="157" fill="#6e7681" font-size="6" text-anchor="middle">Generate → Critic scores rubric → Revise if &lt; threshold</text>
+        <!-- Refinement loop back arrow -->
+        <path d="M 520 146 L 500 146 L 500 92 L 578 92" fill="none" stroke="#39d2c0" stroke-width=".8" stroke-dasharray="3 2" marker-end="url(#g1)"/>
+        <text x="494" y="120" fill="#39d2c0" font-size="5.5" transform="rotate(-90,494,120)" text-anchor="middle">refine</text>
+        <!-- Output -->
+        <rect x="260" y="180" width="260" height="22" rx="4" fill="rgba(63,185,80,.06)" stroke="#3fb950"/>
+        <text x="390" y="195" fill="#3fb950" font-size="7.5" text-anchor="middle" font-weight="600">✓ Validated, typed, structured output</text>
+        <line x1="390" y1="165" x2="390" y2="178" stroke="#3fb950" marker-end="url(#g1)"/>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>Composable Prompts:</strong> Each prompt component (system role, context, few-shot, output schema, task instruction) is a named, versioned, testable unit. When you switch from GPT-4 to Claude, you change the generation call — not the prompt assembly. When output requirements change, update the schema component. Each piece iterates independently.</li>
+      <li><strong>Model Abstraction Layer:</strong> Never call <code>openai.chat.completions.create()</code> directly. Go through <code>ModelRouter.route()</code> which selects provider based on: task complexity (cheap model for simple, frontier for complex), latency SLA, cost budget, feature needs (vision, structured output). When a model is deprecated: change one config line.</li>
+      <li><strong>Recursive Refinement:</strong> Generate → Critique → Revise loop. A critic LLM evaluates the draft against a rubric (multi-dimensional: accuracy, actionability, completeness, tone). If score &lt; threshold and iterations remain, revise. Each iteration traced. Typically converges in 1-2 iterations. Max iterations → flag for human review.</li>
+    </ul>
+
+    <!-- ── DD3: Evaluation Layer ── -->
+    <div class="sub" id="dd-eval">Deep Dive 3 — Evaluation Layer: Traces, Judges, Golden Sets (7 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Build the "immune system" — detect degradation, prove improvement, build trust. This is where most teams fail.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Multi-Speed Evaluation + Trace Architecture</span>
+      <svg viewBox="0 0 780 250" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <!-- Five speeds -->
+        <text x="40" y="18" fill="#f85149" font-size="9" font-weight="600">Five Speeds of Testing</text>
+        <rect x="40" y="26" width="130" height="48" rx="5" fill="rgba(63,185,80,.04)" stroke="#3fb950"/>
+        <text x="105" y="42" fill="#3fb950" font-size="7.5" text-anchor="middle" font-weight="600">Speed 1: ms</text>
+        <text x="105" y="54" fill="#6e7681" font-size="6.5" text-anchor="middle">Schema Validation</text>
+        <text x="105" y="64" fill="#6e7681" font-size="5.5" text-anchor="middle">Every request · Cost: ~0</text>
+        <text x="105" y="72" fill="#3fb950" font-size="5.5" text-anchor="middle">Format, types, ranges</text>
+        <rect x="182" y="26" width="130" height="48" rx="5" fill="rgba(88,166,255,.04)" stroke="#58a6ff"/>
+        <text x="247" y="42" fill="#58a6ff" font-size="7.5" text-anchor="middle" font-weight="600">Speed 2: sec</text>
+        <text x="247" y="54" fill="#6e7681" font-size="6.5" text-anchor="middle">Automated Metrics</text>
+        <text x="247" y="64" fill="#6e7681" font-size="5.5" text-anchor="middle">Every request · Cost: minimal</text>
+        <text x="247" y="72" fill="#58a6ff" font-size="5.5" text-anchor="middle">BLEU, exact match, length</text>
+        <rect x="324" y="26" width="130" height="48" rx="5" fill="rgba(188,140,255,.04)" stroke="#bc8cff"/>
+        <text x="389" y="42" fill="#bc8cff" font-size="7.5" text-anchor="middle" font-weight="600">Speed 3: min</text>
+        <text x="389" y="54" fill="#6e7681" font-size="6.5" text-anchor="middle">LLM-as-Judge</text>
+        <text x="389" y="64" fill="#6e7681" font-size="5.5" text-anchor="middle">Sampled or async · $/eval</text>
+        <text x="389" y="72" fill="#bc8cff" font-size="5.5" text-anchor="middle">Quality, accuracy, safety</text>
+        <rect x="466" y="26" width="130" height="48" rx="5" fill="rgba(248,81,73,.04)" stroke="#f85149"/>
+        <text x="531" y="42" fill="#f85149" font-size="7.5" text-anchor="middle" font-weight="600">Speed 4: hours</text>
+        <text x="531" y="54" fill="#6e7681" font-size="6.5" text-anchor="middle">Golden Set Regression</text>
+        <text x="531" y="64" fill="#6e7681" font-size="5.5" text-anchor="middle">Every deploy · Block if regressed</text>
+        <text x="531" y="72" fill="#f85149" font-size="5.5" text-anchor="middle">CI/CD gate</text>
+        <rect x="608" y="26" width="130" height="48" rx="5" fill="rgba(227,179,65,.04)" stroke="#e3b341"/>
+        <text x="673" y="42" fill="#e3b341" font-size="7.5" text-anchor="middle" font-weight="600">Speed 5: weekly</text>
+        <text x="673" y="54" fill="#6e7681" font-size="6.5" text-anchor="middle">Human Expert Review</text>
+        <text x="673" y="64" fill="#6e7681" font-size="5.5" text-anchor="middle">Calibration · Cost: highest</text>
+        <text x="673" y="72" fill="#e3b341" font-size="5.5" text-anchor="middle">Calibrate LLM judge</text>
+        <!-- Traces -->
+        <rect x="40" y="90" width="698" height="70" rx="6" fill="rgba(57,210,192,.03)" stroke="rgba(57,210,192,.12)"/>
+        <text x="54" y="108" fill="#39d2c0" font-size="9" font-weight="600">TRACES: The X-Ray of Every Request</text>
+        <text x="54" y="122" fill="#6e7681" font-size="7">Each trace captures the complete lifecycle: every span (classify → retrieve → generate → evaluate) with timing, tokens, cost, and metadata.</text>
+        <text x="54" y="136" fill="#6e7681" font-size="7">Example: 1000-request analysis → p99 latency 23s (LLM generation: 18.7s at p99). 10% failure rate: 45% insufficient RAG, 30% wrong language, 15% format error, 10% hallucinated API.</text>
+        <text x="54" y="150" fill="#39d2c0" font-size="7" font-weight="600">Without traces, you're guessing. With traces, you know exactly what to fix and in what priority.</text>
+        <!-- Golden Sets -->
+        <rect x="40" y="172" width="698" height="70" rx="6" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.12)"/>
+        <text x="54" y="190" fill="#f85149" font-size="9" font-weight="600">GOLDEN SETS + EVAL-DRIVEN DEVELOPMENT</text>
+        <text x="54" y="204" fill="#6e7681" font-size="7">100+ expert-validated test cases covering edge, common, and adversarial inputs. Run on every deploy — block if critical dims regress.</text>
+        <text x="54" y="218" fill="#6e7681" font-size="7">Growth cycle: production failures → root cause → new golden entries. Month 6 golden set is 3× more comprehensive than Month 1.</text>
+        <text x="54" y="232" fill="#f85149" font-size="7" font-weight="600">Eval-Driven Dev: (1) Define evals → (2) Run baseline → (3) Make change → (4) Run evals → (5) Compare per-category → (6) Ship or iterate. TDD for AI.</text>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>LLM-as-Judge:</strong> A separate LLM call evaluates output against a multi-dimensional rubric: accuracy (weight 0.3), security (0.25), actionability (0.25), completeness (0.1), tone (0.1). Scores 1-5 per criterion with specific evidence and suggestions. Returns structured JSON. Judge is calibrated weekly against human expert ratings.</li>
+      <li><strong>Experience Database → Self-Improvement:</strong> Every request's strategy + outcome is recorded. Weekly: identify weak categories (score &lt; threshold), analyze failure patterns, generate fixes, test against golden set, commit if improved, rollback if not. The system gets better every week without manual intervention.</li>
+    </ul>
+
+    <!-- ── DD4: Memory & Knowledge Graphs ── -->
+    <div class="sub" id="dd-memory">Deep Dive 4 — Memory, Knowledge Graphs &amp; GraphRAG (10 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Solve the amnesia problem. Every LLM call starts from zero. We need a hierarchical, multi-tier memory architecture inspired by cognitive science, plus knowledge graphs for relational reasoning that vector search can't do.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">5-Tier Cognitive Memory Architecture</span>
+      <svg viewBox="0 0 780 290" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs><marker id="m1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker></defs>
+        <!-- Tier labels and boxes -->
+        <rect x="40" y="10" width="340" height="50" rx="6" fill="rgba(248,81,73,.04)" stroke="#f85149"/>
+        <text x="54" y="28" fill="#f85149" font-size="8" font-weight="600">TIER 1: Working Memory (Context Window = RAM)</text>
+        <text x="54" y="40" fill="#6e7681" font-size="6.5">System prompt ~2K | Core memory ~2K | Conversation ~8K | RAG results ~20K | Response ~20K</text>
+        <text x="54" y="52" fill="#6e7681" font-size="6.5">Lifespan: 1 LLM call | Cost: highest (per-token) | Capacity: 128K tokens | Must be intelligently curated</text>
+
+        <rect x="40" y="66" width="340" height="40" rx="6" fill="rgba(232,116,79,.04)" stroke="#E8744F"/>
+        <text x="54" y="82" fill="#E8744F" font-size="8" font-weight="600">TIER 2: Short-Term (Session Buffer)</text>
+        <text x="54" y="94" fill="#6e7681" font-size="6.5">Full conversation | Scratchpad notes-to-self | Accumulated state | Tool cache</text>
+        <text x="54" y="102" fill="#6e7681" font-size="5.5">Lifespan: 1 session. On end → consolidate: extract facts, record episode, archive raw session.</text>
+
+        <rect x="40" y="112" width="340" height="50" rx="6" fill="rgba(227,179,65,.04)" stroke="#e3b341"/>
+        <text x="54" y="128" fill="#e3b341" font-size="8" font-weight="600">TIER 3: Long-Term (Core + Archival)</text>
+        <text x="54" y="140" fill="#6e7681" font-size="6.5">Core: ~2KB always in context (user prefs, key facts, active goals). LLM edits via tools.</text>
+        <text x="54" y="152" fill="#6e7681" font-size="6.5">Archival: unlimited, searched on demand. Vector + keyword + graph. Temporal decay for stale entries.</text>
+        <text x="54" y="160" fill="#e3b341" font-size="5.5">Self-managed: LLM calls core_memory_update() and archival_memory_search() — app enforces policy.</text>
+
+        <rect x="40" y="168" width="340" height="40" rx="6" fill="rgba(188,140,255,.04)" stroke="#bc8cff"/>
+        <text x="54" y="184" fill="#bc8cff" font-size="8" font-weight="600">TIER 4: Episodic (Experience Database)</text>
+        <text x="54" y="196" fill="#6e7681" font-size="6.5">Situation → Action → Outcome chains. "Have I seen something like this before?"</text>
+        <text x="54" y="204" fill="#6e7681" font-size="5.5">Enables learning WITHOUT retraining. Recall similar episodes → inject lessons into prompt.</text>
+
+        <rect x="40" y="214" width="340" height="40" rx="6" fill="rgba(88,166,255,.04)" stroke="#58a6ff"/>
+        <text x="54" y="230" fill="#58a6ff" font-size="8" font-weight="600">TIER 5: Procedural (Learned Skills)</text>
+        <text x="54" y="242" fill="#6e7681" font-size="6.5">Distilled from successful episodes. "Best known way to do X." Prompt templates, tool sequences.</text>
+        <text x="54" y="250" fill="#6e7681" font-size="5.5">Codified when consolidation finds 5+ similar successful episodes with confidence &gt; 0.9.</text>
+
+        <!-- Memory Controller box -->
+        <rect x="400" y="10" width="340" height="100" rx="6" fill="rgba(188,140,255,.03)" stroke="#bc8cff"/>
+        <text x="414" y="28" fill="#bc8cff" font-size="8" font-weight="600">MEMORY CONTROLLER (Orchestrates All Tiers)</text>
+        <text x="414" y="42" fill="#6e7681" font-size="6.5">Before every LLM call:</text>
+        <text x="414" y="54" fill="#6e7681" font-size="6.5">① Core memory (always in context) → ② Search archival (relevant facts)</text>
+        <text x="414" y="66" fill="#6e7681" font-size="6.5">③ Recall episodes (similar experiences) → ④ Find procedure (learned skills)</text>
+        <text x="414" y="78" fill="#6e7681" font-size="6.5">⑤ Assemble context window (page in, respect token budget)</text>
+        <text x="414" y="92" fill="#6e7681" font-size="6.5">After every response: extract facts → record episode → update short-term</text>
+        <text x="414" y="104" fill="#bc8cff" font-size="6.5" font-weight="600">Background: consolidation (hourly), procedure learning (weekly), decay (daily)</text>
+
+        <!-- Knowledge Graph + GraphRAG -->
+        <rect x="400" y="120" width="340" height="134" rx="6" fill="rgba(57,210,192,.03)" stroke="#39d2c0"/>
+        <text x="414" y="138" fill="#39d2c0" font-size="8" font-weight="600">KNOWLEDGE GRAPH + GraphRAG</text>
+        <text x="414" y="152" fill="#6e7681" font-size="6.5">Entities (nodes) + Relationships (edges) + Community Summaries (clusters).</text>
+        <text x="414" y="164" fill="#6e7681" font-size="6.5">Vector search finds similar text. KG finds connected facts.</text>
+        <text x="414" y="178" fill="#39d2c0" font-size="6.5" font-weight="600">LOCAL SEARCH: entity queries</text>
+        <text x="414" y="190" fill="#6e7681" font-size="6.5">"Who owns auth-service?" → entity lookup → traverse neighbors 1-2 hops → chunks</text>
+        <text x="414" y="202" fill="#39d2c0" font-size="6.5" font-weight="600">GLOBAL SEARCH: thematic queries</text>
+        <text x="414" y="214" fill="#6e7681" font-size="6.5">"What are the main risks?" → community summaries → map-reduce synthesis</text>
+        <text x="414" y="226" fill="#39d2c0" font-size="6.5" font-weight="600">HYBRID RETRIEVAL: Vector + Graph + BM25 → Reciprocal Rank Fusion</text>
+        <text x="414" y="238" fill="#6e7681" font-size="6.5">Adaptive weights: tech IDs → 0.8 keyword. Relationships → 0.7 graph. Broad → 0.5 vector.</text>
+        <text x="414" y="250" fill="#6e7681" font-size="6.5">Temporal KG: bi-temporal model (valid time + system time). Point-in-time + range queries.</text>
+
+        <!-- Flow arrows: tiers page into working memory -->
+        <path d="M 380 30 L 396 30" stroke="#6e7681" stroke-width=".8" stroke-dasharray="3 2" marker-end="url(#m1)"/>
+        <!-- Consolidation arrows -->
+        <text x="382" y="284" fill="#6e7681" font-size="6" font-style="italic">Tiers page into working memory. Consolidation flows down. Knowledge graph feeds hybrid retrieval.</text>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>Context Window = RAM:</strong> Fixed budget. You page in from lower tiers via the Memory Controller, which predicts relevance. Recent conversation kept verbatim; older turns progressively summarized. Core memory (~2KB) always loaded. Archival results paged in per-query. Think: desk (context window) vs. filing cabinet (long-term memory).</li>
+      <li><strong>Self-Managed Memory:</strong> The LLM itself manages its memory via tool calls (<code>core_memory_update</code>, <code>archival_memory_search</code>, <code>memory_consolidate</code>). The LLM has the semantic understanding to decide what's important, relevant, and contradictory. Application code enforces policies (limits, privacy, retention).</li>
+      <li><strong>Temporal Knowledge Graph:</strong> Bi-temporal model tracks when facts were true in the real world (valid time) AND when the system learned about them (system time). Old facts are never deleted — they're closed and a new version created. Enables: "Who leads auth now?" (current), "Who led auth in Q1?" (point-in-time), "How has auth leadership changed?" (timeline).</li>
+      <li><strong>Community Detection for Global Search:</strong> Leiden algorithm clusters the KG into hierarchical communities (Level 1: 5-10 major themes, Level 2: 20-50 sub-themes, Level 3: 100+ specific topics). Each community gets a pre-computed LLM summary. Global queries read 10-20 summaries and synthesize, instead of scanning every document.</li>
+      <li><strong>Consolidation = Sleep:</strong> Background process clusters related memories, synthesizes higher-level insights, promotes high-confidence insights to core memory, prunes redundant entries, and applies temporal decay (5%/month confidence loss for unaccessed, non-pinned memories). Memories below 0.1 confidence move to cold storage.</li>
+    </ul>
+
+    <!-- ── DD5: Orchestration ── -->
+    <div class="sub" id="dd-orchestration">Deep Dive 5 — Agent Orchestration &amp; Adaptive Complexity (6 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> When simple pipelines aren't enough, route requests dynamically. Start with the cheapest approach. Escalate only when quality demands it. Record what works for future routing.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Adaptive Complexity Escalation</span>
+      <svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs><marker id="o1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        <marker id="o2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        <marker id="o3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#f85149" stroke-width="1"/></marker></defs>
+        <!-- Request entry -->
+        <rect x="40" y="10" width="120" height="30" rx="5" fill="rgba(88,166,255,.06)" stroke="#58a6ff"/>
+        <text x="100" y="29" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="600">User Request</text>
+        <line x1="160" y1="25" x2="180" y2="25" stroke="#6e7681" marker-end="url(#o1)"/>
+        <!-- Router -->
+        <rect x="180" y="10" width="130" height="30" rx="5" fill="rgba(188,140,255,.06)" stroke="#bc8cff"/>
+        <text x="245" y="25" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">Router / Planner</text>
+        <text x="245" y="35" fill="#6e7681" font-size="5.5" text-anchor="middle">Complexity Estimator</text>
+        <!-- Complexity levels -->
+        <rect x="40" y="60" width="100" height="40" rx="5" fill="rgba(63,185,80,.04)" stroke="#3fb950"/>
+        <text x="90" y="76" fill="#3fb950" font-size="7" text-anchor="middle" font-weight="600">L1: Direct</text>
+        <text x="90" y="88" fill="#6e7681" font-size="6" text-anchor="middle">1 LLM call · $0.01</text>
+        <rect x="150" y="60" width="100" height="40" rx="5" fill="rgba(63,185,80,.04)" stroke="#3fb950"/>
+        <text x="200" y="76" fill="#3fb950" font-size="7" text-anchor="middle" font-weight="600">L2: RAG</text>
+        <text x="200" y="88" fill="#6e7681" font-size="6" text-anchor="middle">Retrieve + Gen · $0.03</text>
+        <rect x="260" y="60" width="100" height="40" rx="5" fill="rgba(88,166,255,.04)" stroke="#58a6ff"/>
+        <text x="310" y="76" fill="#58a6ff" font-size="7" text-anchor="middle" font-weight="600">L3: Pipeline</text>
+        <text x="310" y="88" fill="#6e7681" font-size="6" text-anchor="middle">Multi-step · $0.05</text>
+        <rect x="370" y="60" width="100" height="40" rx="5" fill="rgba(188,140,255,.04)" stroke="#bc8cff"/>
+        <text x="420" y="76" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">L4: Refinement</text>
+        <text x="420" y="88" fill="#6e7681" font-size="6" text-anchor="middle">Gen→Crit→Rev · $0.08</text>
+        <rect x="480" y="60" width="100" height="40" rx="5" fill="rgba(248,81,73,.04)" stroke="#f85149"/>
+        <text x="530" y="76" fill="#f85149" font-size="7" text-anchor="middle" font-weight="600">L5: Agent</text>
+        <text x="530" y="88" fill="#6e7681" font-size="6" text-anchor="middle">Autonomous · $0.15</text>
+        <rect x="590" y="60" width="100" height="40" rx="5" fill="rgba(248,81,73,.04)" stroke="#f85149"/>
+        <text x="640" y="76" fill="#f85149" font-size="7" text-anchor="middle" font-weight="600">L6: Multi-Agent</text>
+        <text x="640" y="88" fill="#6e7681" font-size="6" text-anchor="middle">Specialists · $0.30</text>
+        <rect x="700" y="60" width="60" height="40" rx="5" fill="rgba(227,179,65,.04)" stroke="#e3b341"/>
+        <text x="730" y="80" fill="#e3b341" font-size="7" text-anchor="middle" font-weight="600">Human</text>
+        <!-- Arrows from router to levels -->
+        <path d="M 220 40 L 220 48 L 90 48 L 90 58" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+        <path d="M 230 40 L 230 48 L 200 48 L 200 58" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+        <path d="M 240 40 L 240 48 L 310 48 L 310 58" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+        <path d="M 250 40 L 250 48 L 420 48 L 420 58" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+        <path d="M 260 40 L 260 48 L 530 48 L 530 58" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+        <!-- Evaluation loop -->
+        <rect x="200" y="120" width="360" height="36" rx="5" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.12)"/>
+        <text x="380" y="137" fill="#f85149" font-size="7.5" text-anchor="middle" font-weight="600">EVALUATION: Score ≥ threshold?</text>
+        <text x="380" y="149" fill="#6e7681" font-size="6" text-anchor="middle">YES → return result | NO &amp; budget remains → escalate to next level | NO &amp; max → human</text>
+        <!-- Escalation arrows -->
+        <path d="M 140 100 L 140 130 L 198 130" fill="none" stroke="#f85149" stroke-width=".6" stroke-dasharray="3 2" marker-end="url(#o3)"/>
+        <path d="M 560 130 L 640 130 L 640 100" fill="none" stroke="#f85149" stroke-width=".6" stroke-dasharray="3 2" marker-end="url(#o3)"/>
+        <!-- Experience DB feedback -->
+        <rect x="200" y="170" width="360" height="36" rx="5" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.12)"/>
+        <text x="380" y="187" fill="#bc8cff" font-size="7.5" text-anchor="middle" font-weight="600">EXPERIENCE DATABASE: Record strategy + outcome</text>
+        <text x="380" y="199" fill="#6e7681" font-size="6" text-anchor="middle">Over time, router learns to skip directly to the right level for each input type</text>
+        <!-- Self-Improvement Cycle -->
+        <rect x="40" y="220" width="720" height="30" rx="5" fill="rgba(57,210,192,.03)" stroke="rgba(57,210,192,.12)"/>
+        <text x="400" y="237" fill="#39d2c0" font-size="7" text-anchor="middle" font-weight="600">WEEKLY SELF-IMPROVEMENT: Identify weak categories → Analyze failure patterns → Generate fixes → Test against golden set → Commit if improved, rollback if not</text>
+        <path d="M 380 156 L 380 168" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+        <path d="M 380 206 L 380 218" fill="none" stroke="#6e7681" stroke-width=".6" marker-end="url(#o1)"/>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>Adaptive Escalation:</strong> The complexity estimator routes simple queries (L1-L2) to cheap models, complex multi-step tasks (L3-L4) to pipelines, and open-ended autonomous tasks (L5-L6) to agents. When a level's quality score is insufficient and cost budget remains, the system escalates to the next level. The Experience Database records which level succeeds for which input type, so over time the router skips directly to the optimal level.</li>
+      <li><strong>Multi-Agent Collaboration:</strong> For the most complex tasks, specialized agents (e.g., code reviewer, security auditor, test coverage analyzer) work under an orchestrator agent. Each agent has its own prompt, tools, and evaluation criteria. The orchestrator decomposes the task, assigns sub-tasks, resolves conflicts between agents, and synthesizes the final output.</li>
+      <li><strong>Human-in-the-Loop Escalation:</strong> When automated quality is low and confidence is low, escalate to a human expert with a context summary. The human's corrections feed back into the Experience DB and golden sets, improving the system for similar future inputs.</li>
+      <li><strong>Self-Improvement Cycle:</strong> Weekly: (1) identify weak categories from Experience DB, (2) cluster failure patterns, (3) for each pattern generate a fix (new prompt, new RAG config, new golden entries), (4) test fix against golden set, (5) commit if improved, rollback if regressed. The system gets better every week without manual intervention.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Observability: Design for Visibility from Day 1</div>
+    <div class="callout say">"Every component must emit standard signals: component name, operation, latency, success/fail, model used, tokens consumed, cost, quality score, confidence, and trace ID. If you can't see it, you can't fix it. Traces reveal exactly what to fix and in what priority."</div>
+    <div class="schema"><span class="table-name">AdaptiveOrchestrator.COMPLEXITY_LEVELS</span>
+
+Level 1: <span class="pk">direct</span>       Single LLM call, no retrieval                     → $0.01
+Level 2: <span class="pk">rag</span>          LLM + retrieval-augmented generation               → $0.03
+Level 3: <span class="pk">pipeline</span>     Multi-step decomposition pipeline                  → $0.05
+Level 4: <span class="pk">refinement</span>   Generate → Critique → Revise loop                  → $0.08
+Level 5: <span class="pk">agent</span>        Autonomous agent with tool use                     → $0.15
+Level 6: <span class="pk">multi_agent</span>  Multiple specialized agents                        → $0.30
+Level 7: <span class="fk">human</span>        Escalate to human expert                           → $$$
+
+<span class="comment">// For each level: execute → evaluate quality → if score ≥ threshold: return
+// If score < threshold AND cost < budget: escalate to next level
+// Experience DB records which level succeeded for which input type
+// Over time, the router learns to skip directly to the right level</span></div>
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Model deprecated overnight</span><span class="mitigation">Abstraction Layer → change provider config. Model Router auto-routes to next-best. Golden set regression test validates no quality loss before production traffic.</span></div>
+    <div class="failure-row"><span class="scenario">LLM halluccinates output</span><span class="mitigation">Schema validation catches format errors. Cross-validation catches arithmetic errors. LLM-as-Judge catches factual errors. Guardrails catch safety issues. Low confidence → human queue.</span></div>
+    <div class="failure-row"><span class="scenario">RAG retrieves irrelevant context</span><span class="mitigation">Traces reveal retrieval quality per-request. Hybrid retrieval (vector + graph + BM25) covers different failure modes. Re-ranker cross-encoder scores relevance. Golden set tests retrieval quality.</span></div>
+    <div class="failure-row"><span class="scenario">Memory contradiction</span><span class="mitigation">Consolidation process detects contradictions. Resolution: newer info wins (default), store both + flag (uncertain), user correction always wins (highest trust). Audit trail for all changes.</span></div>
+    <div class="failure-row"><span class="scenario">Context window overflow</span><span class="mitigation">Context Window Manager enforces token budgets per section. Older conversation progressively summarized. Retrieved context ranked and truncated. Core memory always fits (~2KB).</span></div>
+    <div class="failure-row"><span class="scenario">Knowledge graph entity resolution error</span><span class="mitigation">Fuzzy matching + embedding similarity for dedup. Confidence scores on all relationships. Provenance tracking (which source, when extracted). Graph cleanup during consolidation.</span></div>
+    <div class="failure-row"><span class="scenario">Cost spike (agent loop runaway)</span><span class="mitigation">Per-request cost budget in orchestrator. Max iterations on refinement loops. Adaptive complexity only escalates when quality demands it. Experience DB learns optimal starting level per input type.</span></div>
+    <div class="failure-row"><span class="scenario">Eval drift (LLM judge becomes unreliable)</span><span class="mitigation">Weekly human expert calibration against LLM judge scores. Track judge-human agreement rate. Re-calibrate judge prompt when agreement drops below threshold.</span></div>
+
+    <div class="sub" id="anti-patterns">Anti-Patterns: What Goes Wrong</div>
+    <table>
+      <thead><tr><th>Anti-Pattern</th><th>What Breaks</th><th>Correct Approach</th></tr></thead>
+      <tbody>
+        <tr><td>Stuff everything in context</td><td>Token budget exceeded, important info pushed out, cost explodes</td><td>Tiered memory with intelligent paging via Memory Controller</td></tr>
+        <tr><td>No memory consolidation</td><td>Memory grows forever, contradictions accumulate, retrieval degrades</td><td>Periodic consolidation: synthesize, prune, decay (5%/month unaccessed)</td></tr>
+        <tr><td>Treat all memories equally</td><td>Critical preferences buried under trivia</td><td>Tiered importance: core (always loaded ~2KB) vs archival (searched)</td></tr>
+        <tr><td>No temporal awareness</td><td>Old facts override new ones, or vice versa, silently</td><td>Bi-temporal model: track valid time + system time. Never delete; close + version</td></tr>
+        <tr><td>No forgetting mechanism</td><td>System remembers stale, irrelevant info forever</td><td>Confidence decay + archival for unaccessed memories below 0.1 threshold</td></tr>
+        <tr><td>External-only memory mgmt</td><td>App code decides what to store; misses semantic nuance</td><td>Self-managed: LLM decides what's worth remembering via tool calls</td></tr>
+        <tr><td>Extract everything as entities</td><td>Noisy graph, slow traversal, low precision</td><td>Focused ontology: define entity and relationship types upfront</td></tr>
+        <tr><td>No entity resolution</td><td>Same entity appears as multiple nodes in KG</td><td>Fuzzy matching + embedding similarity for deduplication</td></tr>
+        <tr><td>Graph without vector search</td><td>Can't handle novel queries or semantic matching</td><td>Hybrid retrieval: always combine graph + vector + keyword search</td></tr>
+        <tr><td>No community summaries</td><td>Global queries require scanning entire graph</td><td>Pre-compute hierarchical community summaries via Leiden algorithm</td></tr>
+        <tr><td>Ignoring provenance</td><td>Can't trace why system believes something</td><td>Track source document, extraction confidence, timestamp for every fact</td></tr>
+        <tr><td>Monolithic prompts</td><td>Untestable, can't identify which piece regressed</td><td>Composable versioned prompt components, each iterates independently</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub" id="data-model">Core Data Schemas</div>
+    <div class="schema"><span class="table-name">Trace</span>
+  <span class="pk">trace_id</span>          <span class="type">UUID</span>
+  spans[]            <span class="type">Span[]</span>        <span class="comment">-- name, start/end, input/output, metadata, status, error</span>
+  total_duration_ms  <span class="type">float</span>
+  total_cost_usd     <span class="type">float</span>
+  total_tokens       <span class="type">int</span>
+
+<span class="table-name">GoldenSetEntry</span>
+  <span class="pk">id</span>                 <span class="type">UUID</span>
+  version            <span class="type">string</span>
+  input_data         <span class="type">dict</span>
+  expected_output    <span class="type">string | null</span>
+  evaluation_criteria <span class="type">dict[]</span>
+  metadata           <span class="type">dict</span>          <span class="comment">-- tags, difficulty, category, source</span>
+  created_by         <span class="type">string</span>        <span class="comment">-- which expert validated</span>
+
+<span class="table-name">Experience</span>
+  <span class="pk">experience_id</span>      <span class="type">UUID</span>
+  input_hash         <span class="type">string</span>        <span class="comment">-- stable hash of input features</span>
+  input_category     <span class="type">string</span>        <span class="comment">-- "code_review", "contract_analysis"</span>
+  strategy           <span class="type">dict</span>          <span class="comment">-- model, prompt version, RAG config</span>
+  eval_scores        <span class="type">dict</span>
+  outcome            <span class="type">string</span>        <span class="comment">-- "success", "partial", "failure"</span>
+  lessons            <span class="type">string[]</span>
+
+<span class="table-name">Episode</span>
+  <span class="pk">episode_id</span>         <span class="type">UUID</span>
+  situation          <span class="type">string</span>        <span class="comment">-- what was happening</span>
+  strategy           <span class="type">dict</span>          <span class="comment">-- what approach was used</span>
+  eval_scores        <span class="type">dict</span>          <span class="comment">-- how it turned out</span>
+  lesson             <span class="type">string</span>        <span class="comment">-- what to learn from this</span>
+  embedding          <span class="type">float[]</span>       <span class="comment">-- for similarity search</span>
+
+<span class="table-name">TemporalFact</span>
+  <span class="pk">entity_id</span>          <span class="type">string</span>
+  predicate          <span class="type">string</span>        <span class="comment">-- "leads", "depends_on", "has_vulnerability"</span>
+  object_id          <span class="type">string</span>
+  valid_from         <span class="type">datetime</span>      <span class="comment">-- when true in real world</span>
+  valid_to           <span class="type">datetime?</span>     <span class="comment">-- null = still true</span>
+  system_from        <span class="type">datetime</span>      <span class="comment">-- when system learned this</span>
+  source             <span class="type">string</span>
+  confidence         <span class="type">float</span></div>
+
+    <div class="sub" id="patterns">Complete Pattern Catalog</div>
+    <table>
+      <thead><tr><th>Category</th><th>Pattern</th><th>What It Does</th></tr></thead>
+      <tbody>
+        <tr><td>Intake</td><td>Schema-First Extraction</td><td>Define output schema before prompting. Pydantic + JSON Schema constraints.</td></tr>
+        <tr><td>Intake</td><td>LLM-as-Parser-Generator</td><td>LLM writes deterministic parser code from examples. Deploy parser, save 20× cost.</td></tr>
+        <tr><td>Intake</td><td>Progressive Structuring</td><td>Classify → Segment → Extract → Relate → Validate. For truly unstructured data.</td></tr>
+        <tr><td>Intake</td><td>Parser Flywheel</td><td>Auto-generate parsers as doc types accumulate. 100% LLM → 5% LLM over 6 months.</td></tr>
+        <tr><td>Generation</td><td>Composable Prompts</td><td>Versioned, testable prompt components. Each iterates independently.</td></tr>
+        <tr><td>Generation</td><td>Model Abstraction Layer</td><td>Never call a model directly. Router selects optimal provider per-request.</td></tr>
+        <tr><td>Generation</td><td>Recursive Refinement</td><td>Generate → Critique → Revise loop. Typically converges in 1-2 iterations.</td></tr>
+        <tr><td>Evaluation</td><td>LLM-as-Judge</td><td>Scalable quality assessment. Multi-dimensional rubric, structured JSON output.</td></tr>
+        <tr><td>Evaluation</td><td>Golden Sets</td><td>Expert-validated test suites. CI/CD gate. Grows from production failures.</td></tr>
+        <tr><td>Evaluation</td><td>Multi-Speed Testing</td><td>Schema → Metrics → Judge → Golden → Human. Five speeds, five cost levels.</td></tr>
+        <tr><td>Memory</td><td>5-Tier Cognitive Model</td><td>Working → Short-Term → Long-Term → Episodic → Procedural. Paging architecture.</td></tr>
+        <tr><td>Memory</td><td>Self-Managed Memory</td><td>LLM decides what to store/retrieve via tool calls. App enforces policies.</td></tr>
+        <tr><td>Memory</td><td>Memory Consolidation</td><td>Background: cluster, synthesize, prune, decay. Like brain during sleep.</td></tr>
+        <tr><td>Knowledge</td><td>Knowledge Graph</td><td>Entities + relationships. Entity resolution via fuzzy match + embedding.</td></tr>
+        <tr><td>Knowledge</td><td>GraphRAG (Local)</td><td>Entity → traverse neighbors → connected chunks. For specific entity queries.</td></tr>
+        <tr><td>Knowledge</td><td>GraphRAG (Global)</td><td>Community summaries → map-reduce synthesis. For broad thematic queries.</td></tr>
+        <tr><td>Knowledge</td><td>Hybrid Retrieval</td><td>Vector + Graph + BM25 → Reciprocal Rank Fusion → cross-encoder re-rank.</td></tr>
+        <tr><td>Knowledge</td><td>Temporal KG</td><td>Bi-temporal facts (valid time + system time). Point-in-time + range queries.</td></tr>
+        <tr><td>Orchestration</td><td>Adaptive Escalation</td><td>Direct → RAG → Pipeline → Agent → Human. Start cheap, escalate when needed.</td></tr>
+        <tr><td>Architecture</td><td>Abstraction Sandwich</td><td>App Logic / Abstraction / Foundation. Foundation changes; app logic doesn't.</td></tr>
+        <tr><td>Architecture</td><td>Schema-First Design</td><td>Typed contracts between all components. Pydantic models, not raw strings.</td></tr>
+        <tr><td>Architecture</td><td>Progressive Enhancement</td><td>Ship Week 1, add capability each week. System always production-ready.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6)">06</span>
+    <span class="phase-title">Wrap-Up — Progressive Enhancement Timeline</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Build Incrementally — Never Big-Bang</div>
+    <ul class="items">
+      <li><strong>Week 1:</strong> Prompt → LLM → Output + Schema validation + Basic logging. Production-ready for simple use cases.</li>
+      <li><strong>Week 2:</strong> + RAG retrieval + LLM-as-Judge eval + Trace collection. Now you can measure quality.</li>
+      <li><strong>Week 3:</strong> + Golden set tests + Experience database + Model routing (cheap vs. expensive). Cost optimization begins.</li>
+      <li><strong>Week 4:</strong> + Recursive refinement + Confidence-based escalation + Human-in-the-loop. Quality ceiling rises.</li>
+      <li><strong>Month 2:</strong> + Multi-step pipelines + Parser generation flywheel + Automated improvement cycles. Self-improving system.</li>
+      <li><strong>Month 3:</strong> + Agent orchestration + Knowledge graph + Memory tiers. Full cognitive architecture.</li>
+      <li><strong>Month 4:</strong> + GraphRAG (local + global search) + Community detection + Temporal KG. Enterprise-grade knowledge system.</li>
+    </ul>
+
+    <div class="callout tip">At each stage, the system is production-ready. Each addition is validated against evals before shipping. The architecture has slots for all components; the implementation fills them progressively. <strong>Design must be complete from day one — because retrofitting memory onto a stateless system is 10× harder than building in the extension points.</strong></div>
+
+    <div class="sub">Real-World Instantiations</div>
+    <table>
+      <thead><tr><th>Domain</th><th>Intake</th><th>Generation</th><th>Evaluation</th><th>Memory</th></tr></thead>
+      <tbody>
+        <tr><td>Code Review</td><td>AST-level diff parsing. Classify: bug fix, feature, refactor.</td><td>Structured CodeReview schema. Confidence-scored findings.</td><td>Resolution rate (did dev fix it?). BugBench golden set.</td><td>Experience DB: winning model/prompt per language. KG: service dependencies.</td></tr>
+        <tr><td>Legal Documents</td><td>Parser Flywheel for 500+ contracts/day. 95% deterministic by Month 6.</td><td>Clause extraction, risk assessment, template comparison.</td><td>Lawyer reviews + corrections. Risk accuracy golden set.</td><td>Contract KG: parties, obligations, dependencies. Temporal: terms change over time.</td></tr>
+        <tr><td>Customer Support</td><td>Intent classification + sentiment analysis.</td><td>RAG over knowledge base + past tickets. Confidence-based routing.</td><td>CSAT surveys + agent edits of AI drafts.</td><td>Weekly self-improvement cycle: failure analysis → prompt refinement → golden set growth.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">The Final Insight</div>
+    <div class="callout say">"Models come and go. Prompts get rewritten. APIs change. The patterns — intake, generation, evaluation, memory, orchestration — those are permanent. Build the architecture once. Build it right. Everything else is configuration. When someone asks you to build a second GenAI system, you reuse 70-80% of the architecture. The patterns are durable. The implementations evolve."</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7 ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">★</span>
+    <span class="phase-title">Interview Q&amp;A — Practice</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Q1: Why shouldn't you just send everything to the LLM and parse the output?</div>
+    <div class="callout say">"Three reasons. First, cost: running an LLM on every document at $0.05 each adds up to $500/day for 10K documents. The Parser Flywheel pattern generates deterministic parsers from examples, reducing cost to $0.0001/doc for 90-95% of inputs within months. Second, reliability: LLM outputs are nondeterministic — the same invoice might parse differently on Tuesday than Monday, or differently after a model update. Schema-first extraction with Pydantic validation catches format drift. Cross-validation catches arithmetic errors. Third, speed: a deterministic parser runs in milliseconds; an LLM call takes seconds. The insight is: you don't need the LLM to read every document — you need it to teach you how to read documents."</div>
+
+    <div class="sub">Q2: How does the 5-tier memory architecture differ from just using RAG?</div>
+    <div class="callout say">"RAG is one retrieval mechanism. The 5-tier cognitive model is a complete memory system. Working Memory is the context window — your most precious, expensive resource. Short-Term Memory holds the full session state including scratchpad notes and accumulated reasoning, then consolidates durable knowledge at session end. Long-Term Memory has two stores: Core Memory (~2KB always in context — user preferences, key facts) and Archival Memory (unlimited, searched on demand). Episodic Memory stores situation-action-outcome chains — 'last time I saw a similar PR, what worked?' — enabling learning without retraining. Procedural Memory stores codified skills distilled from successful episodes. The key design choice: the LLM itself manages its memory through tool calls, because it has the semantic understanding to decide what's important. RAG is just one retrieval modality feeding into the working memory. The full system also uses graph traversal, keyword search, and re-ranking."</div>
+
+    <div class="sub">Q3: When would you use GraphRAG versus pure vector search?</div>
+    <div class="callout say">"Vector search finds semantically similar text. It's great for 'find me documents about authentication' but fails at 'how does the auth service connect to billing?' — that requires traversing relationships. GraphRAG adds a knowledge graph with entity resolution and community detection. For local queries — specific entity questions like 'who owns the auth service?' — you look up the entity, traverse 1-2 hops of relationships, and retrieve connected source chunks. For global queries — broad themes like 'what are the main risks across our platform?' — you can't answer by retrieving a few chunks. Instead, you use pre-computed community summaries: the Leiden algorithm clusters the graph hierarchically, each cluster gets an LLM summary, and global queries read 10-20 summaries and synthesize. The temporal knowledge graph adds a bi-temporal model so you can query point-in-time facts. In production, you always combine all three: vector + graph + BM25 keyword, merged via Reciprocal Rank Fusion, then re-ranked with a cross-encoder."</div>
+
+    <div class="sub">Q4: How do you prevent evaluation drift — the LLM judge becoming unreliable?</div>
+    <div class="callout say">"The multi-speed testing architecture handles this. Speed 1-2 (schema validation, automated metrics) are deterministic — they never drift. Speed 3 (LLM-as-Judge) is the one that can drift: the judge model may be updated, the rubric may not cover new failure modes, or the judge may develop blind spots. The countermeasure is Speed 5: weekly human expert calibration. Domain experts score a sample of outputs independently, then we compare judge scores against human scores. If agreement drops below threshold, we recalibrate the judge prompt — usually by adding new failure examples or adjusting criteria weights. Speed 4 (golden sets) provides the safety net: even if the judge drifts, the golden set regression tests catch it because golden sets are anchored to expert-validated ground truth, not to the judge. The key insight: every evaluation method has failure modes, so you layer them. Schema validation catches format errors. Automated metrics catch obvious regressions. LLM-as-Judge catches quality issues. Golden sets catch systematic drift. Humans calibrate everything."</div>
+
+    <div class="sub">Q5: How do you make this architecture cost-effective when frontier models charge $0.01-0.10 per request?</div>
+    <div class="callout say">"Four strategies working together. First, Adaptive Complexity Escalation: start with the cheapest approach (single LLM call, small model) and only escalate when the evaluation layer reports insufficient quality. The Experience Database learns which complexity level succeeds for which input type, so over time the router skips directly to the right level instead of always starting at Level 1. Second, Model Routing: simple tasks go to cheap models (Haiku, GPT-4o-mini at $0.001/request), only complex tasks go to frontier models (Opus at $0.10/request). The router learns from the Experience DB which model works best for each input category. Third, the Parser Flywheel: document processing costs drop 20× over 6 months as deterministic parsers replace LLM calls. Fourth, caching and reuse: if the Experience DB has a high-quality response for a very similar input, skip generation entirely. In Alice's code review system, the average cost settled at $0.04/review with 94% developer satisfaction — because most TypeScript PRs use a mid-tier model, only complex multi-file refactors get the frontier model."</div>
+
+    <div class="sub">Q6: What's the hardest thing about adding memory to a production LLM system?</div>
+    <div class="callout say">"Contradiction resolution and memory bloat. Without consolidation, memory grows forever: every session adds facts, many of which are redundant or contradictory. In March the system learns 'Alice leads auth.' In July, 'Bob leads auth.' A naive system keeps both, or overwrites without history. The bi-temporal model solves this for facts: it tracks when something was true (valid time) and when the system learned it (system time). The consolidation process — inspired by how the brain consolidates during sleep — runs periodically to cluster related memories, synthesize higher-level insights, prune redundant entries, and apply temporal decay to unaccessed memories. The hardest design decision is self-managed vs. external memory management. We chose self-managed: the LLM calls memory tools because it has the semantic understanding to decide what's worth remembering. But you must enforce policies — storage limits, privacy rules, retention periods — in the application layer. The LLM drives content decisions; the infrastructure enforces constraints. Getting this boundary right is the hardest part."</div>
+
+    <div class="sub">Q7: Walk me through how the system handles a query that requires both local entity lookup and broad thematic analysis.</div>
+    <div class="callout say">"Consider: 'What risks does the auth service face based on patterns across our platform?' This is a hybrid query — it needs local search (auth service entity and its neighborhood) AND global search (risk patterns across communities). The query analyzer detects both intents. Path 1: entity lookup finds 'auth-service' in the knowledge graph, traverses 1-2 hops to find dependencies, owners, recent PRs, and vulnerabilities. Path 2: community summaries for risk-related clusters are retrieved — the Leiden algorithm has already clustered the graph into themes like 'authentication &amp; security,' 'billing &amp; payments,' 'infrastructure.' Each community has a pre-computed LLM summary. The system reads the relevant community summaries and runs a map-reduce synthesis. Both paths run in parallel. Results are merged via Reciprocal Rank Fusion — each result gets a score of weight/(k + rank) and documents appearing in both lists get boosted. A cross-encoder re-ranks the final set. The context assembly step fits everything into the token budget: graph-structured context for the entity neighborhood, plus synthesized community insights for the thematic patterns. The LLM generates an answer grounded in both specific facts about auth-service and broad patterns across the platform."</div>
+
+    <div class="sub">Q8: How does this architecture compare to just using a framework like LangChain or LangGraph?</div>
+    <div class="callout say">"Frameworks are implementations; this is architecture. LangChain gives you chains and agents. LangGraph gives you graph-based state machines. CrewAI gives you multi-agent collaboration. But none of them give you the complete production architecture: intake normalization, composable versioned prompts, multi-speed evaluation with golden sets, five-tier cognitive memory, knowledge graphs with GraphRAG, temporal facts, or the experience database that enables self-improvement. Frameworks handle Layer 2 (generation) and parts of Layer 5 (orchestration). The architecture handles all five layers plus the cross-cutting concerns: traces, evaluation, memory management, and the feedback loops that make the system improve over time. In practice, you'd use a framework as one component inside this architecture. LangGraph might power your agent runtime in the orchestration layer. But the intake layer, evaluation layer, memory controller, knowledge graph, and experience database — those are yours. The framework is the doctor's stethoscope; this architecture is the hospital."</div>
+
+  </div>
+</div>
+
+</main>
+
+<script>
+document.querySelectorAll('nav a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t&&t.classList.contains('collapsed'))t.classList.remove('collapsed');
+  });
+});
+</script>
+</body>
+</html>

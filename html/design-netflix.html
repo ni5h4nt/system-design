@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Netflix — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Netflix</h1>
+    <span>Global Video Streaming · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-cdn">Open Connect CDN</a>
+  <a href="#dd-encoding">Video Encoding Pipeline</a>
+  <a href="#dd-playback">Playback &amp; ABR</a>
+  <a href="#dd-recs">Recommendation Engine</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#comparison">Comparison</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"We're designing Netflix — a global video streaming platform serving 300M+ subscribers across 190 countries. The architecture fundamentally splits into two planes: a <strong>Control Plane</strong> on AWS handling everything before you press play (browsing, recommendations, account management), and a <strong>Data Plane</strong> via Open Connect, Netflix's proprietary CDN, handling everything after (video delivery). This separation is the single most important architectural decision — each plane can be optimized independently for its unique requirements."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What's the scale?</strong> <em>→ 300M+ subscribers, 190 countries. ~15% of global downstream internet traffic. 94+ billion hours streamed per six months. Peak concurrent streams: ~20M+. 1000+ microservices. Trillions of events ingested per day.</em></li>
+      <li><strong>What does the client-server split look like?</strong> <em>→ Netflix tightly controls clients (TV, mobile, web apps). The backend is 100% on AWS. Video delivery is 100% on Open Connect (Netflix's own CDN). AWS handles zero video bytes — that's critical for cost.</em></li>
+      <li><strong>Upload vs. viewing ratio?</strong> <em>→ Extremely write-rare, read-heavy. Netflix publishes thousands of titles per year but streams billions of hours. Unlike YouTube (user-generated uploads), Netflix controls the entire content pipeline: ingest → encode → distribute → stream.</em></li>
+      <li><strong>How does content get to users?</strong> <em>→ Open Connect Appliances (OCAs) — custom servers placed inside ISPs and at Internet Exchange Points. ~95% of traffic is served from OCAs embedded directly in ISP networks. Content is pre-positioned during off-peak hours ("fill windows").</em></li>
+      <li><strong>How does personalization work?</strong> <em>→ Everything you see is personalized: the rows on the homepage, the order of titles within rows, the artwork displayed for each title, and even which trailer plays. ML models run across the entire catalog for each member.</em></li>
+      <li><strong>What about DRM and piracy?</strong> <em>→ Widevine (Android, Chrome), FairPlay (Apple), PlayReady (Windows). Content encrypted at rest and in transit. Dynamic watermarking ties pirated copies back to specific accounts.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Open Connect CDN: OCA deployment, fill, steering</td><td>Content licensing &amp; studio production</td></tr>
+        <tr><td>Video encoding pipeline: ingest, transcode, per-title</td><td>Payment processing internals</td></tr>
+        <tr><td>Playback architecture: ABR streaming, DRM</td><td>Netflix gaming platform</td></tr>
+        <tr><td>Control plane: API gateway, microservices, data layer</td><td>Netflix Ads tier ad-serving engine</td></tr>
+        <tr><td>Recommendation engine: personalization, A/B testing</td><td>Content moderation / rating boards</td></tr>
+        <tr><td>Resilience: Chaos Engineering, Hystrix, failover</td><td>Internal studio tools (Prodicle etc.)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Design Principles</div>
+    <ul class="items">
+      <li><strong>Control Plane / Data Plane separation:</strong> AWS handles transactional logic (browsing, auth, recommendations). Open Connect handles bulk data (video bytes). They never mix — AWS never serves video, OCAs never run business logic. This lets each plane scale independently with completely different optimization strategies.</li>
+      <li><strong>Everything fails, all the time:</strong> Netflix's engineering culture assumes failure is constant. Chaos Monkey randomly kills instances. Chaos Kong simulates entire region failures. The system must degrade gracefully — never crash entirely. This philosophy produced Hystrix (circuit breaker), Eureka (service discovery), and Zuul (API gateway), all open-sourced.</li>
+      <li><strong>Proactive caching, not reactive:</strong> Open Connect doesn't cache on demand. Content is pre-positioned to OCAs during off-peak fill windows based on predicted demand. When a user presses play, the content is already local. This is fundamentally different from traditional CDNs.</li>
+      <li><strong>Personalization is the product:</strong> Netflix isn't a catalog you browse — it's a recommendation engine with a play button. Every pixel of the UI is ML-driven: row selection, title ranking, artwork selection, synopsis generation. The goal: reduce time-to-play.</li>
+      <li><strong>A/B test everything:</strong> Netflix runs thousands of concurrent A/B tests. Every UI change, algorithm tweak, and encoding decision is validated through statistically rigorous experimentation before rollout.</li>
+    </ul>
+
+    <div class="callout tip">The central tension in Netflix's architecture: <strong>browsing latency vs. streaming quality.</strong> Users expect sub-200ms API responses when browsing (control plane), and zero-rebuffer 4K video when streaming (data plane). These are fundamentally different workloads requiring different infrastructure. The control plane needs low-latency transactional databases (EVCache, Cassandra). The data plane needs massive throughput from edge-local storage (OCAs with SSDs serving 96 Gbps each). Netflix's genius is cleanly separating these concerns.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">Peak Concurrent Streams</div>
+        <div class="value">~20M+</div>
+        <div class="detail">300M subscribers. ~10% daily active. Peak hour: ~20M concurrent at 3-4 Mbps avg.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Edge Egress (Peak)</div>
+        <div class="value">~73 Tbps</div>
+        <div class="detail">20M concurrent × 3.65 Mbps avg ≈ 73 Tbps from OCAs. Origin sees ~2% (1.46 Tbps) due to ~98% cache hit rate.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">API RPS (Control Plane)</div>
+        <div class="value">~1.25M RPS</div>
+        <div class="detail">50M active users × 15 API calls / 10 min ≈ 1.25M RPS burst. EVCache absorbs 95-99% before hitting DBs.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Content Library</div>
+        <div class="value">~17K+ titles</div>
+        <div class="detail">Each title encoded into ~1,200 files (resolutions × bitrates × codecs × audio tracks × subtitles). Total: ~20M+ files.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Storage (Source + Encoded)</div>
+        <div class="value">Petabytes</div>
+        <div class="detail">Source masters: ~100 GB each (4K HDR). Encoded output: ~10-20 PB across all renditions. Each OCA: 100-360 TB.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Events Ingested</div>
+        <div class="value">~1T+ / day</div>
+        <div class="detail">Play events, pause, seek, rebuffer, error, UI interactions. Kafka + Keystone pipeline. Powers ML, A/B testing, analytics.</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1: The CDN is the product.</strong> At 73 Tbps peak egress, Netflix can't rely on third-party CDNs — the cost would be astronomical and the quality uncontrollable. Building Open Connect (proprietary CDN with ISP-embedded servers) was an existential decision. The ~98% edge cache hit rate means AWS origin serves almost no video bytes. This inverts the traditional CDN model: instead of caching reactively, Netflix proactively pushes content to OCAs during off-peak windows.</div>
+
+    <div class="callout decision"><strong>Key insight #2: Encoding is a one-time cost, streaming is perpetual.</strong> Each title is encoded once into ~1,200 renditions (per-title optimized ABR ladders × codecs × audio × subtitles). This encoding is expensive but amortized over millions of views. The strategy: spend more compute on encoding quality to save bandwidth (and therefore CDN cost) on every single stream. Netflix's per-title encoding saves 20-50% bandwidth vs. fixed ladders.</div>
+
+    <div class="callout decision"><strong>Key insight #3: The EVCache layer is the control plane's backbone.</strong> At 1.25M API RPS, hitting Cassandra/MySQL directly would be ruinous. EVCache (Netflix's memcached fork) achieves 95-99% hit rates, meaning databases see only 12K-62K RPS — manageable. The entire browsing experience is effectively served from in-memory cache, with databases as the durable source of truth.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Netflix splits into two planes: the Control Plane on AWS handles browsing, auth, recommendations, and playback session setup. The Data Plane via Open Connect serves 100% of video bytes from OCAs embedded at ISPs and IXPs. Between them: a video encoding pipeline transforms source masters into thousands of optimized renditions, and a steering service dynamically routes clients to the best OCA based on health, proximity, and content availability."</div>
+
+    <div class="sub">Key Architecture Decisions</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Serve 73 Tbps of video globally</td><td style="color:var(--accent-cyan);font-weight:500">Open Connect: proprietary CDN with ISP-embedded OCAs</td><td>Third-party CDNs (Akamai, CloudFront) couldn't match cost or quality at Netflix scale. OCAs inside ISP networks reduce hops to 0-1, eliminating backbone congestion. Netflix provides hardware free; ISPs provide power/space/connectivity. Win-win: ISPs reduce transit costs, Netflix controls quality.</td><td>Eventual</td></tr>
+        <tr><td>Low-latency browsing experience</td><td style="color:var(--accent-cyan);font-weight:500">EVCache (memcached fork) + Cassandra + microservices</td><td>EVCache provides sub-ms reads at 95-99% hit rate. Cassandra for durable writes (tunable consistency). 1000+ microservices on AWS, each owning its data. Rejected: single relational DB (can't scale to 1.25M RPS), shared cache (blast radius too large).</td><td>Eventual</td></tr>
+        <tr><td>Optimize bandwidth per title</td><td style="color:var(--accent-cyan);font-weight:500">Per-title, shot-based encoding with VMAF</td><td>Instead of one encoding ladder for all content, analyze each title's complexity and create custom bitrate ladders. Animated content needs less bandwidth than action. Shot-based encoding goes further: each scene gets its own optimal settings. VMAF (perceptual quality metric) replaces PSNR for quality assessment. Saves 20-50% bandwidth at same perceived quality.</td><td>—</td></tr>
+        <tr><td>Never let the system fully fail</td><td style="color:var(--accent-cyan);font-weight:500">Chaos Engineering + circuit breakers (Hystrix)</td><td>Chaos Monkey kills random instances in production. Chaos Kong simulates full-region outages. Hystrix wraps every service call with circuit breaker, fallback, and bulkhead isolation. If recommendations fail, show cached popular content — never a blank screen. Rejected: "test in staging" (can't replicate production chaos).</td><td>—</td></tr>
+        <tr><td>Every user sees a unique homepage</td><td style="color:var(--accent-cyan);font-weight:500">ML-driven personalization across every surface</td><td>Rows, ranking within rows, artwork, synopsis — all personalized per member. Offline models (batch, Spark) generate candidate sets. Online models (real-time, serving layer) re-rank based on session context. A/B testing framework validates every change with statistical rigor.</td><td>Eventual</td></tr>
+        <tr><td>Protect content from piracy</td><td style="color:var(--accent-cyan);font-weight:500">Multi-DRM (Widevine, FairPlay, PlayReady) + watermarking</td><td>Content encrypted with AES-128. Device-specific DRM licenses issued per session. Dynamic watermarking embeds invisible per-session identifiers — leaked content can be traced to exact account + device + time. License server enforces concurrent stream limits.</td><td>Strong</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">System Architecture</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Netflix Architecture</span>
+      <svg viewBox="0 0 780 560" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="arrg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+          <marker id="arrr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#f85149" stroke-width="1"/></marker>
+        </defs>
+        <!-- Client -->
+        <rect x="300" y="12" width="180" height="40" rx="8" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="390" y="30" fill="#58a6ff" font-size="11" text-anchor="middle" font-weight="600">Client Device</text>
+        <text x="390" y="43" fill="#6e7681" font-size="7" text-anchor="middle">TV · Mobile · Web · React</text>
+
+        <!-- Split arrows -->
+        <line x1="350" y1="52" x2="180" y2="85" stroke="#58a6ff" stroke-width="1.2" marker-end="url(#arr)"/>
+        <line x1="430" y1="52" x2="600" y2="85" stroke="#f85149" stroke-width="1.2" marker-end="url(#arrr)"/>
+        <text x="240" y="65" fill="#58a6ff" font-size="8" font-weight="600">API calls (browse, auth)</text>
+        <text x="520" y="65" fill="#f85149" font-size="8" font-weight="600">Video bytes (stream)</text>
+
+        <!-- CONTROL PLANE -->
+        <rect x="20" y="85" width="360" height="380" rx="10" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1.5"/>
+        <text x="34" y="103" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".1em" opacity=".7">CONTROL PLANE (AWS)</text>
+
+        <!-- Edge Gateway -->
+        <g><rect x="40" y="115" width="150" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="115" y="130" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Edge Gateway</text>
+          <text x="115" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Zuul 2 / Envoy · TLS · Routing</text>
+        </g>
+        <!-- Service Discovery -->
+        <g><rect x="210" y="115" width="150" height="36" rx="6" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="285" y="130" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Service Discovery</text>
+          <text x="285" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Eureka · Health checks</text>
+        </g>
+
+        <!-- Microservices -->
+        <g><rect x="40" y="165" width="95" height="42" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+          <text x="87" y="182" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Auth</text>
+          <text x="87" y="198" fill="#6e7681" font-size="7" text-anchor="middle">Login · SSO · MFA</text>
+        </g>
+        <g><rect x="145" y="165" width="95" height="42" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+          <text x="192" y="182" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Discovery</text>
+          <text x="192" y="198" fill="#6e7681" font-size="7" text-anchor="middle">Search · Browse</text>
+        </g>
+        <g><rect x="250" y="165" width="110" height="42" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+          <text x="305" y="182" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Recommendation</text>
+          <text x="305" y="198" fill="#6e7681" font-size="7" text-anchor="middle">ML models · Ranking</text>
+        </g>
+
+        <g><rect x="40" y="220" width="95" height="42" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+          <text x="87" y="237" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Playback</text>
+          <text x="87" y="253" fill="#6e7681" font-size="7" text-anchor="middle">Session · DRM lic.</text>
+        </g>
+        <g><rect x="145" y="220" width="95" height="42" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+          <text x="192" y="237" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Billing</text>
+          <text x="192" y="253" fill="#6e7681" font-size="7" text-anchor="middle">Subscriptions</text>
+        </g>
+        <g><rect x="250" y="220" width="110" height="42" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+          <text x="305" y="237" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Steering</text>
+          <text x="305" y="253" fill="#6e7681" font-size="7" text-anchor="middle">OCA selection · URLs</text>
+        </g>
+
+        <!-- Cache + DB -->
+        <g><rect x="40" y="280" width="150" height="36" rx="5" fill="#161b22" stroke="#d29922" stroke-width="1.2"/>
+          <text x="115" y="294" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">EVCache (Memcached)</text>
+          <text x="115" y="306" fill="#6e7681" font-size="7" text-anchor="middle">95-99% hit rate · sub-ms</text>
+        </g>
+        <g><rect x="210" y="280" width="150" height="36" rx="5" fill="#161b22" stroke="#d29922" stroke-width="1.2"/>
+          <text x="285" y="294" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Cassandra + MySQL</text>
+          <text x="285" y="306" fill="#6e7681" font-size="7" text-anchor="middle">Profiles · Metadata · History</text>
+        </g>
+
+        <!-- Event Pipeline -->
+        <g><rect x="40" y="332" width="320" height="36" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/>
+          <text x="200" y="346" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Event Pipeline: Kafka → Keystone → Spark/Flink</text>
+          <text x="200" y="358" fill="#6e7681" font-size="7" text-anchor="middle">1T+ events/day · A/B testing · ML training · Analytics</text>
+        </g>
+
+        <!-- Encoding -->
+        <g><rect x="40" y="384" width="320" height="42" rx="5" fill="#161b22" stroke="#f85149" stroke-width="1"/>
+          <text x="200" y="401" fill="#f85149" font-size="9" text-anchor="middle" font-weight="600">Video Encoding Pipeline (Cosmos)</text>
+          <text x="200" y="416" fill="#6e7681" font-size="7" text-anchor="middle">Ingest → Chunk → Per-title encode → VMAF QA → Package → S3</text>
+        </g>
+
+        <!-- Resilience -->
+        <g><rect x="40" y="440" width="100" height="18" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="90" y="452" fill="#6e7681" font-size="7" text-anchor="middle">Hystrix</text>
+        </g>
+        <g><rect x="150" y="440" width="100" height="18" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="200" y="452" fill="#6e7681" font-size="7" text-anchor="middle">Chaos Monkey</text>
+        </g>
+        <g><rect x="260" y="440" width="100" height="18" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="310" y="452" fill="#6e7681" font-size="7" text-anchor="middle">Spinnaker CD</text>
+        </g>
+
+        <!-- DATA PLANE -->
+        <rect x="400" y="85" width="360" height="260" rx="10" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.15)" stroke-width="1.5"/>
+        <text x="414" y="103" fill="#f85149" font-size="9" font-weight="600" letter-spacing=".1em" opacity=".7">DATA PLANE (OPEN CONNECT CDN)</text>
+
+        <!-- OCA types -->
+        <g><rect x="420" y="115" width="160" height="50" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/>
+          <text x="500" y="133" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">Storage OCA</text>
+          <text x="500" y="146" fill="#6e7681" font-size="7" text-anchor="middle">360 TB HDD+SSD · Full catalog</text>
+          <text x="500" y="157" fill="#6e7681" font-size="7" text-anchor="middle">IX deployments · 96 Gbps</text>
+        </g>
+        <g><rect x="590" y="115" width="160" height="50" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/>
+          <text x="670" y="133" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">Flash OCA</text>
+          <text x="670" y="146" fill="#6e7681" font-size="7" text-anchor="middle">SSD + RAM · ~60% catalog</text>
+          <text x="670" y="157" fill="#6e7681" font-size="7" text-anchor="middle">ISP-embedded · 18 Gbps</text>
+        </g>
+
+        <!-- ISP box -->
+        <rect x="420" y="180" width="330" height="50" rx="6" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.2)" stroke-dasharray="4 2"/>
+        <text x="434" y="195" fill="#d29922" font-size="8" font-weight="600" opacity=".7">ISP NETWORK (Embedded Deployment)</text>
+        <text x="585" y="210" fill="#6e7681" font-size="8" text-anchor="middle">OCAs inside ISP → 0-1 network hops → lowest latency</text>
+        <text x="585" y="222" fill="#6e7681" font-size="7" text-anchor="middle">ISP provides: power, space, connectivity · Netflix provides: hardware, software, content</text>
+
+        <!-- IX box -->
+        <rect x="420" y="244" width="330" height="40" rx="6" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.2)" stroke-dasharray="4 2"/>
+        <text x="434" y="259" fill="#bc8cff" font-size="8" font-weight="600" opacity=".7">IX DEPLOYMENT (Peering / Fallback)</text>
+        <text x="585" y="274" fill="#6e7681" font-size="8" text-anchor="middle">Settlement-free peering · Long-tail content · Fill source for embedded OCAs</text>
+
+        <!-- Control/Data connection -->
+        <g><rect x="420" y="300" width="330" height="36" rx="5" fill="#161b22" stroke="#39d2c0" stroke-width="1"/>
+          <text x="585" y="314" fill="#39d2c0" font-size="9" text-anchor="middle" font-weight="600">OCA Control Plane (on AWS)</text>
+          <text x="585" y="326" fill="#6e7681" font-size="7" text-anchor="middle">Health reports · BGP routes · Fill scheduling · Content availability</text>
+        </g>
+
+        <!-- Arrows: steering to OCA -->
+        <line x1="360" y1="241" x2="420" y2="200" stroke="#39d2c0" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+        <!-- Arrow: encoding to S3 to OCA -->
+        <line x1="360" y1="405" x2="585" y2="340" stroke="#f85149" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrr)"/>
+        <text x="470" y="380" fill="#6e7681" font-size="7" transform="rotate(-20, 470, 380)">Encoded files → S3 → Fill → OCAs</text>
+
+        <!-- Bottom: Container + CD -->
+        <rect x="400" y="365" width="360" height="100" rx="8" fill="rgba(63,185,80,.02)" stroke="rgba(63,185,80,.12)" stroke-dasharray="4 2"/>
+        <text x="414" y="383" fill="#3fb950" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">PLATFORM &amp; OBSERVABILITY</text>
+        <g><rect x="420" y="393" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="470" y="409" fill="#6e7681" font-size="8" text-anchor="middle">Titus (Containers)</text>
+        </g>
+        <g><rect x="530" y="393" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="580" y="409" fill="#6e7681" font-size="8" text-anchor="middle">Spinnaker (CD)</text>
+        </g>
+        <g><rect x="640" y="393" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="690" y="409" fill="#6e7681" font-size="8" text-anchor="middle">Atlas (Metrics)</text>
+        </g>
+        <g><rect x="420" y="430" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="470" y="446" fill="#6e7681" font-size="8" text-anchor="middle">Mantis (Stream)</text>
+        </g>
+        <g><rect x="530" y="430" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="580" y="446" fill="#6e7681" font-size="8" text-anchor="middle">Kayenta (Canary)</text>
+        </g>
+        <g><rect x="640" y="430" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+          <text x="690" y="446" fill="#6e7681" font-size="8" text-anchor="middle">Zuul (Gateway)</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="sub">Flow: What Happens When You Press Play</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Press Play → Video Streaming</span>
+      <svg viewBox="0 0 780 640" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="pa" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="pb" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#58a6ff" stroke-width="1"/></marker>
+          <marker id="pr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#f85149" stroke-width="1"/></marker>
+          <marker id="pg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- User action -->
+        <rect x="270" y="10" width="240" height="34" rx="17" fill="#161b22" stroke="#e3b341" stroke-width="1.5"/>
+        <text x="390" y="31" fill="#e3b341" font-size="11" text-anchor="middle" font-weight="600">▶ User presses PLAY</text>
+        <line x1="390" y1="44" x2="390" y2="66" stroke="#6e7681" stroke-width="1" marker-end="url(#pa)"/>
+
+        <!-- Step 1: Playback Security -->
+        <rect x="40" y="66" width="340" height="80" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="54" y="82" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".06em">1. PLAYBACK SECURITY API</text>
+        <text x="345" y="82" fill="#6e7681" font-size="8" text-anchor="end">AWS</text>
+        <rect x="56" y="92" width="85" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="98" y="106" fill="#6e7681" font-size="8" text-anchor="middle">Auth ✓</text>
+        <rect x="150" y="92" width="85" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="192" y="106" fill="#6e7681" font-size="8" text-anchor="middle">Geo ✓</text>
+        <rect x="244" y="92" width="85" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="286" y="106" fill="#6e7681" font-size="8" text-anchor="middle">Session ✓</text>
+        <rect x="56" y="120" width="274" height="18" rx="3" fill="rgba(188,140,255,.08)" stroke="#bc8cff" stroke-width=".6"/>
+        <text x="193" y="132" fill="#bc8cff" font-size="7" text-anchor="middle" font-weight="600">DRM License issued (Widevine / FairPlay / PlayReady)</text>
+
+        <!-- Step 2: Steering -->
+        <rect x="400" y="66" width="340" height="80" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="414" y="82" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".06em">2. STEERING SERVICE</text>
+        <text x="705" y="82" fill="#6e7681" font-size="8" text-anchor="end">AWS</text>
+        <text x="414" y="100" fill="#6e7681" font-size="8">Which OCAs have this title?</text>
+        <text x="414" y="114" fill="#6e7681" font-size="8">Filter: health, proximity, load</text>
+        <text x="414" y="128" fill="#6e7681" font-size="8">Rank by predicted throughput</text>
+        <rect x="600" y="100" width="126" height="30" rx="4" fill="#161b22" stroke="#d29922" stroke-width=".8"/>
+        <text x="663" y="114" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">OCA URL List</text>
+        <text x="663" y="124" fill="#6e7681" font-size="7" text-anchor="middle">ranked by quality</text>
+
+        <line x1="210" y1="146" x2="210" y2="170" stroke="#58a6ff" stroke-width="1" marker-end="url(#pb)"/>
+        <line x1="570" y1="146" x2="570" y2="170" stroke="#58a6ff" stroke-width="1" marker-end="url(#pb)"/>
+
+        <!-- Step 3: Manifest -->
+        <rect x="120" y="170" width="540" height="56" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="134" y="188" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".06em">3. CONTENT DISCOVERY API</text>
+        <text x="625" y="188" fill="#6e7681" font-size="8" text-anchor="end">AWS</text>
+        <rect x="136" y="197" width="130" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="201" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Manifest (240p → 4K)</text>
+        <rect x="276" y="197" width="130" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="341" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Codecs + Audio + Subs</text>
+        <rect x="416" y="197" width="130" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="481" y="210" fill="#6e7681" font-size="7" text-anchor="middle">OCA URLs attached</text>
+
+        <!-- Divider: Control → Data plane -->
+        <line x1="40" y1="248" x2="740" y2="248" stroke="#f85149" stroke-width="1" stroke-dasharray="6 3"/>
+        <rect x="310" y="238" width="160" height="20" rx="10" fill="var(--bg)" stroke="#f85149" stroke-width="1"/>
+        <text x="390" y="252" fill="#f85149" font-size="8" text-anchor="middle" font-weight="600">CONTROL → DATA PLANE</text>
+
+        <!-- Step 4: Client ABR -->
+        <rect x="40" y="270" width="340" height="90" rx="8" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.15)" stroke-width="1"/>
+        <text x="54" y="288" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".06em">4. CLIENT ABR ENGINE</text>
+        <text x="345" y="288" fill="#6e7681" font-size="8" text-anchor="end">Device</text>
+        <text x="54" y="306" fill="#6e7681" font-size="8">Connect to top-ranked OCA (0-1 hops)</text>
+        <text x="54" y="320" fill="#6e7681" font-size="8">Start conservative → ramp up bitrate</text>
+        <text x="54" y="334" fill="#6e7681" font-size="8">Fetch 2-4s segments via HTTPS</text>
+        <text x="54" y="348" fill="#6e7681" font-size="8">Switch renditions mid-stream as needed</text>
+
+        <!-- Step 5: OCA Serves -->
+        <rect x="400" y="270" width="340" height="90" rx="8" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.15)" stroke-width="1"/>
+        <text x="414" y="288" fill="#f85149" font-size="9" font-weight="600" letter-spacing=".06em">5. OCA SERVES VIDEO</text>
+        <text x="705" y="288" fill="#6e7681" font-size="8" text-anchor="end">Open Connect</text>
+        <text x="414" y="306" fill="#6e7681" font-size="8">Content pre-positioned (fill window)</text>
+        <text x="414" y="320" fill="#6e7681" font-size="8">NGINX serves encrypted segments</text>
+        <text x="414" y="334" fill="#6e7681" font-size="8">SSD/HDD → parallel TCP connections</text>
+        <text x="414" y="348" fill="#6e7681" font-size="8">Fallback: ISP OCA → IX OCA → Origin</text>
+
+        <!-- Arrows between 4 and 5 -->
+        <line x1="380" y1="315" x2="400" y2="315" stroke="#f85149" stroke-width="1.2" marker-end="url(#pr)"/>
+        <text x="390" y="310" fill="#f85149" font-size="7" text-anchor="middle">req</text>
+        <line x1="400" y1="335" x2="380" y2="335" stroke="#3fb950" stroke-width="1.2" marker-end="url(#pg)"/>
+        <text x="390" y="346" fill="#3fb950" font-size="7" text-anchor="middle">segments</text>
+
+        <!-- Video playing indicator -->
+        <rect x="170" y="380" width="220" height="30" rx="15" fill="rgba(63,185,80,.08)" stroke="#3fb950" stroke-width="1"/>
+        <text x="280" y="399" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">▶ Video is playing!</text>
+
+        <!-- Step 6: Telemetry -->
+        <line x1="280" y1="410" x2="280" y2="435" stroke="#6e7681" stroke-width="1" marker-end="url(#pa)"/>
+        <rect x="40" y="435" width="700" height="80" rx="8" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.12)" stroke-width="1"/>
+        <text x="54" y="453" fill="#bc8cff" font-size="9" font-weight="600" letter-spacing=".06em">6. TELEMETRY FLOWS BACK</text>
+        <text x="705" y="453" fill="#6e7681" font-size="8" text-anchor="end">AWS</text>
+        <g><rect x="56" y="463" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+          <text x="106" y="476" fill="#6e7681" font-size="8" text-anchor="middle">Play events</text>
+          <text x="106" y="486" fill="#6e7681" font-size="7" text-anchor="middle">pause/seek/rebuf</text></g>
+        <rect x="168" y="466" width="16" height="18" rx="2" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="176" y="478" fill="#6e7681" font-size="8" text-anchor="middle">→</text>
+        <g><rect x="196" y="463" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+          <text x="246" y="478" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">Kafka</text></g>
+        <rect x="308" y="466" width="16" height="18" rx="2" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="316" y="478" fill="#6e7681" font-size="8" text-anchor="middle">→</text>
+        <g><rect x="336" y="463" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+          <text x="386" y="478" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">Keystone</text></g>
+        <rect x="448" y="466" width="16" height="18" rx="2" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="456" y="478" fill="#6e7681" font-size="8" text-anchor="middle">→</text>
+        <g><rect x="476" y="463" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+          <text x="526" y="478" fill="#6e7681" font-size="8" text-anchor="middle">A/B Testing</text></g>
+        <g><rect x="588" y="463" width="100" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+          <text x="638" y="478" fill="#6e7681" font-size="8" text-anchor="middle">ML Training</text></g>
+        <text x="390" y="508" fill="#6e7681" font-size="7" text-anchor="middle">QoE metrics: startup time, rebuffer ratio, bitrate history → powers recommendations &amp; monitoring</text>
+
+        <!-- Legend -->
+        <rect x="60" y="535" width="660" height="44" rx="6" fill="rgba(255,255,255,.01)" stroke="var(--border)" stroke-width=".5"/>
+        <rect x="85" y="552" width="40" height="14" rx="3" fill="rgba(88,166,255,.1)" stroke="rgba(88,166,255,.3)" stroke-width=".5"/>
+        <text x="133" y="563" fill="#6e7681" font-size="8">Control Plane (AWS)</text>
+        <rect x="255" y="552" width="40" height="14" rx="3" fill="rgba(248,81,73,.1)" stroke="rgba(248,81,73,.3)" stroke-width=".5"/>
+        <text x="303" y="563" fill="#6e7681" font-size="8">Data Plane (OCA)</text>
+        <rect x="420" y="552" width="40" height="14" rx="3" fill="rgba(210,153,34,.1)" stroke="rgba(210,153,34,.3)" stroke-width=".5"/>
+        <text x="468" y="563" fill="#6e7681" font-size="8">Client Device</text>
+        <rect x="565" y="552" width="40" height="14" rx="3" fill="rgba(188,140,255,.1)" stroke="rgba(188,140,255,.3)" stroke-width=".5"/>
+        <text x="613" y="563" fill="#6e7681" font-size="8">Telemetry</text>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4);color:var(--bg)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout goal"><strong>The four deepest architectural questions:</strong> (1) How does Open Connect deliver 73 Tbps with near-zero rebuffering? (2) How does the encoding pipeline produce ~1,200 files per title at optimal quality? (3) How does adaptive bitrate streaming work end-to-end? (4) How does the recommendation engine personalize every pixel?</div>
+
+    <!-- DD1 -->
+    <div class="sub" id="dd-cdn">Deep Dive 1: Open Connect CDN (~8 min)</div>
+
+    <div class="callout goal"><strong>Open Connect is Netflix's purpose-built CDN serving 100% of video traffic.</strong> Unlike traditional CDNs that cache reactively, Open Connect proactively pushes content to servers embedded inside ISP networks. ~95% of traffic is served from OCAs within the viewer's own ISP — 0-1 network hops.</div>
+
+    <table>
+      <thead><tr><th>Component</th><th>What</th><th>Scale</th></tr></thead>
+      <tbody>
+        <tr><td>OCA (Flash)</td><td>SSD + RAM based. Top ~60% of catalog by popularity. Deployed inside ISP data centers. 2U, ~270W, up to 120 TB storage, ~18 Gbps throughput.</td><td>Most common deployment worldwide</td></tr>
+        <tr><td>OCA (Storage)</td><td>HDD + flash mix. Full catalog. Deployed at IX locations. 2U, ~650W, up to 360 TB, ~96 Gbps with 6×10GE or 2×100GE ports.</td><td>Major IXPs globally</td></tr>
+        <tr><td>Fill Process</td><td>During off-peak hours ("fill windows"), new/updated content is pushed from S3 origin to OCAs. Predictive: Netflix knows what users will watch before they watch it. Fills avoid read/write contention on disks.</td><td>Nightly for each region</td></tr>
+        <tr><td>Steering Service</td><td>AWS-hosted. Receives OCA health reports, BGP routes, content availability. Selects optimal OCAs for each playback session. Generates ranked URL list for client.</td><td>Evaluates every play request</td></tr>
+        <tr><td>BGP Routing</td><td>OCAs are "directed-cache" — they only serve IP prefixes explicitly advertised via BGP. ISPs control which customers route to embedded OCAs. Full ISP control over traffic.</td><td>Per-OCA BGP sessions</td></tr>
+        <tr><td>Fallback Chain</td><td>Embedded OCA → IX OCA → Peering → Transit → Origin (S3). Each level is a fallback. Client holds multiple OCA URLs and switches on failure.</td><td>~98% served from edge</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why build a proprietary CDN instead of using Akamai/CloudFront?</strong> Three reasons: (1) <strong>Cost</strong> — at 73 Tbps, third-party CDN costs would be billions/year. Open Connect's model (Netflix provides hardware, ISP provides power/space) has dramatically lower per-bit cost. (2) <strong>Quality control</strong> — Netflix can tune every aspect of the OCA stack: FreeBSD OS, NGINX configs, TCP optimizations, disk I/O scheduling. Third-party CDNs serve many customers and can't be customized. (3) <strong>Proactive caching</strong> — Netflix knows its catalog and can predict demand. Traditional CDNs cache reactively (cache misses on first request). Open Connect pre-fills content, so the first play request is always a cache hit.</div>
+
+    <div class="callout tip"><strong>The OCA software stack.</strong> OCAs run FreeBSD (not Linux) with heavily tuned kernel parameters. Content is served via NGINX. Netflix has optimized the entire stack from network card drivers to disk I/O scheduling to minimize latency and maximize throughput. A single 2U flash OCA can saturate 100 Gbps of network. The software is automatically updated by the Open Connect control plane — ISPs don't manage it.</div>
+
+    <!-- DD2 -->
+    <div class="sub" id="dd-encoding">Deep Dive 2: Video Encoding Pipeline (~8 min)</div>
+
+    <div class="callout goal"><strong>Each title goes through a three-stage microservices pipeline (Cosmos): Ingest → Process → Distribute.</strong> The key innovation is per-title, shot-based encoding: instead of a fixed bitrate ladder, Netflix analyzes each title's visual complexity and creates a custom encoding ladder that minimizes bandwidth while maintaining perceptual quality measured by VMAF.</div>
+
+    <div class="schema"><span class="comment">// Encoding Pipeline: Cosmos Platform</span>
+
+<span class="table-name">Stage 1: INGEST</span>
+  Source master received (4K HDR, ProRes/JPEG2000, ~100 GB)
+  ├── Validate: format, resolution, frame rate, color space
+  ├── Quality checks: detect artifacts, dropped frames, audio sync
+  └── Store source in <span class="pk">S3</span> (immutable, versioned)
+
+<span class="table-name">Stage 2: PROCESS</span>
+  <span class="fk">Split into chunks</span> (scene-aligned, ~2-6 sec each)
+  ├── Per-title analysis: compute complexity curve (motion, detail, grain)
+  ├── For each chunk, for each target resolution:
+  │   ├── Encode with multiple bitrate candidates
+  │   ├── Score each with <span class="pk">VMAF</span> (perceptual quality, 0-100)
+  │   ├── Find <span class="fk">convex hull</span>: minimum bitrate for target VMAF score
+  │   └── Select optimal bitrate for this chunk at this resolution
+  ├── Codecs: H.264 (legacy), H.265/HEVC, VP9, <span class="pk">AV1</span> (newest, best compression)
+  ├── Parallel execution: hundreds of EC2 instances per title
+  └── Audio: Dolby Digital Plus, Dolby Atmos, stereo fallback
+
+<span class="table-name">Stage 3: DISTRIBUTE</span>
+  Package into streaming format (CMAF: HLS + DASH compatible)
+  ├── Encrypt with DRM keys (Widevine, FairPlay, PlayReady)
+  ├── Generate manifest files (MPD/M3U8) per title per device class
+  ├── Upload to <span class="pk">S3 origin</span>
+  └── Trigger <span class="fk">fill</span> to OCAs worldwide (off-peak window)</div>
+
+    <div class="callout decision"><strong>Per-title encoding saves 20-50% bandwidth.</strong> Consider: an animated film like "Klaus" has simple, flat colors — it looks great at 1.5 Mbps. A live-action thriller like "Extraction" has complex motion, explosions, and detail — it needs 4 Mbps for the same perceived quality. A fixed encoding ladder wastes bandwidth on simple content and under-serves complex content. Shot-based encoding goes further: a quiet dialogue scene within an action film gets a lower bitrate than the subsequent chase scene. VMAF (Video Multimethod Assessment Fusion) is Netflix's open-source perceptual quality metric that correlates with human perception far better than traditional PSNR. Each encode is scored by VMAF, and only encodes meeting the quality threshold are promoted.</div>
+
+    <!-- DD3 -->
+    <div class="sub" id="dd-playback">Deep Dive 3: Playback &amp; Adaptive Bitrate (~7 min)</div>
+
+    <div class="callout goal"><strong>Adaptive Bitrate (ABR) streaming adjusts video quality in real-time based on network conditions.</strong> Netflix streams in 2-4 second segments. Before each segment, the client decides which bitrate/resolution to request based on buffer level, estimated throughput, and device capabilities. The goal: maximize quality while preventing rebuffering.</div>
+
+    <table>
+      <thead><tr><th>Concept</th><th>How It Works</th><th>Why It Matters</th></tr></thead>
+      <tbody>
+        <tr><td>ABR Ladder</td><td>Per-title set of renditions: e.g., 240p@235kbps, 480p@750kbps, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fbccc9cb8bbbc9d5c8ceb6998b88">[email&#160;protected]</a>, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7e4f4e464e0e3e4a50484a331c0e0d">[email&#160;protected]</a>, <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9aaed1daabafb4a8afd7f8eae9">[email&#160;protected]</a>. Custom per title via per-title encoding.</td><td>User gets the best quality their bandwidth supports without manual selection</td></tr>
+        <tr><td>Segment Size</td><td>2-4 second video chunks. Client requests one at a time. Can switch quality between segments seamlessly.</td><td>Short segments = faster adaptation. Too short = more HTTP overhead + seek overhead</td></tr>
+        <tr><td>Buffer Model</td><td>Client maintains a playback buffer (~30-60 seconds ahead). ABR algorithm targets a buffer level that balances quality vs. rebuffer risk.</td><td>More buffer = safer from rebuffer but slower quality ramp-up</td></tr>
+        <tr><td>Throughput Estimation</td><td>Measure download time of each segment. Weighted average of recent measurements. Conservative: better to under-estimate than over-estimate (rebuffer is worse than lower quality).</td><td>Accurate estimation = better bitrate selection = better user experience</td></tr>
+        <tr><td>Multi-OCA Fallback</td><td>Client receives multiple OCA URLs. If primary OCA stalls, switch to backup OCA mid-stream without user-visible interruption. Parallel TCP connections for resilience.</td><td>ISP-level OCA failures don't cause rebuffering for the user</td></tr>
+        <tr><td>DRM Enforcement</td><td>Content decrypted in hardware (when available) or software DRM sandbox. License refresh per session. Concurrent stream limits enforced server-side.</td><td>Content protection without noticeable latency. Hardware DRM enables higher quality tiers (L1 Widevine = 4K).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Netflix's ABR algorithm is ML-driven.</strong> Earlier ABR algorithms used simple heuristics (e.g., "if throughput > 2× current bitrate, switch up"). Netflix's production algorithm uses predictive models trained on billions of streaming sessions. It accounts for: device type, network type (WiFi vs. cellular), time of day, ISP characteristics, and historical rebuffer patterns for this user. The result: higher average bitrate with fewer rebuffers than any heuristic approach.</div>
+
+    <!-- DD4 -->
+    <div class="sub" id="dd-recs">Deep Dive 4: Recommendation Engine (~7 min)</div>
+
+    <div class="callout goal"><strong>Netflix's recommendation system is the product.</strong> It determines everything: which rows appear on the homepage, which titles appear in each row, the order of titles, which artwork to display, and which trailer to autoplay. The goal is minimizing time-to-play — getting users watching content they'll enjoy as fast as possible.</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>Offline Pipeline <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">BATCH</span></h4>
+        <ul>
+          <li>Spark/Flink jobs on billions of viewing events</li>
+          <li>Train collaborative filtering models (matrix factorization)</li>
+          <li>Generate candidate sets per member (~1000 titles)</li>
+          <li>Compute title similarity embeddings</li>
+          <li>Pre-compute personalized row contents</li>
+          <li>Retrained daily or on schedule</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Online Serving <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">REAL-TIME</span></h4>
+        <ul>
+          <li>Re-rank candidates based on session context</li>
+          <li>Factor in: time of day, device, recent watches</li>
+          <li>Artwork personalization: select which image per title</li>
+          <li>Row assembly: pick rows + rank titles within each</li>
+          <li>Sub-100ms response time from EVCache + model serving</li>
+          <li>Personalized even for new profiles (cold-start models)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>A/B Testing Framework <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">EXPERIMENT</span></h4>
+        <ul>
+          <li>Thousands of concurrent experiments</li>
+          <li>Statistically rigorous: control vs. treatment groups</li>
+          <li>Metric: retention, engagement, satisfaction</li>
+          <li>Every ML model change is A/B tested</li>
+          <li>Kayenta for automated canary analysis</li>
+          <li>Results feed back into model training</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Artwork Personalization <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">VISUAL</span></h4>
+        <ul>
+          <li>Each title has dozens of artwork variants</li>
+          <li>Different users see different images for same title</li>
+          <li>Based on genre preferences, actor preferences</li>
+          <li>Contextual bandit algorithm selects artwork</li>
+          <li>Significantly increases click-through rate</li>
+          <li>A/B tested against random selection baseline</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Cold-start problem.</strong> A brand-new user has no viewing history. Netflix solves this in layers: (1) During signup, ask for 3 titles you've enjoyed — seed the model. (2) Use demographic/geographic priors (what's popular in your region). (3) Apply "popularity with diversity" — show trending titles across genres. (4) As the user watches even 1-2 titles, collaborative filtering kicks in and personalizes rapidly. The first 3 sessions are critical for retention — the recommendations must be good enough to hook the user.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5);color:var(--bg)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">AWS region goes down</span><span class="mitigation">Multi-region active-active on AWS. Zuul routes traffic to healthy region. Cassandra cross-region replication provides data availability. Open Connect continues serving video independently — video delivery is decoupled from AWS. Chaos Kong regularly simulates full-region failures to validate failover. The user might see stale recommendations but video keeps playing.</span></div>
+    <div class="failure-row"><span class="scenario">OCA failure (ISP-embedded)</span><span class="mitigation">Client holds multiple OCA URLs. If primary OCA returns errors or stalls, client seamlessly switches to next-ranked OCA (may be at IX or different ISP location). OCA health reporting to AWS control plane updates steering within minutes. Failed OCA is deprioritized for new sessions. ISP-level redundancy: multiple OCAs per site.</span></div>
+    <div class="failure-row"><span class="scenario">Recommendation service fails</span><span class="mitigation">Hystrix circuit breaker trips. Fallback: serve cached popular/trending content from EVCache. Users see a generic homepage rather than a blank screen. The "Top 10" rows are pre-computed and cached. Degraded but functional. Netflix principle: "always show something watchable."</span></div>
+    <div class="failure-row"><span class="scenario">Massive traffic spike (new season premiere)</span><span class="mitigation">Open Connect pre-positions content to OCAs days before release. Staggered global release by timezone distributes the spike. Auto-scaling on AWS for control plane. OCAs absorb the bandwidth — AWS origin traffic stays minimal. Netflix can predict premiere demand and pre-scale specific regions.</span></div>
+    <div class="failure-row"><span class="scenario">EVCache cluster failure</span><span class="mitigation">EVCache runs in replicated clusters across AZs. On failure: requests fall through to Cassandra (higher latency, but functional). Cassandra handles the burst with eventual consistency. EVCache auto-recovers and warms from DB. The browsing experience may be slower (200ms → 500ms) but never fails.</span></div>
+    <div class="failure-row"><span class="scenario">Encoding pipeline produces bad quality</span><span class="mitigation">Every encode is scored by VMAF. Encodes below the quality threshold are rejected and re-encoded. QA team reviews representative samples. If bad content reaches OCAs, the asset can be pulled and re-encoded. Content versioning in S3 enables rollback. OCAs can be re-filled with corrected assets during next fill window.</span></div>
+
+    <div class="sub" id="comparison">Netflix vs. YouTube — Architectural Comparison</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>Netflix</th><th>YouTube</th></tr></thead>
+      <tbody>
+        <tr><td>Content Model</td><td>Curated: Netflix controls all content. Thousands of premium titles.</td><td>User-generated: anyone can upload. Billions of videos.</td></tr>
+        <tr><td>Upload:View Ratio</td><td>Extreme read-heavy. ~17K titles, billions of viewing hours.</td><td>High upload volume: 500+ hours uploaded per minute.</td></tr>
+        <tr><td>CDN</td><td>Proprietary: Open Connect with ISP-embedded OCAs. ~98% edge cache hit.</td><td>Google's global edge network (same infra as Search, Gmail).</td></tr>
+        <tr><td>Encoding</td><td>Per-title, shot-based with VMAF. Invest heavily in encoding quality since each title is viewed millions of times.</td><td>Fast encoding (real-time for live). Simpler per-category ladders. Volume demands speed over per-title optimization.</td></tr>
+        <tr><td>Personalization</td><td>Everything personalized: rows, ranking, artwork, trailers. Member-level customization.</td><td>Algorithm-driven recommendations + search. Personalized but competing with freshness (recency matters more).</td></tr>
+        <tr><td>Monetization</td><td>Subscription (+ ad-supported tier). No per-view economics.</td><td>Ad-supported (primary) + Premium. Revenue per impression matters.</td></tr>
+        <tr><td>Latency Priority</td><td>Startup time + rebuffer rate. Quality over speed-of-upload.</td><td>Upload processing speed + search indexing. Freshness matters.</td></tr>
+        <tr><td>DRM</td><td>Heavy: multi-DRM + watermarking. Premium content requires strong protection.</td><td>Lighter: Content ID for copyright. Most content is free/ad-supported.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Chaos Engineering &amp; Resilience</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>Chaos Monkey <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">INSTANCE</span></h4>
+        <ul>
+          <li>Randomly terminates EC2 instances in production</li>
+          <li>Validates that services auto-recover</li>
+          <li>Runs during business hours (engineers available)</li>
+          <li>Foundational: every Netflix service must survive it</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Chaos Kong <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">REGION</span></h4>
+        <ul>
+          <li>Simulates entire AWS region failure</li>
+          <li>Validates cross-region failover</li>
+          <li>Traffic reroutes to surviving regions</li>
+          <li>Open Connect continues independently</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Hystrix <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">CIRCUIT</span></h4>
+        <ul>
+          <li>Circuit breaker on every inter-service call</li>
+          <li>Fallback function returns degraded response</li>
+          <li>Bulkhead isolation: failure in one service can't cascade</li>
+          <li>Real-time monitoring dashboard</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>FIT / ChAP <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">TARGETED</span></h4>
+        <ul>
+          <li>FIT: inject precise failures (specific service, specific error)</li>
+          <li>ChAP: automated, guarded chaos experiments</li>
+          <li>Compare experiment group (with failure) vs. control</li>
+          <li>Auto-abort if user impact exceeds threshold</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Data Layer Architecture</div>
+    <table>
+      <thead><tr><th>Store</th><th>Use Case</th><th>Why This Store</th></tr></thead>
+      <tbody>
+        <tr><td>EVCache</td><td>Session data, API responses, recommendations cache</td><td>Sub-ms reads. Netflix's memcached fork with replication + zone-awareness. 95-99% hit rate shields databases.</td></tr>
+        <tr><td>Cassandra</td><td>User profiles, viewing history, preferences, metadata</td><td>Tunable consistency. Cross-region replication. Handles massive write throughput. AP system for availability.</td></tr>
+        <tr><td>MySQL (RDS)</td><td>Billing, subscriptions, content licensing metadata</td><td>Strong consistency for financial data. Lower write volume. Familiar tooling.</td></tr>
+        <tr><td>S3</td><td>Video assets (source + encoded), logs, ML model artifacts</td><td>Infinite storage. 11 nines durability. Cost-effective for bulk data. Origin for OCA fills.</td></tr>
+        <tr><td>Kafka</td><td>Event streaming: play events, telemetry, inter-service messaging</td><td>1T+ events/day ingestion. Durable, ordered, replayable. Feeds Keystone, Spark, Flink.</td></tr>
+        <tr><td>Elasticsearch</td><td>Search: title search, genre browse, content discovery</td><td>Full-text search with relevance scoring. Handles typos, synonyms, multi-language.</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Netflix's architecture splits cleanly into a Control Plane (AWS) for browsing, auth, recommendations, and playback session setup, and a Data Plane (Open Connect) for video delivery via ISP-embedded OCAs. The encoding pipeline transforms each title into ~1,200 per-title-optimized renditions scored by VMAF. Adaptive bitrate streaming adjusts quality in real-time across 2-4 second segments. The recommendation engine personalizes every pixel of the UI via offline batch ML + online real-time re-ranking. Resilience is baked in via Chaos Engineering — the system assumes everything fails, all the time. The result: 300M+ subscribers, 190 countries, ~15% of global internet traffic, near-zero rebuffering."</div>
+
+    <div class="sub">Evolution</div>
+    <table>
+      <thead><tr><th>Era</th><th>What Changed</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>2007</td><td>DVD → Streaming. Monolithic app, data center.</td><td>DVD-by-mail couldn't scale. Streaming was the future.</td></tr>
+        <tr><td>2008</td><td>Major DB corruption → 3-day outage.</td><td>Triggered migration to AWS and microservices. "Never again."</td></tr>
+        <tr><td>2008-2016</td><td>8-year migration: monolith → 1000+ microservices on AWS.</td><td>Incremental decomposition. Each service owns its data. Independent deployment.</td></tr>
+        <tr><td>2011</td><td>Open Connect launched. OCAs deployed at ISPs and IXPs.</td><td>Third-party CDNs couldn't handle Netflix's scale or quality needs.</td></tr>
+        <tr><td>2012</td><td>Chaos Monkey, Hystrix, Eureka open-sourced.</td><td>Netflix's resilience patterns became industry standards.</td></tr>
+        <tr><td>2015</td><td>Per-title encoding introduced.</td><td>Fixed encoding ladders waste bandwidth. Custom ladders save 20%+ per title.</td></tr>
+        <tr><td>2018</td><td>Spring Boot as primary Java framework. Titus for containers. Shot-based encoding.</td><td>Modernized backend. Finer-grained encoding for even more bandwidth savings.</td></tr>
+        <tr><td>2020</td><td>AV1 codec streaming on supported TVs.</td><td>~30% better compression than VP9. Netflix co-developed AV1 in the Alliance for Open Media.</td></tr>
+        <tr><td>2022</td><td>Ad-supported tier launched.</td><td>New revenue stream. Required new ad-serving infrastructure alongside existing streaming.</td></tr>
+        <tr><td>2025+</td><td>Multi-task AI foundation model for recommendations. Envoy service mesh. GraphQL (DGS) replacing Falcor.</td><td>Unified personalization. Simplified service communication. More efficient data fetching.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Netflix's open-source legacy.</strong> Netflix didn't just build great infrastructure — they open-sourced it: Eureka (service discovery), Zuul (API gateway), Hystrix (circuit breaker), Ribbon (client-side load balancing), Spinnaker (continuous delivery), Titus (container platform), VMAF (perceptual quality metric), Chaos Monkey (chaos engineering), Atlas (telemetry), Mantis (stream processing), and Kayenta (canary analysis). These tools became the foundation of the modern cloud-native ecosystem and influenced Kubernetes, Istio, and every major microservices framework.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7: Q&A ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">07</span>
+    <span class="phase-title">Interview Q&amp;A — Practice Questions</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout goal"><strong>Q: Why did Netflix build its own CDN instead of using a third party?</strong></div>
+    <div class="callout say">"Three reasons: cost, quality, and caching model. At 73 Tbps peak, third-party CDN costs would be unsustainable. By providing hardware free to ISPs (who provide power/space), Netflix dramatically lowers per-bit cost. Quality: Netflix can tune the entire OCA stack — FreeBSD kernel, NGINX, disk I/O — for video-specific workloads. Third-party CDNs serve heterogeneous traffic and can't be customized. Caching model: Open Connect is proactive, not reactive. Netflix pre-fills OCAs with content during off-peak windows based on predicted demand. Traditional CDNs cache on first request, meaning the first viewer always gets a cache miss. With Open Connect, even the first play request hits warm cache."</div>
+
+    <div class="callout goal"><strong>Q: What is per-title encoding and why is it significant?</strong></div>
+    <div class="callout say">"Traditional encoding uses a fixed bitrate ladder — every title gets the same set of bitrate/resolution pairs. But an animated film with flat colors looks great at 1.5 Mbps, while an action movie with complex motion needs 4 Mbps for the same perceived quality. Per-title encoding analyzes each title's visual complexity and creates a custom ABR ladder. Shot-based encoding goes further: each scene within a title gets its own optimal settings. The quality is measured by VMAF, Netflix's perceptual metric that correlates with human perception. Result: 20-50% bandwidth savings at the same perceived quality. Since encoding is a one-time cost but streaming is perpetual, investing in better encoding directly reduces CDN costs on every future stream."</div>
+
+    <div class="callout goal"><strong>Q: How does Netflix handle a full AWS region failure?</strong></div>
+    <div class="callout say">"Two key facts: video delivery is independent of AWS (Open Connect serves from ISP-embedded OCAs), and the control plane runs active-active across multiple AWS regions. On region failure: Zuul re-routes API traffic to surviving regions. Cassandra's cross-region replication ensures data availability. EVCache warms from Cassandra in the surviving region. Users might see slightly stale recommendations (eventual consistency), but video playback continues uninterrupted because OCAs operate independently. Netflix validates this regularly with Chaos Kong — simulated full-region failures in production."</div>
+
+    <div class="callout goal"><strong>Q: How does the recommendation engine handle the cold-start problem?</strong></div>
+    <div class="callout say">"In layers: during signup, Netflix asks for 2-3 titles you've enjoyed — this seeds the collaborative filtering model. For the first sessions, the system uses geographic and demographic priors (what's popular in your region, similar age cohorts). It shows 'popularity with diversity' — trending titles across genres to explore the user's taste space. After even 1-2 viewing sessions, collaborative filtering has enough signal to personalize meaningfully. The critical window is the first 3 sessions: if recommendations are bad, the user churns. Netflix invests heavily in cold-start models specifically because retention in the first week predicts lifetime value."</div>
+
+    <div class="callout goal"><strong>Q: What's the relationship between EVCache and Cassandra?</strong></div>
+    <div class="callout say">"EVCache is the read-through cache layer; Cassandra is the durable store. At 1.25M API RPS, hitting Cassandra directly would be ruinous — so EVCache (Netflix's memcached fork) sits in front with 95-99% hit rates. Cassandra sees only 1-5% of read traffic. Writes go to both: Cassandra for durability, EVCache for immediate read-after-write consistency in the common case. EVCache is replicated across availability zones for resilience. If an EVCache cluster fails, reads fall through to Cassandra — latency increases from sub-ms to low-ms, but the system stays functional. This layered approach lets the browsing experience feel instant while Cassandra handles the durability and cross-region replication."</div>
+
+    <div class="callout goal"><strong>Q: How would you evolve Netflix's architecture for interactive content (games, choose-your-own-adventure)?</strong></div>
+    <div class="callout say">"Interactive content breaks the pre-positioning model because user choices create branching paths — you can't pre-fill every possible path to every OCA. The approach: pre-position all branches (manageable for choose-your-adventure with 5-10 branch points, each a few minutes of content). The client prefetches the next 2-3 branches while the current segment plays. For games: they re

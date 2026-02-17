@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design LangGraph — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design LangGraph</h1>
+    <span>Graph-Based Agent Runtime · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-runtime">Pregel Runtime</a>
+  <a href="#dd-state">State &amp; Channels</a>
+  <a href="#dd-checkpoint">Checkpointing</a>
+  <a href="#dd-hitl">Human-in-the-Loop</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#evolution">Evolution</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"We're designing LangGraph — a low-level, graph-based agent runtime for building stateful, multi-step LLM applications. LangGraph was born out of the LangChain ecosystem as a complete reboot, focused on production-readiness over ease-of-getting-started. The central insight: agents are fundamentally different from traditional software because LLMs are slow, non-deterministic, and open-ended. LangGraph's answer is to structure agent computation into discrete steps modeled as a cyclic graph, enabling checkpointing, human-in-the-loop, streaming, and safe parallelism — all without abstracting away developer control."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>Is this a framework or a platform?</strong> <em>→ Both. LangGraph is the open-source runtime (MIT license). LangGraph Platform is the deployment layer with managed infrastructure, task queues, and APIs. We're designing the core runtime — the execution engine that powers both.</em></li>
+      <li><strong>How does it relate to LangChain?</strong> <em>→ LangGraph is an extension of LangChain but can function independently. It was a deliberate reboot: LangChain was easy to start but hard to customize. LangGraph prioritizes customization and production-readiness. Nodes can be plain Python functions or LangChain Runnables.</em></li>
+      <li><strong>What's the execution model?</strong> <em>→ Cyclic graph based on the Pregel/BSP (Bulk Synchronous Parallel) algorithm. Nodes are functions that read/write state. Edges (including conditional edges) define control flow. Execution proceeds in "super-steps" — each super-step runs eligible nodes in parallel, then applies updates deterministically. This enables cycles (loops), safe parallelism, and checkpointing.</em></li>
+      <li><strong>Why not use an existing framework?</strong> <em>→ DAG frameworks (Airflow etc.) can't handle cycles. Durable execution engines (Temporal etc.) lack streaming, add inter-step latency, and degrade as history grows. LLM agents need both loops and low-latency streaming — no existing framework offered this combination.</em></li>
+      <li><strong>What LLMs does it support?</strong> <em>→ LLM-agnostic. Integrates with any LangChain-compatible model (OpenAI, Anthropic, Google, Ollama, etc.). Different nodes in the same graph can use different models.</em></li>
+      <li><strong>Who's using it in production?</strong> <em>→ LinkedIn, Uber, Klarna, Elastic, and thousands of others. The framework has processed billions of agent steps across enterprise deployments.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>StateGraph: nodes, edges, conditional routing</td><td>The LLM inference engine itself</td></tr>
+        <tr><td>Pregel execution algorithm (BSP-inspired)</td><td>LangChain core library internals</td></tr>
+        <tr><td>State management: channels, reducers, schemas</td><td>LangSmith (tracing/monitoring SaaS)</td></tr>
+        <tr><td>Checkpointing: persistence, threads, time-travel</td><td>Specific tool implementations</td></tr>
+        <tr><td>Human-in-the-loop: interrupt, resume, edit state</td><td>Multi-tenancy, billing, marketplace</td></tr>
+        <tr><td>Streaming: token-level, node-level, custom events</td><td>LangGraph Studio (visual debugger UI)</td></tr>
+        <tr><td>LangGraph Platform: task queue, deployment</td><td>Fine-tuning or training LLMs</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1: ReAct agent with tools</strong> — A single agent node calls an LLM, which decides whether to invoke a tool or produce a final answer. Conditional edge routes back to the agent (loop) or to END. Checkpointing saves state at each step so failures don't lose progress.</li>
+      <li><strong>UC2: Multi-agent supervisor</strong> — A supervisor node routes work to specialist agent sub-graphs (researcher, coder, analyst). Each specialist is itself a LangGraph with its own state. The supervisor collects outputs, evaluates quality, and either delegates more work or produces a final result.</li>
+      <li><strong>UC3: Human-in-the-loop approval</strong> — An agent drafts an email. Graph pauses at an interrupt point. Human reviews the draft, edits it, and resumes. The checkpoint preserves full state during the pause — even across server restarts. This is the key UX pattern for production agents.</li>
+      <li><strong>UC4: Long-running research pipeline</strong> — A multi-step pipeline: gather sources → analyze → synthesize → review. Each step may take minutes. Task queue handles execution asynchronously. On failure at step 3, checkpointing enables resuming from step 3 without re-running steps 1-2.</li>
+      <li><strong>UC5: Chatbot with memory</strong> — A conversational agent where each message appends to a persistent thread. Thread-level checkpointing maintains conversation history across sessions. Cross-thread Store enables long-term memory (user preferences, facts) shared across conversations.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Low abstraction, maximum control:</strong> Developers write regular Python functions as nodes. No magic. No black-box cognitive architectures. The framework provides building blocks (checkpointing, streaming, interrupt) that you opt into — they don't get in your way until you reach for them.</li>
+      <li><strong>Deterministic parallelism:</strong> When multiple nodes can run concurrently, the framework must guarantee that the final state is independent of execution order and timing. Variability in outputs must come from the LLM, never from the framework.</li>
+      <li><strong>Streaming-first:</strong> Every agent must support real-time streaming of intermediate results — token-by-token LLM output, node completions, custom events. End users expect responsiveness despite LLM latency.</li>
+      <li><strong>Durable execution:</strong> Checkpoints must survive process restarts. An agent paused for human review on Monday must be resumable on Tuesday from a different server. Persistence backends: in-memory (dev), SQLite (lightweight), PostgreSQL (production).</li>
+      <li><strong>Scalable performance:</strong> Framework overhead must be negligible. Execution time must scale gracefully with graph size (more nodes, more steps, larger state). No performance cliffs as agents grow in complexity.</li>
+      <li><strong>Ecosystem integration:</strong> Must work with LangChain tools, prompts, and models. Must integrate with LangSmith for tracing. Must support MCP (Model Context Protocol) for external tool servers.</li>
+    </ul>
+
+    <div class="callout tip">The key design philosophy from the LangGraph team: "We aimed to find the right abstraction for AI agents, and decided that was little to no abstraction at all." Instead of imposing a cognitive architecture (like role-playing agents or fixed workflows), LangGraph provides low-level primitives — graph structure, state management, checkpointing — and lets developers compose them however they need. This is what makes LangGraph uniquely flexible but also harder to learn than higher-level frameworks like CrewAI.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">Nodes per Graph</div>
+        <div class="value">3–50+</div>
+        <div class="detail">Simple ReAct: 2-3 nodes. Multi-agent supervisor: 10-20 nodes. Complex pipeline with sub-graphs: 50+.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Super-Steps per Run</div>
+        <div class="value">5–100+</div>
+        <div class="detail">Each loop iteration = 1 super-step. ReAct agent with 5 tool calls = ~10 super-steps. Research pipeline: 50-100+.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Checkpoint Size</div>
+        <div class="value">10 KB – 10 MB</div>
+        <div class="detail">State dict serialized per super-step. Chat history grows linearly. Postgres supports up to 1GB per field. Typical: 50-500 KB.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Agent Run Duration</div>
+        <div class="value">1s – 60 min+</div>
+        <div class="detail">Simple chatbot: 1-5s. Multi-step research: 5-30 min. Long-running with human pauses: hours or days.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Checkpoint Writes per Run</div>
+        <div class="value">5–100+</div>
+        <div class="detail">1 checkpoint per super-step. 10 super-steps = 10 checkpoints. Must be fast (&lt;5ms overhead) to not impact latency.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Production Scale</div>
+        <div class="value">Billions of steps</div>
+        <div class="detail">LinkedIn, Uber, Klarna in production. Horizontally-scaling servers + task queues via LangGraph Platform.</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1: LLM latency dominates, framework overhead must be invisible.</strong> A single LLM call takes 0.5–5 seconds. If checkpointing adds 5ms per super-step and there are 20 super-steps, that's 100ms total — invisible against 20+ seconds of LLM time. But if checkpointing added 500ms per step, it would add 10 seconds — unacceptable. The framework must be so fast that developers never think about its overhead. LangGraph targets sub-millisecond per super-step for the execution algorithm itself.</div>
+
+    <div class="callout decision"><strong>Key insight #2: Agents are getting longer, not shorter.</strong> With test-time compute and chain-of-thought, agents are taking more steps, running longer, and building larger state. The framework's performance must scale gracefully with: (1) number of steps (no degradation as history grows — unlike Temporal), (2) state size (efficient serialization), and (3) number of concurrent nodes (parallel execution without data races).</div>
+
+    <div class="callout decision"><strong>Key insight #3: Human time is the real latency.</strong> When an agent pauses for human approval, the wait might be seconds, hours, or days. The checkpoint must be fully durable — surviving server restarts, deployments, and even machine migrations. This pushes toward external persistence (Postgres) over in-memory state, and full serialization of all execution context.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"LangGraph models agent computation as a cyclic graph executed via a Pregel-inspired algorithm. State flows through channels. Nodes are regular Python functions that read and write state. Edges — including conditional edges — define control flow. The runtime executes in super-steps: each step runs eligible nodes in parallel with isolated state copies, then applies updates deterministically. Checkpoints are saved after every super-step, enabling persistence, time-travel, and human-in-the-loop."</div>
+
+    <div class="sub">Key Architecture Decisions</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Agents need loops (cycles)</td><td style="color:var(--accent-cyan);font-weight:500">Cyclic graph (not DAG)</td><td>ReAct agents loop: call LLM → use tool → check → repeat. DAG frameworks (Airflow) can't handle this. LangGraph uses a Pregel/BSP-based algorithm that natively supports cycles, with a configurable max iterations limit (recursion_limit) as a safety valve.</td><td>—</td></tr>
+        <tr><td>Safe parallelism without data races</td><td style="color:var(--accent-cyan);font-weight:500">Pregel/BSP execution model</td><td>When multiple nodes run in parallel, each gets an isolated copy of state. Updates are applied in deterministic order after all finish. This guarantees that execution order never influences output — variability comes only from LLMs. Rejected: shared mutable state (race conditions), locks (deadlocks, latency).</td><td>Strong</td></tr>
+        <tr><td>Durable state across failures &amp; pauses</td><td style="color:var(--accent-cyan);font-weight:500">Checkpoint after every super-step</td><td>Serialized state snapshots saved to pluggable backends (Memory, SQLite, Postgres, Redis). Enables: resume from failure, human-in-the-loop pauses, time-travel debugging. Trade-off: adds write latency per step, but it's &lt;5ms with Postgres and negligible vs. LLM latency.</td><td>Eventual</td></tr>
+        <tr><td>Minimal abstraction, maximum control</td><td style="color:var(--accent-cyan);font-weight:500">Nodes are plain Python functions</td><td>No role-playing agents, no task definitions, no crew abstractions. A node is <code>def f(state) → state</code>. The developer decides what each node does. This makes LangGraph a runtime, not a cognitive architecture. Rejected: opinionated agent patterns (too rigid for production diversity).</td><td>—</td></tr>
+        <tr><td>Real-time user feedback despite latency</td><td style="color:var(--accent-cyan);font-weight:500">First-class streaming at every level</td><td>Token-level streaming from LLMs, node-level streaming (events when nodes start/finish), and custom events emitted from within nodes. The graph structure makes streaming natural — each node completion is a streamable event. Zero-overhead when not used.</td><td>—</td></tr>
+        <tr><td>Runtime independent of SDK</td><td style="color:var(--accent-cyan);font-weight:500">Separate PregelLoop runtime from developer APIs</td><td>Two public APIs: StateGraph (declarative) and Functional API (imperative). Both compile to the same internal PregelLoop runtime. This lets the team evolve APIs and runtime independently. Enables deprecating old APIs (e.g., the original Graph API) without touching the runtime.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">System Architecture</div>
+    <div class="svg-diagram">
+      <span class="dia-title">LangGraph Architecture</span>
+      <svg viewBox="0 0 780 520" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="arrg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+          <marker id="arrc" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+        </defs>
+        <!-- Developer SDK layer -->
+        <rect x="28" y="20" width="724" height="70" rx="10" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1.5"/>
+        <text x="42" y="38" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".1em" opacity=".7">DEVELOPER SDK</text>
+        <g><rect x="48" y="48" width="145" height="30" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="120" y="67" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">StateGraph API</text></g>
+        <g><rect x="208" y="48" width="145" height="30" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="280" y="67" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Functional API</text></g>
+        <g><rect x="368" y="48" width="145" height="30" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="440" y="67" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">.compile()</text></g>
+        <line x1="353" y1="63" x2="368" y2="63" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="193" y1="63" x2="208" y2="63" stroke="#6e7681" stroke-width="1"/>
+        <!-- Arrow from compile to runtime -->
+        <line x1="440" y1="78" x2="440" y2="110" stroke="#39d2c0" stroke-width="1.5" marker-end="url(#arrc)"/>
+
+        <!-- Runtime layer -->
+        <rect x="28" y="110" width="724" height="180" rx="10" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.15)" stroke-width="1.5"/>
+        <text x="42" y="128" fill="#39d2c0" font-size="9" font-weight="600" letter-spacing=".1em" opacity=".7">PREGEL RUNTIME (PregelLoop)</text>
+        <!-- Execution cycle -->
+        <g><rect x="48" y="140" width="150" height="56" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/>
+          <text x="123" y="158" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">1. Select Nodes</text>
+          <text x="123" y="172" fill="#6e7681" font-size="7" text-anchor="middle">Compare channel versions</text>
+          <text x="123" y="182" fill="#6e7681" font-size="7" text-anchor="middle">vs. subscriber seen versions</text>
+        </g>
+        <g><rect x="218" y="140" width="150" height="56" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/>
+          <text x="293" y="158" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">2. Execute Parallel</text>
+          <text x="293" y="172" fill="#6e7681" font-size="7" text-anchor="middle">Isolated state copies</text>
+          <text x="293" y="182" fill="#6e7681" font-size="7" text-anchor="middle">No data races</text>
+        </g>
+        <g><rect x="388" y="140" width="150" height="56" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="463" y="158" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">3. Apply Updates</text>
+          <text x="463" y="172" fill="#6e7681" font-size="7" text-anchor="middle">Deterministic order</text>
+          <text x="463" y="182" fill="#6e7681" font-size="7" text-anchor="middle">Reducers merge values</text>
+        </g>
+        <g><rect x="558" y="140" width="150" height="56" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/>
+          <text x="633" y="158" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">4. Checkpoint</text>
+          <text x="633" y="172" fill="#6e7681" font-size="7" text-anchor="middle">Save state snapshot</text>
+          <text x="633" y="182" fill="#6e7681" font-size="7" text-anchor="middle">+ pending writes</text>
+        </g>
+        <line x1="198" y1="168" x2="218" y2="168" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="368" y1="168" x2="388" y2="168" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="538" y1="168" x2="558" y2="168" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <!-- Loop arrow -->
+        <path d="M 708 168 Q 730 168 730 210 Q 730 250 390 250 Q 48 250 48 210 Q 48 190 48 168" fill="none" stroke="#f85149" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+        <text x="390" y="262" fill="#f85149" font-size="8" text-anchor="middle" font-weight="600">Loop until no nodes to run OR recursion_limit hit</text>
+
+        <!-- State & Channels -->
+        <g><rect x="48" y="212" width="200" height="30" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="148" y="231" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Channels (State)</text></g>
+        <g><rect x="268" y="212" width="110" height="30" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="323" y="231" fill="#6e7681" font-size="9" text-anchor="middle">Reducers</text></g>
+        <g><rect x="398" y="212" width="110" height="30" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="453" y="231" fill="#6e7681" font-size="9" text-anchor="middle">Edges/Routing</text></g>
+        <g><rect x="528" y="212" width="110" height="30" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="583" y="231" fill="#6e7681" font-size="9" text-anchor="middle">Streaming</text></g>
+        <g><rect x="658" y="212" width="88" height="30" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="702" y="231" fill="#6e7681" font-size="9" text-anchor="middle">interrupt()</text></g>
+
+        <!-- Persistence layer -->
+        <rect x="28" y="310" width="480" height="70" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+        <text x="42" y="328" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">PERSISTENCE &amp; MEMORY</text>
+        <g><rect x="48" y="336" width="96" height="30" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="96" y="355" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">Checkpointer</text></g>
+        <g><rect x="156" y="336" width="96" height="30" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="204" y="355" fill="#6e7681" font-size="8" text-anchor="middle">Threads</text></g>
+        <g><rect x="264" y="336" width="96" height="30" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="312" y="355" fill="#6e7681" font-size="8" text-anchor="middle">Store (KV)</text></g>
+        <g><rect x="372" y="336" width="126" height="30" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="435" y="355" fill="#6e7681" font-size="8" text-anchor="middle">Postgres / SQLite</text></g>
+
+        <!-- Integrations -->
+        <rect x="530" y="310" width="222" height="70" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+        <text x="544" y="328" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">INTEGRATIONS</text>
+        <g><rect x="548" y="336" width="90" height="30" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="593" y="355" fill="#6e7681" font-size="8" text-anchor="middle">LLM Providers</text></g>
+        <g><rect x="650" y="336" width="90" height="30" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="695" y="355" fill="#6e7681" font-size="8" text-anchor="middle">Tools / MCP</text></g>
+
+        <!-- Platform layer -->
+        <rect x="28" y="400" width="724" height="60" rx="8" fill="rgba(63,185,80,.02)" stroke="rgba(63,185,80,.12)" stroke-dasharray="4 2"/>
+        <text x="42" y="418" fill="#3fb950" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">LANGGRAPH PLATFORM (Deployment)</text>
+        <g><rect x="48" y="424" width="120" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="108" y="440" fill="#6e7681" font-size="8" text-anchor="middle">Task Queue</text></g>
+        <g><rect x="182" y="424" width="120" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="242" y="440" fill="#6e7681" font-size="8" text-anchor="middle">REST API Server</text></g>
+        <g><rect x="316" y="424" width="120" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="376" y="440" fill="#6e7681" font-size="8" text-anchor="middle">Assistants API</text></g>
+        <g><rect x="450" y="424" width="120" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="510" y="440" fill="#6e7681" font-size="8" text-anchor="middle">Cron Jobs</text></g>
+        <g><rect x="584" y="424" width="120" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="644" y="440" fill="#6e7681" font-size="8" text-anchor="middle">LangSmith Tracing</text></g>
+
+        <!-- Connections -->
+        <line x1="633" y1="196" x2="633" y2="310" stroke="#d29922" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+
+    <div class="sub">Flow: ReAct Agent Execution</div>
+    <div class="svg-diagram">
+      <span class="dia-title">ReAct Agent — Super-Step Execution</span>
+      <svg viewBox="0 0 780 620" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="fa" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="fc" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+          <marker id="fo" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#d29922" stroke-width="1"/></marker>
+          <marker id="fr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#f85149" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Invoke -->
+        <rect x="240" y="14" width="300" height="34" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.5"/>
+        <text x="390" y="28" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">graph.invoke({"messages": [user_msg]})</text>
+        <text x="390" y="40" fill="#6e7681" font-size="7" text-anchor="middle">Input written to __start__ channel</text>
+        <line x1="390" y1="48" x2="390" y2="70" stroke="#6e7681" stroke-width="1" marker-end="url(#fa)"/>
+
+        <!-- SUPER-STEP 1 -->
+        <rect x="60" y="70" width="660" height="110" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.12)" stroke-width="1"/>
+        <text x="74" y="88" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">SUPER-STEP 1</text>
+        <rect x="80" y="96" width="200" height="36" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="180" y="111" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Node: agent</text>
+        <text x="180" y="124" fill="#6e7681" font-size="7" text-anchor="middle">Reads messages → Calls LLM</text>
+        <rect x="310" y="96" width="230" height="36" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+        <text x="425" y="111" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">LLM → ToolCall("search", ...)</text>
+        <text x="425" y="124" fill="#6e7681" font-size="7" text-anchor="middle">Writes: messages += [AIMessage(tool_calls)]</text>
+        <line x1="280" y1="114" x2="310" y2="114" stroke="#6e7681" stroke-width="1" marker-end="url(#fa)"/>
+        <!-- Checkpoint badge -->
+        <rect x="570" y="96" width="130" height="20" rx="10" fill="rgba(188,140,255,.1)" stroke="#bc8cff" stroke-width=".8"/>
+        <text x="635" y="109" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">✓ Checkpoint #1</text>
+        <!-- Condition -->
+        <rect x="570" y="125" width="130" height="20" rx="10" fill="rgba(210,153,34,.1)" stroke="#d29922" stroke-width=".8"/>
+        <text x="635" y="138" fill="#d29922" font-size="8" text-anchor="middle">has tool_calls → tools</text>
+
+        <line x1="390" y1="180" x2="390" y2="202" stroke="#d29922" stroke-width="1" marker-end="url(#fo)"/>
+        <text x="406" y="196" fill="#d29922" font-size="8" font-weight="500">conditional edge</text>
+
+        <!-- SUPER-STEP 2 -->
+        <rect x="60" y="202" width="660" height="110" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.12)" stroke-width="1"/>
+        <text x="74" y="220" fill="#3fb950" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">SUPER-STEP 2</text>
+        <rect x="80" y="228" width="200" height="36" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/>
+        <text x="180" y="243" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Node: tools</text>
+        <text x="180" y="256" fill="#6e7681" font-size="7" text-anchor="middle">Reads tool_calls from AI message</text>
+        <rect x="310" y="228" width="230" height="36" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+        <text x="425" y="243" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">search("LangGraph docs") → results</text>
+        <text x="425" y="256" fill="#6e7681" font-size="7" text-anchor="middle">Writes: messages += [ToolMessage(content)]</text>
+        <line x1="280" y1="246" x2="310" y2="246" stroke="#6e7681" stroke-width="1" marker-end="url(#fa)"/>
+        <rect x="570" y="228" width="130" height="20" rx="10" fill="rgba(188,140,255,.1)" stroke="#bc8cff" stroke-width=".8"/>
+        <text x="635" y="241" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">✓ Checkpoint #2</text>
+        <rect x="570" y="257" width="130" height="20" rx="10" fill="rgba(210,153,34,.1)" stroke="#d29922" stroke-width=".8"/>
+        <text x="635" y="270" fill="#d29922" font-size="8" text-anchor="middle">→ back to agent (LOOP)</text>
+
+        <!-- Loop arrow -->
+        <path d="M 390 312 L 390 330 Q 390 340 380 340 L 40 340 Q 30 340 30 330 L 30 160 Q 30 150 40 150 L 55 150" fill="none" stroke="#f85149" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#fr)"/>
+        <text x="30" y="260" fill="#f85149" font-size="8" font-weight="600" transform="rotate(-90, 30, 260)">LOOP BACK</text>
+
+        <!-- SUPER-STEP 3 -->
+        <rect x="60" y="360" width="660" height="110" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.12)" stroke-width="1"/>
+        <text x="74" y="378" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">SUPER-STEP 3</text>
+        <rect x="80" y="386" width="200" height="36" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="180" y="401" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Node: agent</text>
+        <text x="180" y="414" fill="#6e7681" font-size="7" text-anchor="middle">Full context: [user, AI, tool_result]</text>
+        <rect x="310" y="386" width="230" height="36" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+        <text x="425" y="401" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">LLM → Final text answer</text>
+        <text x="425" y="414" fill="#6e7681" font-size="7" text-anchor="middle">Writes: messages += [AIMessage(content)]</text>
+        <line x1="280" y1="404" x2="310" y2="404" stroke="#6e7681" stroke-width="1" marker-end="url(#fa)"/>
+        <rect x="570" y="386" width="130" height="20" rx="10" fill="rgba(188,140,255,.1)" stroke="#bc8cff" stroke-width=".8"/>
+        <text x="635" y="399" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">✓ Checkpoint #3</text>
+        <rect x="570" y="415" width="130" height="20" rx="10" fill="rgba(63,185,80,.1)" stroke="#3fb950" stroke-width=".8"/>
+        <text x="635" y="428" fill="#3fb950" font-size="8" text-anchor="middle">no tool_calls → END</text>
+
+        <line x1="390" y1="470" x2="390" y2="495" stroke="#3fb950" stroke-width="1.2" marker-end="url(#fc)"/>
+
+        <!-- Return -->
+        <rect x="240" y="495" width="300" height="34" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="390" y="510" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Return: state["messages"]</text>
+        <text x="390" y="522" fill="#6e7681" font-size="7" text-anchor="middle">Output channel value returned to caller</text>
+
+        <!-- Legend -->
+        <rect x="60" y="550" width="660" height="50" rx="6" fill="rgba(255,255,255,.01)" stroke="var(--border)" stroke-width=".5"/>
+        <circle cx="90" cy="575" r="4" fill="#58a6ff"/><text x="100" y="578" fill="#6e7681" font-size="8">Node execution</text>
+        <circle cx="220" cy="575" r="4" fill="#bc8cff"/><text x="230" y="578" fill="#6e7681" font-size="8">Checkpoint saved</text>
+        <circle cx="370" cy="575" r="4" fill="#d29922"/><text x="380" y="578" fill="#6e7681" font-size="8">Conditional edge</text>
+        <circle cx="520" cy="575" r="4" fill="#f85149"/><text x="530" y="578" fill="#6e7681" font-size="8">Loop (cycle)</text>
+        <circle cx="640" cy="575" r="4" fill="#3fb950"/><text x="650" y="578" fill="#6e7681" font-size="8">Halt</text>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4);color:var(--bg)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout goal"><strong>The four deepest architectural questions:</strong> (1) How does the Pregel runtime work? (2) How do state channels and reducers prevent conflicts? (3) How does checkpointing enable durability and time-travel? (4) How does human-in-the-loop interrupt/resume work without losing state?</div>
+
+    <!-- DD1 -->
+    <div class="sub" id="dd-runtime">Deep Dive 1: Pregel Runtime — The Execution Engine (~8 min)</div>
+
+    <div class="callout goal"><strong>The core algorithm.</strong> LangGraph's runtime is called PregelLoop, inspired by Google's Pregel system for large-scale graph processing. The key idea: structure agent computation into discrete "super-steps" with deterministic concurrency, enabling checkpointing, streaming, and safe parallelism as emergent properties of the execution model.</div>
+
+    <div class="schema"><span class="comment">// The Pregel execution algorithm (simplified)</span>
+
+<span class="table-name">PregelLoop</span>.run(input, config):
+    <span class="pk">channels</span> = initialize_channels(graph.schema)    <span class="comment">// State containers</span>
+    <span class="pk">channels</span>[__start__].write(input)                <span class="comment">// Write input to entry channel</span>
+    
+    <span class="fk">for step in range(recursion_limit):</span>           <span class="comment">// Max iterations safety</span>
+        
+        <span class="comment">// 1. SELECT: find nodes whose subscribed channels have new data</span>
+        <span class="pk">eligible</span> = []
+        for node in graph.nodes:
+            for ch in node.subscribed_channels:
+                if ch.version > node.last_seen_version[ch]:
+                    eligible.append(node)
+                    break
+        
+        if not eligible:
+            break                                       <span class="comment">// No work → halt</span>
+        
+        <span class="comment">// 2. EXECUTE: run eligible nodes in parallel with isolated state</span>
+        futures = []
+        for node in eligible:
+            <span class="fk">state_copy</span> = deep_copy(channels)         <span class="comment">// Isolated snapshot</span>
+            futures.append(
+                executor.submit(node.fn, state_copy)    <span class="comment">// Parallel execution</span>
+            )
+        
+        results = await gather(futures)
+        
+        <span class="comment">// 3. APPLY: merge updates deterministically</span>
+        for node, result in sorted(results):            <span class="comment">// Deterministic order!</span>
+            for channel_name, value in result.items():
+                channels[channel_name].<span class="pk">update</span>(value)   <span class="comment">// Through reducer</span>
+                channels[channel_name].version += 1
+            node.last_seen_version = current_versions()
+        
+        <span class="comment">// 4. CHECKPOINT: save full state snapshot</span>
+        checkpointer.<span class="pk">put</span>(config, serialize(channels))
+        
+        <span class="comment">// 5. STREAM: emit super-step events</span>
+        yield StreamEvent(step, eligible, channels)
+    
+    return channels[output_channel].value</div>
+
+    <div class="callout decision"><strong>Why Pregel/BSP and not simple sequential execution?</strong> Sequential execution is simpler but can't parallelize independent nodes. Shared-memory parallelism risks data races. Pregel gives you the best of both: automatic parallelization when dependencies allow, but with the determinism guarantee that execution order never influences output. The trade-off: you must think in terms of "what channels does my node subscribe to" rather than "what runs after what." But this is precisely what enables features like checkpointing (the full state is available between super-steps) and streaming (each super-step boundary is a natural emission point).</div>
+
+    <div class="callout tip"><strong>Deterministic concurrency is the killer feature.</strong> Imagine two nodes A and B both run in parallel and both append to <code>messages</code>. With naive parallelism, the order depends on which finishes first — non-deterministic! LangGraph applies updates in a fixed order (by node name or registration order), so the result is always the same regardless of timing. This is critical for debugging: if you see a bug, you can reproduce it exactly by replaying the same inputs.</div>
+
+    <!-- DD2 -->
+    <div class="sub" id="dd-state">Deep Dive 2: State, Channels &amp; Reducers (~7 min)</div>
+
+    <div class="callout goal"><strong>State is the data that flows through the graph.</strong> It's defined by a typed schema (TypedDict or Pydantic). Channels are the containers for each field. Reducers define how concurrent updates to the same field are merged. This is the mechanism that makes parallel execution safe.</div>
+
+    <table>
+      <thead><tr><th>Concept</th><th>What it is</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>State Schema</td><td>TypedDict or Pydantic model defining the shape of state</td><td><code>class State(TypedDict): messages: list[BaseMessage]; summary: str</code></td></tr>
+        <tr><td>Channel</td><td>Named container for a single state field. Has a current value and a version counter (monotonically increasing string)</td><td><code>channels["messages"]</code> → holds the list of messages, version "3"</td></tr>
+        <tr><td>Reducer</td><td>Function that merges a new value into the existing channel value. Attached via <code>Annotated</code> type hints.</td><td><code>messages: Annotated[list, add]</code> → new messages are appended, not replaced</td></tr>
+        <tr><td>No Reducer</td><td>Without a reducer, <code>update_state</code> overwrites the channel value directly</td><td><code>summary: str</code> → last write wins</td></tr>
+        <tr><td>Channel Version</td><td>Bumped on every update. Used by the runtime to determine which nodes need to re-run (their subscribed channels have newer versions than they last saw)</td><td>Node "agent" last saw messages at v2, current is v3 → agent is eligible to run</td></tr>
+      </tbody>
+    </table>
+
+    <div class="schema"><span class="comment">// State schema with reducers</span>
+
+from typing import Annotated
+from operator import add
+
+class <span class="table-name">AgentState</span>(TypedDict):
+    <span class="pk">messages</span>: Annotated[list[BaseMessage], <span class="fk">add</span>]    <span class="comment">// Reducer: append new messages</span>
+    <span class="pk">next_agent</span>: str                                     <span class="comment">// No reducer: last write wins</span>
+    <span class="pk">tool_results</span>: Annotated[dict, <span class="fk">merge_dicts</span>]        <span class="comment">// Custom reducer: deep merge</span>
+    <span class="pk">iteration_count</span>: Annotated[int, <span class="fk">add</span>]              <span class="comment">// Reducer: sum increments</span>
+
+<span class="comment">// What happens when two parallel nodes both write to "messages":</span>
+<span class="comment">// Node A returns: {"messages": [msg_a]}</span>
+<span class="comment">// Node B returns: {"messages": [msg_b]}</span>
+<span class="comment">// Reducer `add` applies both: messages = old + [msg_a] + [msg_b]</span>
+<span class="comment">// Order: deterministic (A before B, always), regardless of which finished first</span></div>
+
+    <div class="callout decision"><strong>Why channel versions instead of simple dirty flags?</strong> Versions enable fine-grained scheduling. A node subscribes to specific channels. If only "summary" changes but the node only subscribes to "messages", it won't re-run — preventing unnecessary LLM calls. Versions also enable time-travel: you can inspect the exact state at any historical super-step by its version numbers.</div>
+
+    <!-- DD3 -->
+    <div class="sub" id="dd-checkpoint">Deep Dive 3: Checkpointing &amp; Persistence (~7 min)</div>
+
+    <div class="callout goal"><strong>Checkpointing transforms a stateless graph into a durable, resumable computation.</strong> After every super-step, the full state is serialized and saved. This enables: resume from failure, human-in-the-loop pauses, time-travel debugging, and memory across conversations (threads).</div>
+
+    <table>
+      <thead><tr><th>Concept</th><th>Description</th><th>Implementation</th></tr></thead>
+      <tbody>
+        <tr><td>Checkpoint</td><td>Serialized snapshot of all channel values, versions, and metadata at a super-step</td><td>Dict: <code>{v, ts, id, channel_values, channel_versions, versions_seen, pending_sends}</code></td></tr>
+        <tr><td>Thread</td><td>A unique execution context (like a conversation). Each thread has its own checkpoint history.</td><td><code>config = {"configurable": {"thread_id": "user-123"}}</code></td></tr>
+        <tr><td>Checkpointer</td><td>Pluggable persistence backend implementing <code>put</code>, <code>get_tuple</code>, <code>list</code></td><td>InMemorySaver (dev), SqliteSaver (light), PostgresSaver (production)</td></tr>
+        <tr><td>Pending Writes</td><td>If node A succeeds but node B fails in the same super-step, A's writes are saved as "pending" so A doesn't re-run on resume</td><td>Stored alongside checkpoint. On resume, pending writes are applied and only failed nodes re-execute.</td></tr>
+        <tr><td>Time Travel</td><td>Load any historical checkpoint and fork execution from that point</td><td><code>graph.get_state_history(config)</code> → list of all checkpoints. <code>graph.invoke(input, config_with_checkpoint_id)</code> → fork.</td></tr>
+        <tr><td>Store (KV)</td><td>Cross-thread key-value storage for long-term memory (user prefs, facts)</td><td>InMemoryStore (dev), PostgresStore / RedisStore (production). Accessed via namespaced keys.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="schema"><span class="comment">// Checkpoint lifecycle</span>
+
+<span class="table-name">Super-step 1:</span>
+  Node "agent" runs → writes messages
+  <span class="pk">Checkpoint #1</span> saved: {messages: [user, ai], versions: {messages: 2}}
+
+<span class="table-name">Super-step 2:</span>
+  Node "tools" runs → writes tool results
+  <span class="pk">Checkpoint #2</span> saved: {messages: [user, ai, tool], versions: {messages: 3}}
+
+<span class="fk">💥 Process crashes</span>
+
+<span class="table-name">Resume:</span>
+  Checkpointer.get_tuple(thread_id) → Checkpoint #2
+  PregelLoop restores channels from checkpoint
+  Continues from super-step 3 (no re-running steps 1-2)
+
+<span class="table-name">Time Travel:</span>
+  graph.update_state(config_for_checkpoint_1, {"messages": [edited_msg]})
+  → <span class="fk">Forks</span> from Checkpoint #1 with modified state
+  → Execution diverges from the original timeline</div>
+
+    <div class="callout decision"><strong>Checkpoint sizing and TTL.</strong> Every super-step writes a checkpoint. A 50-step agent creates 50 checkpoints. At 100KB each = 5MB per run. For a chatbot with 100 conversations/day × 30 days = 15GB/month. PostgresSaver supports TTL (time-to-live) to auto-delete old checkpoints. Blob storage offloads large state objects. The 1GB practical limit per checkpoint means extremely large state objects (e.g., full document embeddings) should be stored externally and referenced by ID.</div>
+
+    <!-- DD4 -->
+    <div class="sub" id="dd-hitl">Deep Dive 4: Human-in-the-Loop (~7 min)</div>
+
+    <div class="callout goal"><strong>Human-in-the-loop is the most important production pattern for AI agents.</strong> Users need to approve actions, edit drafts, provide feedback, and steer agent behavior. LangGraph implements this via the <code>interrupt()</code> function, which pauses graph execution at any point, saves state via checkpointing, and resumes when the human responds — even from a different server.</div>
+
+    <div class="schema"><span class="comment">// Human-in-the-loop: draft → review → send</span>
+
+from langgraph.types import interrupt, Command
+
+def <span class="table-name">draft_email</span>(state):
+    draft = llm.invoke("Draft an email about: " + state["topic"])
+    
+    <span class="comment">// Pause execution, present draft to human</span>
+    <span class="pk">human_response = interrupt(</span>
+        <span class="fk">{"draft": draft, "prompt": "Edit this draft or approve"}</span>
+    <span class="pk">)</span>
+    
+    <span class="comment">// Execution resumes HERE when human responds</span>
+    if human_response["action"] == "approve":
+        return {"email": draft, "status": "approved"}
+    elif human_response["action"] == "edit":
+        return {"email": human_response["edited_draft"], "status": "edited"}
+
+<span class="comment">// What happens under the hood:</span>
+<span class="comment">// 1. interrupt() saves current state as checkpoint</span>
+<span class="comment">// 2. Graph execution halts, returns interrupt payload to caller</span>
+<span class="comment">// 3. ... time passes (seconds, hours, days) ...</span>
+<span class="comment">// 4. Human calls graph.invoke(Command(resume=response), config)</span>
+<span class="comment">// 5. Checkpointer loads saved state</span>
+<span class="comment">// 6. interrupt() returns human's response</span>
+<span class="comment">// 7. Node continues from where it paused</span></div>
+
+    <table>
+      <thead><tr><th>Pattern</th><th>How</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Approve/Reject</td><td>interrupt() before a sensitive action. Human approves → action executes. Human rejects → agent takes alternative path.</td><td>Agent wants to send an email. Interrupt with draft. Human approves or asks for revision.</td></tr>
+        <tr><td>Edit State</td><td><code>graph.update_state(config, new_values)</code> modifies any checkpoint field. Resume picks up the edited state.</td><td>Agent planned 5 steps. Human edits step 3 to change the approach before execution continues.</td></tr>
+        <tr><td>Time Travel</td><td>Load a past checkpoint, fork from that point. The agent re-executes from the historical state with optionally modified inputs.</td><td>"That response was wrong. Go back to before the search and try a different query."</td></tr>
+        <tr><td>Multi-Turn</td><td>Interrupt multiple times in a single run. Each interrupt saves state. Each resume continues from exactly where it left off.</td><td>Research agent: interrupt after gathering sources (review?), interrupt after draft (edit?), interrupt before publish (approve?).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Why interrupt() is better than callbacks.</strong> Callbacks force you to split your logic across multiple functions — the "before" function and the "after" callback. With interrupt(), the logic stays in one function, making it easy to read and debug. Under the hood, interrupt() uses checkpointing to serialize the execution state, which means it works across server restarts. This is what "durable execution" means in LangGraph's context: your code can pause indefinitely and resume exactly where it left off.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5);color:var(--bg)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Agent enters infinite loop (cycles endlessly)</span><span class="mitigation"><code>recursion_limit</code> — configurable max super-steps (default varies). When hit, execution halts and returns the current state. This is the primary safety valve against runaway agents. The limit counts super-steps, not LLM calls, so a single node making multiple LLM calls still counts as one step.</span></div>
+    <div class="failure-row"><span class="scenario">Node fails mid-super-step (other parallel nodes succeeded)</span><span class="mitigation"><strong>Pending writes.</strong> Completed nodes' outputs are saved as pending checkpoint writes. On resume, only the failed node re-executes. This prevents wasting LLM calls re-running nodes that already succeeded. If the same node fails repeatedly, the developer can implement retry logic within the node or use error callbacks.</span></div>
+    <div class="failure-row"><span class="scenario">Process crashes mid-execution</span><span class="mitigation">Last checkpoint is the recovery point. Checkpoints are saved after each super-step. On restart, load the latest checkpoint for the thread and resume. At worst, you lose the current in-flight super-step's work. With LangGraph Platform's task queue, the queue manager detects the crash and re-enqueues the work.</span></div>
+    <div class="failure-row"><span class="scenario">State grows too large (long conversations)</span><span class="mitigation">Multiple strategies: (1) Use <code>entrypoint.final(value=result, save=trimmed_state)</code> to control what's checkpointed vs. returned. (2) Summarize old messages instead of keeping full history. (3) Use the Store for large data and reference by key. (4) PostgresSaver supports up to 1GB per field; for larger objects, use blob storage with lifecycle rules.</span></div>
+    <div class="failure-row"><span class="scenario">LLM API rate limit or timeout</span><span class="mitigation">Node-level retry with backoff. LangGraph doesn't impose framework-level rate limits (unlike CrewAI's max_rpm) — developers implement retries within nodes or via LangChain's built-in retry mechanisms. Checkpointing ensures progress is saved even if retries eventually fail.</span></div>
+    <div class="failure-row"><span class="scenario">Checkpoint database becomes bottleneck</span><span class="mitigation">PostgresSaver uses connection pooling. Checkpoint TTL auto-deletes old data. Blob storage offloads large objects. For extreme scale, LangGraph Platform handles checkpoint infrastructure automatically. MongoDB has a 16MB document limit per checkpoint — PostgreSQL is preferred for large states.</span></div>
+
+    <div class="sub">LangGraph vs. CrewAI — Architectural Comparison</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>LangGraph</th><th>CrewAI</th></tr></thead>
+      <tbody>
+        <tr><td>Abstraction</td><td>Nodes + Edges + State Graph</td><td>Agents + Tasks + Crews + Flows</td></tr>
+        <tr><td>Philosophy</td><td>"No abstraction is the right abstraction." Low-level, maximum control.</td><td>Role-playing agents with natural language personas. Higher-level, opinionated.</td></tr>
+        <tr><td>Execution</td><td>Pregel/BSP algorithm with cyclic graphs, deterministic parallelism</td><td>Sequential / Hierarchical processes</td></tr>
+        <tr><td>State</td><td>Typed schema with channels, reducers, version tracking</td><td>Flow state (typed) + task-to-task context passing</td></tr>
+        <tr><td>Persistence</td><td>Built-in checkpointing (Postgres, SQLite, Redis) + KV Store</td><td>Memory system (short/long/entity) + SQLite</td></tr>
+        <tr><td>Human-in-loop</td><td>First-class <code>interrupt()</code> function with full state preservation</td><td><code>human_input: true</code> on tasks</td></tr>
+        <tr><td>Debugging</td><td>"Debug the graph" — trace state transitions, edge conditions, checkpoints</td><td>"Debug the agent" — trace LLM reasoning, delegation chains</td></tr>
+        <tr><td>Learning curve</td><td>Higher: understand graph theory, channels, reducers, BSP model</td><td>Lower: define agents in YAML/Python, run</td></tr>
+        <tr><td>Flexibility</td><td>Maximum: any topology, any control flow, sub-graphs</td><td>Covers 90% of use cases simply</td></tr>
+        <tr><td>LangChain dep.</td><td>Ecosystem integration (optional but natural)</td><td>None (standalone)</td></tr>
+        <tr><td>Platform</td><td>LangGraph Platform: task queue, APIs, managed Postgres, LangSmith</td><td>CrewAI AMP: Studio, Control Plane, integrations</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Streaming Architecture</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>Token Streaming <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">REAL-TIME</span></h4>
+        <ul>
+          <li>LLM tokens streamed as they're generated</li>
+          <li>Zero buffering: token → user immediately</li>
+          <li><code>stream_mode="messages"</code></li>
+          <li>Works with any LangChain chat model</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Node Events <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">STRUCTURED</span></h4>
+        <ul>
+          <li>Events when nodes start, finish, error</li>
+          <li>Shows which node is active</li>
+          <li><code>stream_mode="updates"</code></li>
+          <li>Natural for progress indicators</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>State Values <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">SNAPSHOT</span></h4>
+        <ul>
+          <li>Full state emitted after each super-step</li>
+          <li>Client sees cumulative state changes</li>
+          <li><code>stream_mode="values"</code></li>
+          <li>Best for UI state synchronization</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Custom Events <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">FLEXIBLE</span></h4>
+        <ul>
+          <li>Developer emits arbitrary events from nodes</li>
+          <li>Used for: progress bars, logs, metrics</li>
+          <li><code>stream_mode="custom"</code></li>
+          <li>Framework-agnostic payloads</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">LangGraph Platform</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>Task Queue <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">INFRA</span></h4>
+        <ul>
+          <li>Decouples triggering from execution</li>
+          <li>Retries with backoff on failure</li>
+          <li>Horizontal scaling of workers</li>
+          <li>Handles long-running background jobs</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Assistants API <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">API</span></h4>
+        <ul>
+          <li>Templatize cognitive architectures</li>
+          <li>Configure tools, prompts, models per assistant</li>
+          <li>Version and deploy independently</li>
+          <li>REST API for any client</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Managed Persistence <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">STORAGE</span></h4>
+        <ul>
+          <li>Auto-managed Postgres checkpointer</li>
+          <li>No manual checkpointer configuration</li>
+          <li>TTL policies for data retention</li>
+          <li>Blob storage for large state</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>Deployment Options <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">DEPLOY</span></h4>
+        <ul>
+          <li>LangGraph Cloud (managed SaaS)</li>
+          <li>Self-hosted in your VPC</li>
+          <li>1-click deploy from LangSmith</li>
+          <li>LangGraph Studio (visual debugger)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"LangGraph is a graph-based agent runtime built on the Pregel/BSP execution model. The core architecture: typed state flows through channels with reducers. Nodes are plain Python functions that read/write state. Edges (including conditional) define control flow with full support for cycles. The runtime executes in super-steps with deterministic parallelism, checkpoints after each step, and streams intermediate results in real-time. This enables the six production features that agents need: parallelization, streaming, checkpointing, human-in-the-loop, task queues, and tracing. LangGraph Platform adds managed infrastructure for deployment at scale."</div>
+
+    <div class="sub" id="evolution">Evolution &amp; Future</div>
+    <table>
+      <thead><tr><th>Phase</th><th>What Changed</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Pre-LangGraph</td><td>LangChain Chains &amp; Agents</td><td>Easy to start, but hard to customize and scale. Opinionated abstractions didn't fit production diversity.</td></tr>
+        <tr><td>LangGraph v0 (2024)</td><td>Graph API (no shared state)</td><td>First attempt at structured agents. Quickly deprecated — shared state was essential for real workflows.</td></tr>
+        <tr><td>LangGraph + StateGraph</td><td>Channels, reducers, Pregel runtime</td><td>The core architecture that shipped. Deterministic parallelism, checkpointing, streaming. Production-proven at LinkedIn, Uber.</td></tr>
+        <tr><td>Functional API</td><td><code>@entrypoint</code> + <code>@task</code> decorators</td><td>Imperative alternative to StateGraph for developers who prefer writing sequential Python over declaring graphs.</td></tr>
+        <tr><td>LangGraph Platform</td><td>Managed deployment: task queue, APIs, persistence</td><td>The task queue was the one feature that required infrastructure beyond a Python library.</td></tr>
+        <tr><td>LangGraph 1.0 (alpha)</td><td>API stabilization, performance hardening</td><td>Production maturity. Signal that the API contract is stable for enterprise adoption.</td></tr>
+        <tr><td>Future: Distributed Execution</td><td>Nodes running on different machines</td><td>Agents are getting longer and more complex. Single-machine execution won't scale forever. Pregel/BSP was originally designed for distributed graph processing — LangGraph's architecture is naturally extensible to distributed execution.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>The Pregel bet.</strong> Choosing Pregel/BSP as the execution algorithm was the most consequential design decision. It was originally designed by Google for distributed graph processing on clusters of machines. LangGraph uses it for single-machine agent execution today, but the architecture naturally extends to distributed execution in the future — where different nodes run on different servers. The super-step synchronization model, channel-based state passing, and checkpoint-per-step design all work identically in a distributed setting. This is why performance scales gracefully: the algorithm was designed for planet-scale computation, and LangGraph uses it for agent-scale computation.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7: Q&A ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">07</span>
+    <span class="phase-title">Interview Q&amp;A — Practice Questions</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout goal"><strong>Q: Why did LangGraph choose Pregel/BSP over simpler approaches?</strong></div>
+    <div class="callout say">"Three reasons: (1) Deterministic parallelism — execution order never influences output. (2) Native support for cycles, which agents need for tool-calling loops. (3) Natural checkpointing boundaries — the super-step synchronization points are exactly where you want to save state. DAG frameworks can't handle cycles. Simple sequential execution can't parallelize. Shared-memory parallelism risks data races. Temporal-style durable execution degrades with long histories and adds inter-step latency. Pregel gives us all the features we need with none of these limitations."</div>
+
+    <div class="callout goal"><strong>Q: How does LangGraph handle the case where two parallel nodes both write to the same state field?</strong></div>
+    <div class="callout say">"Through reducers. Each state field can have an associated reducer function — for example, the `add` operator for lists. When two parallel nodes both write to `messages`, the reducer appends both updates in a deterministic order (by node name). Without a reducer, last-write-wins in deterministic order. This is the key mechanism that makes parallel execution safe: developers declare their merge strategy upfront, and the runtime applies it consistently."</div>
+
+    <div class="callout goal"><strong>Q: What happens if a long-running agent needs to pause for human approval and the server restarts?</strong></div>
+    <div class="callout say">"This is exactly what checkpointing is designed for. When `interrupt()` is called, the full graph state is serialized and persisted to the checkpointer (e.g., PostgreSQL). The graph halts and returns the interrupt payload. Hours later — even after server restarts, deployments, or machine migrations — the human's response triggers `graph.invoke(Command(resume=response), config)`. The checkpointer loads the saved state, and execution resumes from exactly where it paused. The node function literally continues from the line after `interrupt()`."</div>
+
+    <div class="callout goal"><strong>Q: LangGraph vs. CrewAI — when would you pick each?</strong></div>
+    <div class="callout say">"CrewAI when you want speed-to-value with a multi-agent pattern: define roles, goals, backstories in YAML, and run. It's opinionated and covers the common 'team of specialized agents' pattern well. LangGraph when you need maximum control over the execution topology: custom graph structures, fine-grained state management, complex branching/looping, or production-grade durability (checkpointing, human-in-the-loop). LangGraph is lower-level — more flexible, but more effort. The trade-off is abstraction vs. control, and it depends on whether the standard patterns fit your use case."</div>
+
+    <div class="callout goal"><strong>Q: How does LangGraph's streaming work and why is it important?</strong></div>
+    <div class="callout say">"LLM calls take seconds to minutes. Without streaming, users stare at a blank screen. LangGraph supports four streaming modes: token-level (real-time LLM output), node events (which step is running), state values (full state after each super-step), and custom events (developer-defined). The graph structure makes this natural: each super-step boundary is a streaming emission point, and each node can stream its internal LLM tokens. Multiple modes can be combined. LangGraph Platform exposes this via server-sent events (SSE) over HTTP."</div>
+
+    <div class="callout goal"><strong>Q: How would you scale LangGraph to handle thousands of concurrent agent executions?</strong></div>
+    <div class="callout say">"Three layers: (1) LangGraph Platform's task queue decouples incoming requests from execution, enabling fair scheduling and retry. (2) Horizontally-scaling worker servers, each running graph executions independently. Checkpoints go to shared Postgres, so any worker can resume any thread. (3) Connection pooling for the checkpointer (PostgresSaver with psycopg_pool). Future: the Pregel architecture was designed for distributed processing, so eventually nodes themselves could execute on different machines — though single-machine execution handles most current workloads."</div>
+
+  </div>
+</div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design OpenFGA / Zanzibar — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design OpenFGA / Zanzibar</h1>
+    <span>Authorization · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-check">Check Resolution Algorithm</a>
+  <a href="#dd-consistency">Zookie Consistency Protocol</a>
+  <a href="#dd-leopard">Leopard Indexing System</a>
+  <a href="#dd-caching">Caching &amp; Hot Spots</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#data-model">Data Model</a>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a Zanzibar-style global authorization system — the engine behind 'can user X do action Y on resource Z?' at massive scale. Google's Zanzibar handles 10M+ checks/second for Drive, YouTube, Photos, Calendar, and Cloud with &lt;10ms p95 latency and 99.999% availability. OpenFGA is its open-source descendant. The core insight: model all authorization as <strong>relationships between objects</strong> (ReBAC), store them as tuples, and resolve permission checks via graph traversal — unifying ACLs, RBAC, and ABAC into one system."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What's the core abstraction?</strong> <em>→ Relationship tuples: (user, relation, object). Example: (user:alice, editor, document:readme). Authorization = "does a path exist in the relationship graph from user to object via the given relation?"</em></li>
+      <li><strong>What authorization models must it support?</strong> <em>→ Direct grants (ACLs), role-based (RBAC), relationship-based (ReBAC with group nesting), and attribute-based (ABAC via conditions). All expressed through the same tuple + config language.</em></li>
+      <li><strong>What APIs are needed?</strong> <em>→ Check ("can user do this?"), Read (fetch stored tuples), Write (add/delete tuples), Expand (show userset tree), ListObjects ("what can user access?"), ListUsers ("who can access this?"), Watch (stream changes).</em></li>
+      <li><strong>What does the consistency model look like?</strong> <em>→ Must solve the "new enemy" problem: when you revoke access then add content, the system must never serve the revoked user the new content using stale permissions. Zookies (opaque consistency tokens) ensure causal ordering.</em></li>
+      <li><strong>How deep can permission graphs get?</strong> <em>→ Very deep. Org → team → sub-team → project → folder → document → user. Plus computed relations (editors are also viewers). The Leopard indexing system precomputes transitive closures for deeply nested groups.</em></li>
+      <li><strong>Scale targets?</strong> <em>→ Zanzibar: trillions of tuples, billions of users, 10M+ checks/second, &lt;10ms p95 latency, 99.999% availability over 3 years. OpenFGA targets similar model at smaller scale with PostgreSQL/MySQL backends.</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Relationship tuple data model &amp; namespace config</td><td>Authentication (who the user is)</td></tr>
+        <tr><td>Check API resolution algorithm (graph traversal)</td><td>Application-level policy languages (OPA/Rego)</td></tr>
+        <tr><td>Zookie consistency protocol (new enemy prevention)</td><td>Network-level authorization (firewalls, mTLS)</td></tr>
+        <tr><td>Leopard indexing for nested groups</td><td>Fine-grained data masking / column-level</td></tr>
+        <tr><td>Caching &amp; hotspot management</td><td>Detailed Spanner internals</td></tr>
+        <tr><td>ListObjects / ListUsers reverse queries</td><td>Full ABAC condition evaluation engine</td></tr>
+        <tr><td>Watch API for change streams</td><td>UI / admin console design</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">5 Core Design Principles</div>
+    <ul class="items">
+      <li><strong>Relationships, not roles:</strong> Model all authorization as edges in a graph. Roles, groups, hierarchies are all just relationship patterns. This unifies ACLs, RBAC, and ABAC into one engine.</li>
+      <li><strong>Causal consistency:</strong> The "new enemy" problem is the fundamental correctness threat. Zookies ensure permission checks respect the ordering of ACL and content changes.</li>
+      <li><strong>Normalized storage, denormalized serving:</strong> Store tuples in normalized form for correctness; build indexes (Leopard, distributed caches) for performance. Correctness must never be sacrificed for speed.</li>
+      <li><strong>Schema separation:</strong> Namespace configurations (the "model") are separate from relationship tuples (the "data"). Models evolve without migrating data.</li>
+      <li><strong>Application-agnostic:</strong> One authorization engine serves hundreds of diverse services. Each service defines its own namespace config but shares the infrastructure, consistency guarantees, and API.</li>
+    </ul>
+    <div class="callout tip">The central tension in authorization systems: <strong>consistency vs. latency</strong>. Reading the latest permissions from a globally distributed database on every check would be correct but slow. Reading from a local cache is fast but potentially stale. Zanzibar's genius is the zookie protocol — it lets applications specify <em>exactly how fresh</em> they need permissions to be, giving the system freedom to optimize every other check for speed.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Check RPS (Zanzibar)</div><div class="value">>10M/sec</div><div class="detail">Millions of authorization decisions per second across all Google services. Each user action may trigger 10-100 checks.</div></div>
+      <div class="est-card"><div class="label">Stored Tuples</div><div class="value">Trillions</div><div class="detail">Every shared document, group membership, folder ACL across all Google products = trillions of relationship tuples.</div></div>
+      <div class="est-card"><div class="label">Check Latency (p95)</div><div class="value">&lt;10ms</div><div class="detail">Authorization is on the critical path of every user interaction. Search results may need 10-100 checks in parallel.</div></div>
+      <div class="est-card"><div class="label">Availability</div><div class="value">99.999%</div><div class="detail">&lt;2 min global downtime per quarter. Auth must be more available than the services it protects.</div></div>
+      <div class="est-card"><div class="label">Spanner Reads</div><div class="value">~20M/sec</div><div class="detail">In-memory caches absorb ~90% of reads. Remaining 20M/sec hit Spanner, at 0.5ms median latency.</div></div>
+      <div class="est-card"><div class="label">Leopard QPS</div><div class="value">~1.5M/sec</div><div class="detail">Specialized index for nested group resolution. Sub-150μs median. Served entirely from memory.</div></div>
+      <div class="est-card"><div class="label">Global Clusters</div><div class="value">30+ regions</div><div class="detail">10,000+ servers across dozens of clusters worldwide. Data replicated to all regions via Spanner.</div></div>
+      <div class="est-card"><div class="label">Write Volume</div><div class="value">~100K/sec</div><div class="detail">Writes are rare relative to reads (1:100+ ratio). Every write requires Spanner distributed coordination.</div></div>
+    </div>
+    <div class="callout tip">Key insight: <strong>authorization is overwhelmingly read-heavy</strong>. For every permission change (a write), there may be thousands of checks (reads). This extreme read:write ratio justifies aggressive caching, eventual consistency for most reads, and investing heavily in read-path optimization. Writes can afford to be slower because they're infrequent and must coordinate for correctness.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The architecture has five major layers: client applications submit requests to ACL server clusters, which resolve permissions via graph traversal using tuple data stored in Spanner, with the Leopard index handling deep group nesting and a distributed cache layer managing hot spots. A separate Watch server cluster streams changes for secondary indexes."</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Zanzibar / OpenFGA Architecture</span>
+      <svg viewBox="0 0 780 480" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ha1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="ha2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#58a6ff" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Client Services -->
+        <rect x="40" y="14" width="120" height="30" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="100" y="33" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Drive</text>
+        <rect x="170" y="14" width="120" height="30" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="230" y="33" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">YouTube</text>
+        <rect x="300" y="14" width="120" height="30" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="360" y="33" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Photos</text>
+        <rect x="430" y="14" width="120" height="30" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="490" y="33" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Cloud IAM</text>
+        <rect x="560" y="14" width="120" height="30" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="620" y="33" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Calendar</text>
+        <text x="710" y="33" fill="#6e7681" font-size="9">…</text>
+
+        <!-- Arrows down -->
+        <line x1="100" y1="44" x2="340" y2="78" stroke="#6e7681" stroke-width=".8" marker-end="url(#ha1)"/>
+        <line x1="360" y1="44" x2="380" y2="78" stroke="#6e7681" stroke-width=".8" marker-end="url(#ha1)"/>
+        <line x1="620" y1="44" x2="440" y2="78" stroke="#6e7681" stroke-width=".8" marker-end="url(#ha1)"/>
+
+        <!-- API layer -->
+        <rect x="240" y="78" width="300" height="34" rx="6" fill="rgba(88,166,255,.06)" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="390" y="96" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Zanzibar API (Check · Read · Write · Expand · Watch)</text>
+        <text x="390" y="106" fill="#6e7681" font-size="7" text-anchor="middle">+ zookie in every request</text>
+
+        <!-- ACL Server Cluster -->
+        <line x1="390" y1="112" x2="390" y2="140" stroke="#6e7681" stroke-width="1" marker-end="url(#ha1)"/>
+        <rect x="160" y="140" width="460" height="100" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="174" y="158" fill="#3fb950" font-size="9" font-weight="600" letter-spacing=".06em">ACL SERVER CLUSTER (per region)</text>
+
+        <!-- Server nodes inside -->
+        <rect x="180" y="168" width="120" height="56" rx="5" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="240" y="185" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="600">Check Resolver</text>
+        <text x="240" y="198" fill="#6e7681" font-size="7" text-anchor="middle">Graph traversal</text>
+        <text x="240" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Parallel sub-checks</text>
+        <text x="240" y="222" fill="#6e7681" font-size="7" text-anchor="middle">Userset rewrite eval</text>
+
+        <rect x="320" y="168" width="120" height="56" rx="5" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="380" y="185" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">Distributed Cache</text>
+        <text x="380" y="198" fill="#6e7681" font-size="7" text-anchor="middle">Consistent hashing</text>
+        <text x="380" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Lock table dedup</text>
+        <text x="380" y="222" fill="#6e7681" font-size="7" text-anchor="middle">Timestamp quantization</text>
+
+        <rect x="460" y="168" width="140" height="56" rx="5" fill="#161b22" stroke="var(--border)" stroke-width=".8"/>
+        <text x="530" y="185" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">Namespace Config</text>
+        <text x="530" y="198" fill="#6e7681" font-size="7" text-anchor="middle">Relation definitions</text>
+        <text x="530" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Userset rewrite rules</text>
+        <text x="530" y="222" fill="#6e7681" font-size="7" text-anchor="middle">Storage params</text>
+
+        <!-- Down to data layer -->
+        <line x1="240" y1="240" x2="200" y2="280" stroke="#6e7681" stroke-width="1" marker-end="url(#ha1)"/>
+        <line x1="380" y1="240" x2="450" y2="280" stroke="#6e7681" stroke-width="1" marker-end="url(#ha1)"/>
+        <line x1="530" y1="240" x2="630" y2="280" stroke="#6e7681" stroke-width="1" marker-end="url(#ha1)"/>
+
+        <!-- Spanner -->
+        <rect x="60" y="280" width="280" height="70" rx="8" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="200" y="298" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Google Spanner (OpenFGA: Postgres/MySQL)</text>
+        <rect x="74" y="306" width="120" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="134" y="319" fill="#6e7681" font-size="7" text-anchor="middle">Tuple DB (per namespace)</text>
+        <rect x="204" y="306" width="120" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="264" y="319" fill="#6e7681" font-size="7" text-anchor="middle">Changelog DB</text>
+        <text x="200" y="344" fill="#6e7681" font-size="7" text-anchor="middle">PK: (shard, object_id, relation, user, commit_ts)</text>
+
+        <!-- Leopard -->
+        <rect x="370" y="280" width="180" height="70" rx="8" fill="rgba(210,153,34,.04)" stroke="rgba(210,153,34,.15)" stroke-width="1"/>
+        <text x="460" y="298" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Leopard Index</text>
+        <text x="460" y="316" fill="#6e7681" font-size="8" text-anchor="middle">In-memory skip lists</text>
+        <text x="460" y="330" fill="#6e7681" font-size="8" text-anchor="middle">Transitive group closure</text>
+        <text x="460" y="344" fill="#6e7681" font-size="8" text-anchor="middle">sub-150μs median</text>
+
+        <!-- Watch servers -->
+        <rect x="580" y="280" width="160" height="70" rx="8" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="660" y="298" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Watch Servers</text>
+        <text x="660" y="316" fill="#6e7681" font-size="8" text-anchor="middle">Changelog streaming</text>
+        <text x="660" y="330" fill="#6e7681" font-size="8" text-anchor="middle">Ordered tuple events</text>
+        <text x="660" y="344" fill="#6e7681" font-size="8" text-anchor="middle">Heartbeat zookies</text>
+
+        <!-- Watch feeds Leopard -->
+        <path d="M 580 320 Q 560 320 560 315 L 560 315 Q 560 310 550 310" fill="none" stroke="#bc8cff" stroke-width=".8" stroke-dasharray="3 2" marker-end="url(#ha1)"/>
+
+        <!-- Periodic Pipeline -->
+        <rect x="60" y="380" width="680" height="44" rx="6" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.12)" stroke-width="1"/>
+        <text x="74" y="398" fill="#f85149" font-size="9" font-weight="600">Offline Pipeline (Periodic Jobs)</text>
+        <text x="74" y="414" fill="#6e7681" font-size="8">Snapshot tuple dumps · Garbage-collect old versions · Build Leopard offline index shards · Global replication of index</text>
+
+        <!-- Legend -->
+        <rect x="60" y="440" width="680" height="28" rx="5" fill="rgba(255,255,255,.01)" stroke="var(--border)" stroke-width=".5"/>
+        <circle cx="90" cy="454" r="4" fill="#e3b341"/><text x="100" y="458" fill="#6e7681" font-size="8">Client services</text>
+        <circle cx="200" cy="454" r="4" fill="#3fb950"/><text x="210" y="458" fill="#6e7681" font-size="8">ACL servers</text>
+        <circle cx="310" cy="454" r="4" fill="#58a6ff"/><text x="320" y="458" fill="#6e7681" font-size="8">Spanner/DB</text>
+        <circle cx="410" cy="454" r="4" fill="#d29922"/><text x="420" y="458" fill="#6e7681" font-size="8">Leopard index</text>
+        <circle cx="530" cy="454" r="4" fill="#bc8cff"/><text x="540" y="458" fill="#6e7681" font-size="8">Watch stream</text>
+        <circle cx="640" cy="454" r="4" fill="#f85149"/><text x="650" y="458" fill="#6e7681" font-size="8">Offline pipeline</text>
+      </svg>
+    </div>
+
+    <div class="sub">Zanzibar Data Model: Tuples &amp; Namespace Configs</div>
+    <div class="schema"><span class="comment">// === Relationship Tuple (the core unit of authorization data) ===</span>
+<span class="table-name">tuple</span> = (<span class="pk">user</span>, <span class="pk">relation</span>, <span class="pk">object</span>)
+
+<span class="comment">// Examples:</span>
+(user:alice,      editor,   document:readme)     <span class="comment">// direct grant</span>
+(group:eng#member, viewer,   document:design)     <span class="comment">// group grant (userset)</span>
+(document:readme,  parent,   folder:root)         <span class="comment">// object hierarchy</span>
+(user:bob,         member,   group:eng)           <span class="comment">// group membership</span>
+
+<span class="comment">// === Namespace Configuration (the "schema" / authorization model) ===</span>
+<span class="table-name">type document</span>
+  relations
+    define <span class="pk">owner</span>:   [user]
+    define <span class="pk">editor</span>:  [user, group#member]
+    define <span class="pk">viewer</span>:  [user, group#member] <span class="fk">or editor or owner</span>  <span class="comment">// userset rewrite</span>
+    define <span class="pk">parent</span>:  [folder]
+
+<span class="table-name">type folder</span>
+  relations
+    define <span class="pk">owner</span>:   [user]
+    define <span class="pk">viewer</span>:  [user, group#member] <span class="fk">or viewer from parent</span>  <span class="comment">// inheritance</span>
+    define <span class="pk">parent</span>:  [folder]
+
+<span class="table-name">type group</span>
+  relations
+    define <span class="pk">member</span>:  [user, group#member]  <span class="comment">// nested groups</span></div>
+
+    <div class="sub">Key Architectural Decisions</div>
+    <table>
+      <thead><tr><th>Decision</th><th>Choice</th><th>Why Not Alternative</th></tr></thead>
+      <tbody>
+        <tr><td>Data Model</td><td>Relationship tuples (ReBAC)</td><td>RBAC can't express hierarchies; ABAC too slow at scale for real-time checks</td></tr>
+        <tr><td>Storage</td><td>Spanner (Zanzibar) / PostgreSQL (OpenFGA)</td><td>Need external consistency for zookies; NoSQL lacks transaction ordering</td></tr>
+        <tr><td>Consistency</td><td>Zookies (opaque tokens)</td><td>Strong consistency everywhere = too slow; eventual = new enemy problem</td></tr>
+        <tr><td>Check Algorithm</td><td>Graph traversal with parallel fan-out</td><td>Precomputing all permissions = too much storage; on-demand = flexible</td></tr>
+        <tr><td>Group Indexing</td><td>Leopard (in-memory transitive closure)</td><td>Recursive DB queries too slow for deeply nested groups (10+ levels)</td></tr>
+        <tr><td>Caching</td><td>Distributed cache with consistent hashing</td><td>Local-only cache = poor hit rates; centralized = single point of failure</td></tr>
+        <tr><td>Schema Evolution</td><td>Immutable model versions</td><td>Mutable models risk inconsistency during rollout across regions</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Check API: End-to-End Flow</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Check Request Lifecycle</span>
+      <svg viewBox="0 0 780 360" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="cf1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Request -->
+        <rect x="40" y="14" width="340" height="34" rx="6" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="210" y="28" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Client: Check(user:alice, viewer, document:readme, zookie=Z₁)</text>
+        <text x="210" y="42" fill="#6e7681" font-size="7" text-anchor="middle">Can alice view this document?</text>
+        <line x1="210" y1="48" x2="210" y2="72" stroke="#6e7681" stroke-width="1" marker-end="url(#cf1)"/>
+
+        <!-- Step 1: Snapshot -->
+        <rect x="40" y="72" width="340" height="36" rx="5" fill="rgba(210,153,34,.04)" stroke="rgba(210,153,34,.2)" stroke-width="1"/>
+        <text x="54" y="88" fill="#d29922" font-size="8" font-weight="600">1. Resolve snapshot timestamp</text>
+        <text x="54" y="102" fill="#6e7681" font-size="7">Decode zookie Z₁ → timestamp T. Use snapshot ≥ T (at-least-as-fresh).</text>
+        <line x1="210" y1="108" x2="210" y2="130" stroke="#6e7681" stroke-width="1" marker-end="url(#cf1)"/>
+
+        <!-- Step 2: Cache check -->
+        <rect x="40" y="130" width="340" height="36" rx="5" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="54" y="146" fill="#58a6ff" font-size="8" font-weight="600">2. Check distributed cache</text>
+        <text x="54" y="160" fill="#6e7681" font-size="7">Hash(object_id, relation, user, quantized_ts) → peer server. Lock table dedup.</text>
+        <line x1="210" y1="166" x2="210" y2="188" stroke="#6e7681" stroke-width="1" marker-end="url(#cf1)"/>
+
+        <!-- Step 3: Load config -->
+        <rect x="40" y="188" width="340" height="36" rx="5" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="54" y="204" fill="#bc8cff" font-size="8" font-weight="600">3. Load namespace config for "document"</text>
+        <text x="54" y="218" fill="#6e7681" font-size="7">viewer = [user, group#member] or editor or owner → build rewrite tree</text>
+        <line x1="210" y1="224" x2="210" y2="246" stroke="#6e7681" stroke-width="1" marker-end="url(#cf1)"/>
+
+        <!-- Step 4: Graph traversal -->
+        <rect x="40" y="246" width="340" height="50" rx="5" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="54" y="262" fill="#3fb950" font-size="8" font-weight="600">4. Resolve: graph traversal (parallel fan-out)</text>
+        <text x="54" y="276" fill="#6e7681" font-size="7">Direct: alice ∈ viewers? Editor: alice ∈ editors? Owner: alice ∈ owners?</text>
+        <text x="54" y="290" fill="#6e7681" font-size="7">Group: any group with alice as member that's in viewers? (→ Leopard)</text>
+
+        <!-- Right side: resolution tree -->
+        <rect x="420" y="72" width="320" height="224" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.1)" stroke-width="1"/>
+        <text x="434" y="90" fill="#3fb950" font-size="9" font-weight="600">Resolution Tree (parallel)</text>
+
+        <text x="440" y="112" fill="#d29922" font-size="8" font-weight="600">viewer =</text>
+        <text x="460" y="128" fill="#58a6ff" font-size="8">UNION</text>
+        <text x="480" y="146" fill="#6e7681" font-size="8">├─ direct viewers of document:readme</text>
+        <text x="480" y="162" fill="#6e7681" font-size="8">├─ group#member viewers (→ Leopard)</text>
+        <text x="480" y="180" fill="#d29922" font-size="8">├─ editor (UNION)</text>
+        <text x="500" y="196" fill="#6e7681" font-size="8">│  ├─ direct editors</text>
+        <text x="500" y="212" fill="#6e7681" font-size="8">│  └─ group#member editors</text>
+        <text x="480" y="230" fill="#d29922" font-size="8">├─ owner (UNION)</text>
+        <text x="500" y="246" fill="#6e7681" font-size="8">│  └─ direct owners</text>
+        <text x="480" y="264" fill="#bc8cff" font-size="8">└─ viewer from parent folder</text>
+        <text x="500" y="280" fill="#6e7681" font-size="8">   └─ recurse: Check(alice, viewer, parent)</text>
+
+        <!-- Result -->
+        <line x1="210" y1="296" x2="210" y2="318" stroke="#3fb950" stroke-width="1" marker-end="url(#cf1)"/>
+        <rect x="40" y="318" width="700" height="30" rx="6" fill="rgba(63,185,80,.06)" stroke="#3fb950" stroke-width="1.2"/>
+        <text x="390" y="337" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">5. Return: {allowed: true, zookie: Z₂} — first branch that resolves true short-circuits</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1: Check Resolution -->
+    <div class="sub" id="dd-check">Deep Dive 1: Check Resolution Algorithm (8 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand how Zanzibar evaluates "can user X do Y on object Z?" by traversing the relationship graph, applying userset rewrite rules, and parallelizing sub-checks.</div>
+    <ul class="items">
+      <li><strong>Userset rewrite rules</strong> are the heart of the schema. They express <em>computed relations</em>: "all editors are also viewers" becomes <code>define viewer: [user] or editor</code>. The Check resolver expands these rules into a tree of sub-problems, each resolved independently.</li>
+      <li><strong>Three operators:</strong> <code>union</code> (any branch true → true), <code>intersection</code> (all branches true → true), <code>exclusion</code> (base true AND subtracted false → true). Union is by far the most common — "viewers = direct viewers OR editors OR owners".</li>
+      <li><strong>Parallel fan-out:</strong> For union operations, all branches are evaluated concurrently. The first branch that returns <code>true</code> short-circuits the entire check — no need to wait for slower branches. This is critical for latency.</li>
+      <li><strong>Tuple-to-userset:</strong> Expressions like <code>viewer from parent</code> first read the parent tuple for the object, then recursively check the viewer relation on the parent. This enables folder → document inheritance without duplicating tuples.</li>
+      <li><strong>Computed userset:</strong> <code>or editor</code> means "also check the editor relation on the same object." Doesn't require any tuple reads — it's a lateral move in the graph.</li>
+      <li><strong>Recursive resolution:</strong> Group membership can be nested: <code>group:eng</code> contains <code>group:backend#member</code>, which contains <code>user:alice</code>. Each level requires another round of tuple reads. Without Leopard, this is O(depth) serial reads to Spanner — unacceptable for deep hierarchies.</li>
+      <li><strong>Request forwarding:</strong> Within a cluster, sub-checks are forwarded to the peer server that "owns" the relevant cache key (via consistent hashing on object_id). This concentrates cache hits and minimizes duplicate work.</li>
+    </ul>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Union Resolution — Short-Circuit</span>
+      <svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="u1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Root -->
+        <rect x="280" y="10" width="220" height="28" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="390" y="28" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">Check: alice viewer document:readme</text>
+
+        <!-- UNION node -->
+        <line x1="390" y1="38" x2="390" y2="60" stroke="#6e7681" stroke-width="1" marker-end="url(#u1)"/>
+        <rect x="350" y="60" width="80" height="22" rx="11" fill="rgba(210,153,34,.1)" stroke="#d29922" stroke-width="1"/>
+        <text x="390" y="74" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">UNION</text>
+
+        <!-- Branch 1: Direct -->
+        <line x1="365" y1="82" x2="120" y2="110" stroke="#6e7681" stroke-width=".8" marker-end="url(#u1)"/>
+        <rect x="40" y="110" width="160" height="40" rx="5" fill="rgba(248,81,73,.04)" stroke="rgba(248,81,73,.2)" stroke-width="1"/>
+        <text x="120" y="127" fill="#f85149" font-size="8" text-anchor="middle" font-weight="600">Direct viewer?</text>
+        <text x="120" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Read tuples → NOT FOUND</text>
+        <rect x="90" y="155" width="60" height="14" rx="3" fill="rgba(248,81,73,.08)"/>
+        <text x="120" y="165" fill="#f85149" font-size="7" text-anchor="middle">false (1.2ms)</text>
+
+        <!-- Branch 2: Editor -->
+        <line x1="380" y1="82" x2="350" y2="110" stroke="#6e7681" stroke-width=".8" marker-end="url(#u1)"/>
+        <rect x="260" y="110" width="160" height="40" rx="5" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.2)" stroke-width="1"/>
+        <text x="340" y="127" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">Editor? (computed)</text>
+        <text x="340" y="142" fill="#6e7681" font-size="7" text-anchor="middle">Read tuples → alice IS editor ✓</text>
+        <rect x="305" y="155" width="70" height="14" rx="3" fill="rgba(63,185,80,.1)"/>
+        <text x="340" y="165" fill="#3fb950" font-size="7" text-anchor="middle">true (0.8ms)</text>
+
+        <!-- Branch 3: Owner (cancelled) -->
+        <line x1="405" y1="82" x2="550" y2="110" stroke="#6e7681" stroke-width=".8" marker-end="url(#u1)"/>
+        <rect x="470" y="110" width="160" height="40" rx="5" fill="#161b22" stroke="var(--border)" stroke-width=".6" stroke-dasharray="4 2"/>
+        <text x="550" y="127" fill="#6e7681" font-size="8" text-anchor="middle">Owner?</text>
+        <text x="550" y="142" fill="#6e7681" font-size="7" text-anchor="middle">CANCELLED (short-circuit)</text>
+
+        <!-- Branch 4: Parent (cancelled) -->
+        <line x1="415" y1="82" x2="700" y2="110" stroke="#6e7681" stroke-width=".8" marker-end="url(#u1)"/>
+        <rect x="640" y="110" width="120" height="40" rx="5" fill="#161b22" stroke="var(--border)" stroke-width=".6" stroke-dasharray="4 2"/>
+        <text x="700" y="127" fill="#6e7681" font-size="8" text-anchor="middle">From parent?</text>
+        <text x="700" y="142" fill="#6e7681" font-size="7" text-anchor="middle">CANCELLED</text>
+
+        <!-- Result -->
+        <rect x="230" y="190" width="320" height="28" rx="6" fill="rgba(63,185,80,.06)" stroke="#3fb950" stroke-width="1"/>
+        <text x="390" y="208" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Result: allowed=true (0.8ms — editor branch resolved first)</text>
+
+        <!-- Annotation -->
+        <rect x="120" y="230" width="540" height="20" rx="4" fill="rgba(210,153,34,.04)" stroke="rgba(210,153,34,.1)" stroke-width=".6"/>
+        <text x="390" y="243" fill="#d29922" font-size="7" text-anchor="middle">All branches launched in parallel. First TRUE cancels remaining. For INTERSECTION, first FALSE cancels remaining.</text>
+      </svg>
+    </div>
+
+    <!-- DD2: Zookie Consistency -->
+    <div class="sub" id="dd-consistency">Deep Dive 2: Zookie Consistency Protocol (8 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand how zookies prevent the "new enemy" problem while still allowing most reads to use fast, locally cached data.</div>
+    <ul class="items">
+      <li><strong>The "new enemy" problem:</strong> Alice removes Bob from a document's access list. Alice then adds confidential content. If the permission check for Bob uses stale data (before the removal), Bob sees the confidential content. This is the fundamental correctness bug in distributed authorization.</li>
+      <li><strong>Zookie lifecycle:</strong> When a client modifies content, it asks Zanzibar for a <em>content-change check</em>. Zanzibar returns a zookie encoding the current Spanner timestamp. The client stores this zookie atomically with the content. On subsequent access checks, the client sends the zookie → Zanzibar uses a snapshot ≥ that timestamp.</li>
+      <li><strong>At-least-as-fresh semantics:</strong> Zookies specify a <em>minimum</em> freshness, not an exact timestamp. Zanzibar can use any snapshot ≥ the zookie's timestamp. This freedom is crucial — it allows Zanzibar to serve from locally replicated data and quantize timestamps for cache efficiency.</li>
+      <li><strong>Timestamp quantization:</strong> Instead of using exact timestamps (which would make every request unique and uncacheable), Zanzibar rounds timestamps to coarser intervals (e.g., every 5-10 seconds). All requests within the same window share cache entries, dramatically improving hit rates.</li>
+      <li><strong>Default staleness:</strong> When no zookie is provided, Zanzibar chooses a "reasonably recent" snapshot (typically a few seconds old). This is fine for most UI rendering — showing a file list with 5-second-stale permissions is acceptable. Only content-change checks need fresh data.</li>
+      <li><strong>Spanner's TrueTime:</strong> The zookie protocol works because Spanner provides <em>external consistency</em>: if event A happens before event B in real time, their timestamps reflect that ordering globally. Without this, zookies couldn't guarantee causal ordering across data centers.</li>
+      <li><strong>OpenFGA equivalent:</strong> OpenFGA provides <code>consistency_preference</code> on requests: <code>MINIMIZE_LATENCY</code> (default, allow stale), <code>NO_CONSISTENCY</code> (fastest), <code>HIGHER_CONSISTENCY</code> (route to primary DB). SpiceDB uses "ZedTokens" as its zookie analog.</li>
+    </ul>
+
+    <div class="svg-diagram">
+      <span class="dia-title">The New Enemy Problem &amp; Zookie Solution</span>
+      <svg viewBox="0 0 780 340" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ne1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Timeline -->
+        <line x1="40" y1="30" x2="740" y2="30" stroke="var(--border)" stroke-width="1"/>
+        <text x="390" y="20" fill="#6e7681" font-size="8" text-anchor="middle" font-weight="600">TIME →</text>
+
+        <!-- T1: Alice removes Bob -->
+        <line x1="140" y1="25" x2="140" y2="35" stroke="#f85149" stroke-width="1.5"/>
+        <rect x="60" y="40" width="160" height="36" rx="5" fill="rgba(248,81,73,.04)" stroke="#f85149" stroke-width="1"/>
+        <text x="140" y="55" fill="#f85149" font-size="8" text-anchor="middle" font-weight="600">T₁: Alice removes Bob</text>
+        <text x="140" y="68" fill="#6e7681" font-size="7" text-anchor="middle">DELETE (bob, viewer, doc:secret)</text>
+
+        <!-- T2: Alice adds content -->
+        <line x1="380" y1="25" x2="380" y2="35" stroke="#d29922" stroke-width="1.5"/>
+        <rect x="280" y="40" width="200" height="36" rx="5" fill="rgba(210,153,34,.04)" stroke="#d29922" stroke-width="1"/>
+        <text x="380" y="55" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">T₂: Alice adds confidential content</text>
+        <text x="380" y="68" fill="#6e7681" font-size="7" text-anchor="middle">Content-change check → zookie Z(T₂)</text>
+
+        <!-- T3: Bob tries to read -->
+        <line x1="600" y1="25" x2="600" y2="35" stroke="#58a6ff" stroke-width="1.5"/>
+        <rect x="510" y="40" width="180" height="36" rx="5" fill="rgba(88,166,255,.04)" stroke="#58a6ff" stroke-width="1"/>
+        <text x="600" y="55" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="600">T₃: Bob requests document</text>
+        <text x="600" y="68" fill="#6e7681" font-size="7" text-anchor="middle">Check(bob, viewer, doc:secret, Z(T₂))</text>
+
+        <!-- WITHOUT zookies (bad) -->
+        <rect x="40" y="100" width="340" height="90" rx="6" fill="rgba(248,81,73,.04)" stroke="rgba(248,81,73,.2)" stroke-width="1"/>
+        <text x="54" y="118" fill="#f85149" font-size="9" font-weight="600">❌ WITHOUT Zookies</text>
+        <text x="54" y="136" fill="#6e7681" font-size="8">Check uses stale snapshot from before T₁</text>
+        <text x="54" y="152" fill="#6e7681" font-size="8">Bob still appears as viewer → allowed: true</text>
+        <text x="54" y="168" fill="#f85149" font-size="8" font-weight="600">Bob sees confidential content! ← NEW ENEMY</text>
+        <text x="54" y="184" fill="#6e7681" font-size="7">ACL removal at T₁ not yet replicated to local datacenter</text>
+
+        <!-- WITH zookies (good) -->
+        <rect x="400" y="100" width="340" height="90" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.2)" stroke-width="1"/>
+        <text x="414" y="118" fill="#3fb950" font-size="9" font-weight="600">✓ WITH Zookies</text>
+        <text x="414" y="136" fill="#6e7681" font-size="8">Check uses snapshot ≥ T₂ (from zookie)</text>
+        <text x="414" y="152" fill="#6e7681" font-size="8">T₂ > T₁, so removal at T₁ is visible</text>
+        <text x="414" y="168" fill="#3fb950" font-size="8" font-weight="600">Bob correctly denied → allowed: false</text>
+        <text x="414" y="184" fill="#6e7681" font-size="7">Zookie guarantees causal ordering is respected</text>
+
+        <!-- Key insight -->
+        <rect x="40" y="210" width="700" height="54" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.15)" stroke-width="1"/>
+        <text x="54" y="228" fill="#d29922" font-size="9" font-weight="600">The Protocol</text>
+        <text x="54" y="244" fill="#6e7681" font-size="8">1. Content modification → request zookie from Zanzibar (encodes current Spanner timestamp T₂)</text>
+        <text x="54" y="258" fill="#6e7681" font-size="8">2. Store zookie Z(T₂) atomically with content → all ACL changes before T₂ will be visible on future checks</text>
+
+        <!-- Bottom detail -->
+        <rect x="40" y="280" width="340" height="44" rx="5" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.1)" stroke-width=".8"/>
+        <text x="54" y="296" fill="#58a6ff" font-size="8" font-weight="600">Most checks (no zookie)</text>
+        <text x="54" y="310" fill="#6e7681" font-size="7">Use default staleness (few seconds). Fast, served from local cache.</text>
+        <text x="54" y="320" fill="#6e7681" font-size="7">Fine for UI rendering, listing files, etc.</text>
+
+        <rect x="400" y="280" width="340" height="44" rx="5" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.1)" stroke-width=".8"/>
+        <text x="414" y="296" fill="#d29922" font-size="8" font-weight="600">Content-change checks (with zookie)</text>
+        <text x="414" y="310" fill="#6e7681" font-size="7">Use at-least-as-fresh semantics. May need fresher replica.</text>
+        <text x="414" y="320" fill="#6e7681" font-size="7">Required when protecting newly modified content.</text>
+      </svg>
+    </div>
+
+    <!-- DD3: Leopard -->
+    <div class="sub" id="dd-leopard">Deep Dive 3: Leopard Indexing System (7 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand how Zanzibar resolves deeply nested group memberships efficiently using a specialized in-memory index.</div>
+    <ul class="items">
+      <li><strong>The problem:</strong> Recursive pointer chasing through deeply nested groups requires serial reads to Spanner: "Is alice in group:eng?" → read members → "group:backend is a member" → read backend members → "group:infra is a member" → ... Each hop is a database round-trip. For 10+ levels, this is 5-20ms per hop — far exceeding the &lt;10ms budget.</li>
+      <li><strong>Leopard's solution:</strong> Pre-compute the <em>transitive closure</em> of group membership. For every group, maintain a denormalized set of all users who are directly or indirectly members. Querying "is alice in group:eng?" becomes a single in-memory set lookup.</li>
+      <li><strong>Data structure:</strong> Leopard stores index entries as ordered lists of integer user IDs in skip-list structures. Set operations (union, intersection) run in O(min(|A|,|B|)) skip-list seeks. The index is sharded by element IDs across multiple servers, served entirely from memory.</li>
+      <li><strong>Three-part architecture:</strong> (1) <strong>Offline index builder</strong> — periodically snapshots all tuples, expands the group graph, produces index shards, replicates globally. (2) <strong>Online incremental layer</strong> — watches the changelog via Watch API, transforms tuple modifications into Leopard index updates in real-time. (3) <strong>Serving layer</strong> — merges offline index + incremental updates at query time, responds in sub-150μs median.</li>
+      <li><strong>Amplification problem:</strong> A single Zanzibar tuple change (e.g., adding a user to a top-level group) can cascade to tens of thousands of Leopard index updates because it affects every sub-group. The incremental indexer must handle this write amplification efficiently.</li>
+      <li><strong>Leopard stats:</strong> ~1.5M QPS at median, sub-150μs median latency, sub-1ms at p99. Online layer writes ~500 index updates/second median, ~1,500/second at p99.</li>
+      <li><strong>OpenFGA equivalent:</strong> OpenFGA doesn't have a Leopard analog yet. SpiceDB has an open proposal for "Tiger cache" which would serve a similar function. Currently, OpenFGA relies on recursive DB queries with query-level caching.</li>
+    </ul>
+
+    <!-- DD4: Caching -->
+    <div class="sub" id="dd-caching">Deep Dive 4: Caching &amp; Hot Spot Management (7 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand Zanzibar's multi-layer caching strategy and why hot spot handling is "the most critical frontier" for low latency.</div>
+    <ul class="items">
+      <li><strong>Why hot spots are critical:</strong> Normalized storage means common groups (like "all-employees") are read by every check that touches them. A single popular group can receive millions of reads/second, overwhelming the Spanner shard that stores it. The paper states: "We found the handling of hot spots to be the most critical frontier in our pursuit of low latency and high availability."</li>
+      <li><strong>Layer 1 — Distributed check cache:</strong> ACL servers in each cluster form a peer-to-peer distributed cache using consistent hashing. Cache keys include (object_id, relation, user, quantized_timestamp). Sub-checks are forwarded to the peer that owns the relevant key. This concentrates identical requests on one server, maximizing hit rates.</li>
+      <li><strong>Timestamp quantization:</strong> Instead of using exact microsecond timestamps (which make every request unique), Zanzibar rounds timestamps to intervals (e.g., 5-10 seconds). All requests within the same quantum share the same cache key. The at-least-as-fresh zookie semantics make this safe — any timestamp ≥ the zookie is valid.</li>
+      <li><strong>Lock table (stampede prevention):</strong> Each server maintains a lock table tracking outstanding requests. When multiple requests arrive for the same cache key, only one actually executes — the others wait and share the result. This prevents "thundering herd" on cache misses.</li>
+      <li><strong>Layer 2 — Relationship cache:</strong> Frequently accessed tuples are cached at the ACL server level. Hit rate: ~90% for tuple lookups, reducing Spanner reads from ~200M/sec (in-memory hits) to ~20M/sec (Spanner hits).</li>
+      <li><strong>Layer 3 — Leopard (denormalized):</strong> In-memory transitive closure index. Eliminates recursive group lookups entirely for covered namespaces.</li>
+      <li><strong>Request hedging:</strong> When calls to Spanner or Leopard are slow (above a dynamically computed percentile threshold), Zanzibar sends the same request to a second replica. First response wins, other is cancelled. Limits additional traffic to a small fraction while dramatically reducing tail latency. ~1% of Spanner reads (200K/sec) benefit from hedging.</li>
+      <li><strong>Forwarding key optimization:</strong> For most namespaces, the forwarding key is computed from object_id alone. Since checking <code>document:readme#viewer</code> often requires checking <code>document:readme#editor</code> and <code>document:readme#owner</code>, keeping all checks for the same object on the same server maximizes local cache hits.</li>
+    </ul>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Caching Layers</span>
+      <svg viewBox="0 0 780 220" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="cl1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Request -->
+        <rect x="40" y="20" width="80" height="24" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1"/>
+        <text x="80" y="36" fill="#e3b341" font-size="8" text-anchor="middle" font-weight="600">Request</text>
+
+        <!-- L0: Check cache -->
+        <line x1="120" y1="32" x2="160" y2="32" stroke="#6e7681" stroke-width="1" marker-end="url(#cl1)"/>
+        <rect x="160" y="10" width="160" height="44" rx="6" fill="rgba(63,185,80,.04)" stroke="#3fb950" stroke-width="1"/>
+        <text x="240" y="26" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">L0: Check Cache</text>
+        <text x="240" y="40" fill="#6e7681" font-size="7" text-anchor="middle">Distributed, consistent hash</text>
+        <text x="240" y="50" fill="#6e7681" font-size="7" text-anchor="middle">~10% hit rate on RPC results</text>
+
+        <!-- L1: Tuple cache -->
+        <line x1="320" y1="32" x2="360" y2="32" stroke="#6e7681" stroke-width="1" marker-end="url(#cl1)"/>
+        <rect x="360" y="10" width="140" height="44" rx="6" fill="rgba(88,166,255,.04)" stroke="#58a6ff" stroke-width="1"/>
+        <text x="430" y="26" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="600">L1: Tuple Cache</text>
+        <text x="430" y="40" fill="#6e7681" font-size="7" text-anchor="middle">Server-local, per-relation</text>
+        <text x="430" y="50" fill="#6e7681" font-size="7" text-anchor="middle">~90% hit rate on reads</text>
+
+        <!-- L2: Leopard -->
+        <line x1="500" y1="32" x2="540" y2="32" stroke="#6e7681" stroke-width="1" marker-end="url(#cl1)"/>
+        <rect x="540" y="10" width="140" height="44" rx="6" fill="rgba(210,153,34,.04)" stroke="#d29922" stroke-width="1"/>
+        <text x="610" y="26" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">L2: Leopard</text>
+        <text x="610" y="40" fill="#6e7681" font-size="7" text-anchor="middle">In-memory denormalized</text>
+        <text x="610" y="50" fill="#6e7681" font-size="7" text-anchor="middle">sub-150μs nested groups</text>
+
+        <!-- Spanner -->
+        <line x1="680" y1="32" x2="710" y2="32" stroke="#6e7681" stroke-width="1" marker-end="url(#cl1)"/>
+        <rect x="710" y="16" width="50" height="32" rx="5" fill="rgba(248,81,73,.04)" stroke="#f85149" stroke-width="1"/>
+        <text x="735" y="36" fill="#f85149" font-size="7" text-anchor="middle" font-weight="600">DB</text>
+
+        <!-- Hit rates and volume -->
+        <rect x="40" y="74" width="720" height="40" rx="6" fill="rgba(255,255,255,.01)" stroke="var(--border)" stroke-width=".5"/>
+        <text x="240" y="90" fill="#3fb950" font-size="8" text-anchor="middle">~10% RPC hit rate</text>
+        <text x="240" y="104" fill="#6e7681" font-size="7" text-anchor="middle">Saves: ~1M checks/sec</text>
+        <text x="430" y="90" fill="#58a6ff" font-size="8" text-anchor="middle">~90% tuple hit rate</text>
+        <text x="430" y="104" fill="#6e7681" font-size="7" text-anchor="middle">Saves: ~180M reads/sec</text>
+        <text x="610" y="90" fill="#d29922" font-size="8" text-anchor="middle">~1.5M group QPS</text>
+        <text x="610" y="104" fill="#6e7681" font-size="7" text-anchor="middle">Eliminates recursive lookups</text>
+        <text x="735" y="90" fill="#f85149" font-size="8" text-anchor="middle">~20M/s</text>
+        <text x="735" y="104" fill="#6e7681" font-size="7" text-anchor="middle">Spanner</text>
+
+        <!-- Quantization annotation -->
+        <rect x="40" y="130" width="720" height="44" rx="6" fill="rgba(210,153,34,.04)" stroke="rgba(210,153,34,.15)" stroke-width="1"/>
+        <text x="54" y="148" fill="#d29922" font-size="8" font-weight="600">Timestamp Quantization (enables cache sharing)</text>
+        <text x="54" y="164" fill="#6e7681" font-size="8">Requests at T=1000.001 and T=1000.004 both round to T=1000 → same cache key → single evaluation serves both.</text>
+
+        <!-- Hedging annotation -->
+        <rect x="40" y="184" width="720" height="28" rx="5" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.1)" stroke-width=".8"/>
+        <text x="54" y="202" fill="#bc8cff" font-size="8" font-weight="600">Request Hedging:</text>
+        <text x="200" y="202" fill="#6e7681" font-size="8">If Spanner/Leopard slow → send duplicate to 2nd replica → first response wins → ~1% of reads benefit</text>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Spanner region outage</span><span class="mitigation">Multi-region replication. Local replicas serve reads from recent snapshots. Writes fail over to other regions. Zookie semantics allow serving from any replica ≥ requested freshness.</span></div>
+    <div class="failure-row"><span class="scenario">Leopard index stale</span><span class="mitigation">Leopard falls back to Spanner for freshness-critical checks. Watch API lag monitored. If incremental layer falls behind, offline snapshot rebuild triggered.</span></div>
+    <div class="failure-row"><span class="scenario">Hot group overwhelms cache</span><span class="mitigation">Timestamp quantization spreads load. Lock table prevents stampedes. Request forwarding concentrates computation on one peer. Extreme case: manual cache warming or prefetching.</span></div>
+    <div class="failure-row"><span class="scenario">Slow check (deep nesting)</span><span class="mitigation">Request hedging to secondary replicas. Check depth limits to prevent infinite recursion. Leopard handles the deepest namespaces. Circuit breaker on max fan-out.</span></div>
+    <div class="failure-row"><span class="scenario">Stale permission served</span><span class="mitigation">By design, only content-change checks with zookies have freshness guarantees. Normal checks accept bounded staleness. The system is correct when protocol is followed.</span></div>
+    <div class="failure-row"><span class="scenario">Write conflict (optimistic)</span><span class="mitigation">Zanzibar uses "touch" writes with preconditions (CAS). If a concurrent write modifies the lock tuple, the write is rejected and retried. Idempotent via tuple dedup.</span></div>
+
+    <div class="sub">Zanzibar vs. OpenFGA vs. SpiceDB</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>Google Zanzibar</th><th>OpenFGA (CNCF)</th><th>SpiceDB (AuthZed)</th></tr></thead>
+      <tbody>
+        <tr><td>Origin</td><td>Google internal (2016), paper 2019</td><td>Auth0/Okta (2021), now CNCF project</td><td>AuthZed (2020), open-source</td></tr>
+        <tr><td>Storage</td><td>Google Spanner (global)</td><td>PostgreSQL, MySQL, SQLite</td><td>CockroachDB, Spanner, PostgreSQL, MySQL</td></tr>
+        <tr><td>Consistency</td><td>Zookies + TrueTime + external consistency</td><td>Consistency preference flag (minimize latency / higher consistency)</td><td>ZedTokens (faithful zookie implementation)</td></tr>
+        <tr><td>Group Index</td><td>Leopard (in-memory transitive closure)</td><td>Recursive DB queries + query cache</td><td>Dispatch cache (Tiger cache proposed)</td></tr>
+        <tr><td>Schema Language</td><td>Protocol buffers (namespace config)</td><td>FGA DSL (model schema 1.1)</td><td>Zed schema language</td></tr>
+        <tr><td>APIs</td><td>Check, Read, Write, Expand, Watch</td><td>Check, Read, Write, ListObjects, ListUsers, Expand</td><td>Check, Read, Write, Expand, Watch, LookupResources/Subjects</td></tr>
+        <tr><td>Scale</td><td>Trillions of tuples, 10M+ checks/sec</td><td>Moderate scale (single-region typical)</td><td>Designed for multi-region, millions of tuples</td></tr>
+        <tr><td>Conditions (ABAC)</td><td>Limited (via namespace config)</td><td>Conditions with CEL expressions</td><td>Caveats with CEL expressions</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub" id="data-model">Data Model (Spanner / PostgreSQL)</div>
+    <div class="schema"><span class="comment">// === Zanzibar: Tuple DB in Spanner (one database per namespace) ===</span>
+<span class="table-name">relation_tuples</span> {
+  <span class="pk">shard_id</span>        <span class="type">INT</span>           <span class="comment">-- client-controlled sharding</span>
+  <span class="pk">object_id</span>       <span class="type">STRING</span>        <span class="comment">-- e.g., "document:readme"</span>
+  <span class="pk">relation</span>        <span class="type">STRING</span>        <span class="comment">-- e.g., "viewer", "editor"</span>
+  <span class="pk">user</span>            <span class="type">STRING</span>        <span class="comment">-- e.g., "user:alice" or "group:eng#member"</span>
+  <span class="pk">commit_ts</span>       <span class="type">TIMESTAMP</span>     <span class="comment">-- Spanner commit timestamp (versioned rows)</span>
+  PRIMARY KEY (shard_id, object_id, relation, user, commit_ts)
+}
+
+<span class="table-name">changelog</span> {
+  <span class="pk">changelog_shard</span> <span class="type">INT</span>           <span class="comment">-- randomly selected per write</span>
+  <span class="pk">timestamp</span>       <span class="type">TIMESTAMP</span>     <span class="comment">-- Spanner commit timestamp</span>
+  <span class="pk">update_id</span>       <span class="type">INT</span>           <span class="comment">-- unique within timestamp</span>
+  namespace       <span class="type">STRING</span>        <span class="comment">-- which namespace changed</span>
+  operation       <span class="type">ENUM</span>          <span class="comment">-- WRITE or DELETE</span>
+  tuple           <span class="type">BYTES</span>         <span class="comment">-- serialized tuple</span>
+  PRIMARY KEY (changelog_shard, timestamp, update_id)
+}
+
+<span class="comment">// === OpenFGA: Equivalent in PostgreSQL ===</span>
+<span class="table-name">tuple</span> {
+  <span class="pk">store</span>           <span class="type">VARCHAR(26)</span>   <span class="comment">-- ULID (multi-tenant store isolation)</span>
+  object_type     <span class="type">VARCHAR(256)</span>
+  object_id       <span class="type">VARCHAR(256)</span>
+  relation        <span class="type">VARCHAR(50)</span>
+  _user           <span class="type">VARCHAR(512)</span>  <span class="comment">-- user:alice or group:eng#member</span>
+  ulid            <span class="type">VARCHAR(26)</span>   <span class="comment">-- unique tuple ID</span>
+  inserted_at     <span class="type">TIMESTAMPTZ</span>
+  condition_name  <span class="type">VARCHAR(256)</span>  <span class="comment">-- optional: for ABAC conditions</span>
+  condition_ctx   <span class="type">JSONB</span>         <span class="comment">-- condition context (ip_address, time, etc.)</span>
+}</div>
+
+    <div class="sub">Client Isolation &amp; Multi-Tenancy</div>
+    <ul class="items">
+      <li><strong>Namespace-level isolation:</strong> Each Google service (Drive, YouTube, etc.) gets its own namespace with separate tuple databases. This prevents one service's traffic from impacting another.</li>
+      <li><strong>Resource quotas:</strong> Each client has CPU-second quotas per RPC. Zanzibar measures cost generically and enforces limits. Overuse triggers throttling, not failure.</li>
+      <li><strong>Separate Spanner read limits:</strong> Per-(object, client) and per-client read limits on each Spanner server prevent one client from monopolizing database resources.</li>
+      <li><strong>Different lock table keys per client:</strong> Prevents one client's Spanner throttling from causing cache misses for other clients sharing the same ACL server.</li>
+      <li><strong>Outstanding RPC limits:</strong> Each server limits concurrent RPCs to control memory usage. Prevents runaway requests from one client from exhausting server resources.</li>
+      <li><strong>OpenFGA: Store-level isolation:</strong> Multi-tenant by design — each application gets a "store" with its own authorization model and tuples. API calls scoped to store_id.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Timeline</div>
+    <ul class="items">
+      <li><strong>2010s:</strong> Google team formed to unify authorization across products. Previous systems were per-product — inconsistent semantics, duplicated effort, security gaps.</li>
+      <li><strong>~2016:</strong> Zanzibar deployed internally at Google. Named after the spice trading port (project was internally called "Spice" — "the ACLs must flow").</li>
+      <li><strong>2019:</strong> Zanzibar paper published at USENIX ATC. Immediately sparked open-source implementations.</li>
+      <li><strong>2020:</strong> AuthZed founded, begins building SpiceDB as an open-source Zanzibar implementation.</li>
+      <li><strong>2021:</strong> Auth0 launches FGA (Fine-Grained Authorization) based on Zanzibar principles. Used in production since December 2021.</li>
+      <li><strong>2022:</strong> OpenFGA open-sourced by Okta/Auth0. Community grows rapidly.</li>
+      <li><strong>2023-2024:</strong> OpenFGA joins CNCF as an incubating project. SpiceDB matures with CockroachDB backend, ZedTokens. Airbnb's Himeji (internal Zanzibar) becomes known.</li>
+      <li><strong>2025:</strong> OpenFGA adopted by Auth0, Grafana Labs, Canonical, Docker, Agicap. Conditions/ABAC support added. Ecosystem includes Terraform provider, VS Code extension, Helm charts, SDKs for 5+ languages.</li>
+    </ul>
+
+    <div class="sub">The Zanzibar Ecosystem</div>
+    <ul class="items">
+      <li><strong>SpiceDB (AuthZed):</strong> Most faithful open-source Zanzibar implementation. CockroachDB/Spanner backend for global consistency. ZedTokens. Zed schema language.</li>
+      <li><strong>OpenFGA (CNCF):</strong> Developer-friendly Zanzibar-inspired engine. PostgreSQL/MySQL backend. FGA DSL. Focus on ease of deployment over global scale.</li>
+      <li><strong>Ory Keto:</strong> Early Zanzibar-inspired project. Part of the Ory ecosystem alongside Hydra (OAuth) and Kratos (identity).</li>
+      <li><strong>Permify:</strong> Open-source, Zanzibar-based authorization with gRPC API and schema language.</li>
+      <li><strong>Airbnb Himeji:</strong> Internal Zanzibar system built by co-creator Abhishek Parmar. Powers Airbnb's authorization.</li>
+      <li><strong>Carta, Netflix, others:</strong> Multiple companies have built internal Zanzibar-style systems after the paper's publication.</li>
+    </ul>
+
+    <div class="callout tip">The Zanzibar paper's impact extends far beyond Google. By demonstrating that relationship-based access control can unify ACLs, RBAC, and ABAC into one system — and operate at planetary scale — it shifted the industry's approach to authorization. Broken access control is now #1 on the OWASP Top 10, and ReBAC (as pioneered by Zanzibar) has become the recommended approach for building correct authorization systems.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7 ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">★</span>
+    <span class="phase-title">Interview Q&A — Practice</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Q1: Why did Google build Zanzibar instead of using per-service authorization?</div>
+    <div class="callout say">"Before Zanzibar, each Google product maintained its own authorization logic. This created three problems: (1) inconsistent semantics — what 'viewer' meant in Drive was different from YouTube, making cross-product features like sharing a Calendar event with a Drive link nearly impossible to reason about correctly; (2) duplicated engineering effort — every team reimplemented caching, consistency, group resolution; (3) security gaps — per-service systems had different levels of correctness, and a bug in one service's authorization was an isolated problem to debug. Zanzibar unified this into one system with a single data model, one consistency guarantee, and shared infrastructure. The cost was centralizing all authorization data, but the benefit was that any service could express its authorization model through namespace configs while getting global consistency, &lt;10ms latency, and 99.999% availability for free."</div>
+
+    <div class="sub">Q2: Explain the new enemy problem and how zookies solve it.</div>
+    <div class="callout say">"The new enemy problem occurs when authorization changes and content changes happen in sequence but the system evaluates permissions using stale data. Classic example: Alice removes Bob from a document, then adds confidential content. If Bob's next access check uses a cached permission snapshot from before the removal, he sees the confidential content. Zookies solve this by encoding a Spanner timestamp when content is modified. The client stores this zookie atomically with the content. On future checks, the zookie ensures the evaluation uses a snapshot at least as fresh as the content modification — guaranteeing all prior ACL changes are visible. The 'at-least-as-fresh' semantics are the key insight: Zanzibar doesn't need the exact timestamp, just any snapshot newer than it, which gives the system freedom to use locally cached data and quantize timestamps for efficiency."</div>
+
+    <div class="sub">Q3: How would you handle a Google Search results page that needs 100 authorization checks?</div>
+    <div class="callout say">"Search is the hardest Zanzibar use case because of high fan-out and strict latency requirements. First, all 100 checks are issued in parallel to the nearest ACL server cluster. The distributed cache handles hot resources (popular documents that many users check). Timestamp quantization means all 100 checks likely share the same cache partition. The union short-circuit optimization means checks resolve as soon as any branch is true — most checks resolve in &lt;1ms from cache. For the long tail, request hedging sends slow requests to backup replicas. The Leopard index handles group-based checks in sub-150μs. The key trade-off: Search uses 'safe' (slightly stale) checks without zookies, accepting a few seconds of staleness for dramatically better performance. Content-change checks with zookies are only needed when modifying content, not when reading search results."</div>
+
+    <div class="sub">Q4: How does OpenFGA compare to Zanzibar for a startup?</div>
+    <div class="callout say">"OpenFGA is an excellent choice for startups because it captures Zanzibar's core insight — relationship-based authorization — without requiring Google-scale infrastructure. You get the same tuple data model, userset rewrite rules, Check/ListObjects/ListUsers APIs, and schema language, backed by PostgreSQL instead of Spanner. The trade-offs: OpenFGA doesn't have Leopard (so deeply nested groups are slower), uses simpler consistency controls (flag-based rather than zookies), and is designed for single-region deployment. For most startups, this is fine — you probably don't need 10M checks/second or global consistency across 30 regions. Start with OpenFGA on PostgreSQL, model your authorization as relationships from day one, and you'll have a clean upgrade path if you later need SpiceDB (with CockroachDB) or even a managed Zanzibar-like service."</div>
+
+    <div class="sub">Q5: Why use ReBAC over traditional RBAC?</div>
+    <div class="callout say">"RBAC answers 'does this user have this role?' ReBAC answers 'does a relationship path exist between this user and this resource?' The difference becomes critical in real applications. Consider Google Drive: a user might have access because they own the file, OR they're an editor, OR they're in a group that's a viewer, OR they have access to the parent folder which contains the file. RBAC can't express this naturally — you'd need to precompute roles for every resource, which doesn't scale. ReBAC models it as a graph: user → group → folder → document, where each edge has a relation type. Check becomes graph reachability. The namespace config defines how relations compose — 'editors are also viewers,' 'folder viewers are document viewers.' This is why Zanzibar uses ReBAC: it naturally unifies ACLs (direct grants), RBAC (roles as group membership), and hierarchy (folder inheritance) into one model."</div>
+
+    <div class="sub">Q6: What's the hardest operational challenge in running Zanzibar?</div>
+    <div class="callout say">"Hot spots. The paper explicitly calls this out as 'the most critical frontier.' The problem: normalized storage means common entities — the 'all-employees' group, a widely-shared document, a top-level organization — become extreme hot spots. Every permission check that involves 'all-employees' reads the same Spanner rows. The mitigations are layered: (1) distributed cache with consistent hashing concentrates requests on one server per cache key; (2) lock tables prevent thundering herd on cache misses; (3) timestamp quantization lets multiple requests share the same cache entry; (4) Leopard precomputes group membership to avoid repeated reads entirely; (5) request hedging handles when cached data is evicted. Even with all of this, the Zanzibar team hand-tunes hot spots — for instance, enabling cache prefetching for known popular groups. It's a continuous operational effort, not a one-time solution."</div>
+
+  </div>
+</div>
+
+</main>
+
+<script>
+document.querySelectorAll('nav a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t&&t.classList.contains('collapsed'))t.classList.remove('collapsed');
+  });
+});
+</script>
+</body>
+</html>

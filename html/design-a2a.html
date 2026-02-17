@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design A2A (Agent-to-Agent Protocol) — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design A2A</h1>
+    <span>Agent-to-Agent Protocol · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-discovery">Agent Cards &amp; Discovery</a>
+  <a href="#dd-task">Task Lifecycle &amp; Messaging</a>
+  <a href="#dd-streaming">Streaming &amp; Push</a>
+  <a href="#dd-security">Auth &amp; Trust</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#evolution">Evolution</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"We're designing A2A — the Agent-to-Agent protocol — an open standard by Google (now Linux Foundation) that enables AI agents built on different frameworks to discover each other, negotiate interaction modalities, delegate tasks, and collaborate — all without exposing their internal state, tools, or memory. If MCP is 'USB-C for connecting models to tools,' A2A is 'the internet for agents to talk to each other.' MCP = agent-to-tool. A2A = agent-to-agent."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What's the relationship to MCP?</strong> <em>→ Complementary. MCP connects an agent to its tools (databases, APIs). A2A connects agents to each other. An agent might use MCP to query a database, then use A2A to delegate a subtask to a specialist agent. They live at different layers of the stack.</em></li>
+      <li><strong>Are agents opaque to each other?</strong> <em>→ Yes — this is a core design principle. Agent A doesn't know Agent B's internal framework, LLM, memory, or tools. They interact only through the A2A protocol. This preserves IP and allows heterogeneous systems to collaborate.</em></li>
+      <li><strong>Synchronous or async interactions?</strong> <em>→ Both. Quick tasks complete synchronously in one request-response. Long-running tasks use a lifecycle (submitted → working → completed) with streaming updates via SSE or push notifications via webhooks.</em></li>
+      <li><strong>How do agents find each other?</strong> <em>→ Agent Cards: a JSON file at <code>/.well-known/agent.json</code> describing the agent's name, skills, endpoint, and auth requirements. Like a business card for AI agents.</em></li>
+      <li><strong>Protocol bindings?</strong> <em>→ Three bindings: JSON-RPC over HTTP, gRPC, and plain HTTP/REST. The data model is defined in protobuf — bindings are generated from it. Protocol-agnostic data layer + concrete bindings.</em></li>
+      <li><strong>Enterprise-grade?</strong> <em>→ Yes. OAuth 2.0, OpenID Connect, signed agent cards, task-scoped tokens, audit trails. Backed by 150+ partners including Google, SAP, Salesforce, ServiceNow.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Agent Card: discovery, capabilities, skills</td><td>Internal agent implementation (LLM, memory, tools)</td></tr>
+        <tr><td>Task lifecycle: submit → working → completed/failed</td><td>Agent orchestration frameworks (ADK, LangGraph internals)</td></tr>
+        <tr><td>Message exchange: text, files, structured data (Parts)</td><td>Shared agent memory or state synchronization</td></tr>
+        <tr><td>Streaming (SSE) + push notifications (webhooks)</td><td>Agent training or fine-tuning</td></tr>
+        <tr><td>Auth: OAuth 2.0, OpenID, API keys, signed cards</td><td>Billing, marketplace, agent monetization</td></tr>
+        <tr><td>Multi-binding: JSON-RPC, gRPC, HTTP/REST</td><td>In-process agent communication (same runtime)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1: Task delegation</strong> — A purchasing concierge agent discovers a pizza seller agent via its Agent Card, sends a message ("Order a large pepperoni"), and receives task updates as the seller agent processes the order. The agents may be built on entirely different frameworks (ADK vs CrewAI).</li>
+      <li><strong>UC2: Multi-turn collaboration</strong> — A travel agent delegates hotel booking to a hotel agent. The hotel agent asks a clarifying question ("Which dates?"). The travel agent relays the answer. Back-and-forth until the task completes. This requires stateful task tracking with the <code>input-required</code> state.</li>
+      <li><strong>UC3: Long-running async task</strong> — A research agent submits a deep analysis request to a data agent. The data agent takes 10 minutes. The research agent subscribes via SSE for streaming progress updates, or registers a webhook for push notification on completion.</li>
+      <li><strong>UC4: Agent discovery</strong> — An enterprise orchestrator fetches Agent Cards from <code>/.well-known/agent.json</code> for all registered agents. It matches the user's request to the agent with the best-matching skill. No hardcoded agent registry — just standard HTTP discovery.</li>
+      <li><strong>UC5: Multimodal exchange</strong> — A design agent sends an image artifact (PNG) to a QA agent for visual regression testing. The QA agent responds with a structured JSON report. A2A's Part system supports text, files, images, and structured data in a single message.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Opacity:</strong> Agents are black boxes to each other. No sharing of internal prompts, memory, tools, or LLM choice. The protocol only exposes inputs (messages) and outputs (artifacts). This protects intellectual property and enables heterogeneous agent ecosystems.</li>
+      <li><strong>Framework-agnostic:</strong> An agent built with Google ADK can talk to one built with LangGraph, CrewAI, Semantic Kernel, or bare Python. The protocol is the contract, not the implementation.</li>
+      <li><strong>Task-oriented:</strong> Every interaction is structured as a Task with a lifecycle. Not free-form messaging — tasks have IDs, states, history, and artifacts. This enables tracking, auditing, and resumption.</li>
+      <li><strong>Multi-modal content negotiation:</strong> Agents declare what content types they accept and produce (text/plain, application/json, image/png). The client agent checks the server's capabilities before sending. No sending an image to a text-only agent.</li>
+      <li><strong>Enterprise security:</strong> OAuth 2.0, OpenID Connect, signed Agent Cards (cryptographic proof of identity), task-scoped short-lived tokens. Zero ambient authority.</li>
+      <li><strong>Backward compatible:</strong> Agent Cards include a <code>protocolVersion</code>. Older clients gracefully degrade when encountering newer servers. Unknown fields are ignored, not errors.</li>
+    </ul>
+
+    <div class="callout tip">The fundamental insight: MCP and A2A occupy different layers. MCP is the "nervous system" connecting an agent to its own tools and data (function calling). A2A is the "social network" connecting agents to other agents for collaboration. An enterprise stack uses both: MCP internally (agent ↔ tools), A2A externally (agent ↔ agent). A2A agents are opaque peers; MCP servers are transparent tool providers. This complementary layering is the key architectural distinction.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"A2A is a protocol, not a centralized service. But let's estimate the interaction patterns to understand what the protocol must handle."</div>
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">A2A-Enabled Agents (Ecosystem)</div>
+        <div class="value">~10K+</div>
+        <div class="detail">Growing: 150+ partners. Every enterprise will have 5-50 internal agents communicating via A2A.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Tasks per Agent per Day</div>
+        <div class="value">100–10K</div>
+        <div class="detail">Enterprise orchestrator delegating to specialist agents. Varies wildly by use case.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Messages per Task</div>
+        <div class="value">1–20</div>
+        <div class="detail">Simple: 1 request + 1 response. Multi-turn: 10-20 back-and-forth messages.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Task Duration</div>
+        <div class="value">100ms – 30 min</div>
+        <div class="detail">Instant: lookup agent. Long-running: data analysis, report generation, order fulfillment.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Message Size</div>
+        <div class="value">1 KB – 10 MB</div>
+        <div class="detail">Text: ~1KB. Structured JSON: 10-100KB. File artifacts (images, PDFs): up to MBs.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Agent Card Size</div>
+        <div class="value">2–10 KB</div>
+        <div class="detail">JSON: name, description, endpoint, skills[], auth, capabilities. Cached by clients.</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> A2A is decentralized — there's no central broker. Every A2A server is a standalone HTTP endpoint. The scalability challenge belongs to each agent operator, not to a central infrastructure. A popular agent (like a Salesforce CRM agent) must handle its own traffic, exactly like a popular web API.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> Task duration is bimodal. Quick tasks (lookups, simple questions) complete in under a second — synchronous HTTP is fine. Long-running tasks (research, data processing) take minutes — these need async patterns: SSE streaming for real-time updates, or webhooks for fire-and-forget notification. The protocol must handle both gracefully with the same task abstraction.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> Discovery is the cold-start problem. Before agents can collaborate, they must find each other. Agent Cards at <code>/.well-known/agent.json</code> provide a pull-based discovery mechanism. But in an enterprise with 50 internal agents, some form of registry or catalog becomes necessary — the protocol defines the card format but not the registry.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"A2A has a three-layer architecture: a protocol-agnostic data model (Task, Message, Part, Artifact), abstract operations (send message, get task, cancel), and concrete protocol bindings (JSON-RPC, gRPC, HTTP). The key participants are: Client agents (initiators) and Server agents (executors). Everything is task-oriented — agents don't have free-form conversations; they collaborate on tasks with defined lifecycles."</div>
+
+    <div class="sub">Key Architecture Decisions</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Agent-to-agent communication (not agent-to-tool)</td><td style="color:var(--accent-cyan);font-weight:500">Task-oriented protocol (not tool-call protocol)</td><td>Agents are opaque peers, not transparent function providers. A "task" abstraction captures multi-turn, long-running, multi-modal collaboration. MCP's tool-call model treats the server as a function to invoke — A2A treats it as an autonomous collaborator.</td><td>—</td></tr>
+        <tr><td>Agents on different frameworks must interoperate</td><td style="color:var(--accent-cyan);font-weight:500">Protobuf-first data model + multiple bindings</td><td>Single authoritative protobuf definition generates JSON-RPC, gRPC, and REST bindings. Protobuf ensures type safety across languages. A JSON-only spec would lack the rigor for gRPC and typed SDK generation.</td><td>—</td></tr>
+        <tr><td>Discover agent capabilities before delegating</td><td style="color:var(--accent-cyan);font-weight:500">Agent Cards at /.well-known/agent.json</td><td>Standard HTTP discovery (like .well-known/openid-configuration). No central registry needed — each agent self-describes. A central directory would be a single point of failure and a governance bottleneck.</td><td>AP</td></tr>
+        <tr><td>Tasks range from instant to 30+ minutes</td><td style="color:var(--accent-cyan);font-weight:500">Sync (blocking) + SSE stream + webhook push</td><td>One-shot: <code>message/send</code> blocks until done. Streaming: <code>message/stream</code> returns SSE events. Async push: webhook URL in task config. Three patterns cover the full duration spectrum. Polling alone would waste bandwidth; SSE alone doesn't work for fire-and-forget.</td><td>Eventual</td></tr>
+        <tr><td>Rich data: text, JSON, images, files</td><td style="color:var(--accent-cyan);font-weight:500">Part-based content model with MIME types</td><td>Each message contains Parts (like MIME multipart). Each Part has a content type: text/plain, application/json, image/png, etc. Agents negotiate supported types via Agent Card. Text-only would exclude visual and structured data critical for enterprise workflows.</td><td>—</td></tr>
+        <tr><td>Cross-vendor auth in enterprise environments</td><td style="color:var(--accent-cyan);font-weight:500">OpenAPI-aligned security schemes</td><td>Agent Card declares supported auth: OAuth 2.0, OpenID Connect, API keys. Aligns with OpenAPI spec — enterprise infra already handles these. Custom auth would require new infrastructure at every org.</td><td>CP</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Architecture: Client-Server Agent Model</div>
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">A2A Architecture</span>
+      <svg viewBox="0 0 780 500" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="arrg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+          <marker id="arrb" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#58a6ff" stroke-width="1"/></marker>
+        </defs>
+        <!-- User -->
+        <g class="svg-node"><rect x="30" y="30" width="130" height="44" rx="8" fill="#161b22" stroke="#d29922" stroke-width="1.5"/><text x="95" y="50" fill="#d29922" font-size="11" text-anchor="middle" font-weight="600">User / Trigger</text><text x="95" y="63" fill="#6e7681" font-size="8" text-anchor="middle">"Book me a trip to NYC"</text></g>
+        <!-- Client Agent -->
+        <rect x="30" y="100" width="300" height="170" rx="10" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.15)" stroke-width="1.5"/>
+        <text x="44" y="118" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">CLIENT AGENT (Orchestrator)</text>
+        <g class="svg-node"><rect x="48" y="132" width="120" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="108" y="148" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">LLM + Logic</text><text x="108" y="158" fill="#6e7681" font-size="7" text-anchor="middle">ADK / LangGraph</text></g>
+        <g class="svg-node"><rect x="48" y="180" width="120" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="108" y="196" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">A2A Client SDK</text><text x="108" y="206" fill="#6e7681" font-size="7" text-anchor="middle">Discovery + messaging</text></g>
+        <g class="svg-node"><rect x="186" y="132" width="130" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="251" y="148" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">MCP Clients</text><text x="251" y="158" fill="#6e7681" font-size="7" text-anchor="middle">Own tools &amp; data</text></g>
+        <g class="svg-node"><rect x="186" y="180" width="130" height="36" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="251" y="196" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Task Manager</text><text x="251" y="206" fill="#6e7681" font-size="7" text-anchor="middle">Track delegated tasks</text></g>
+        <g class="svg-node"><rect x="48" y="228" width="268" height="28" rx="5" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="182" y="245" fill="#6e7681" font-size="9" text-anchor="middle">Agent Card Cache (discovered remote agents)</text></g>
+        <!-- A2A Protocol arrow -->
+        <text x="470" y="195" fill="#3fb950" font-size="9" font-weight="600" text-anchor="middle" letter-spacing=".08em">A2A PROTOCOL</text>
+        <text x="470" y="208" fill="#6e7681" font-size="7" text-anchor="middle">JSON-RPC / gRPC / HTTP</text>
+        <line x1="330" y1="198" x2="400" y2="198" stroke="#3fb950" stroke-width="2" marker-end="url(#arrg)"/>
+        <line x1="540" y1="198" x2="400" y2="198" stroke="#3fb950" stroke-width="2" marker-end="url(#arrg)"/>
+        <!-- Server Agents -->
+        <rect x="420" y="30" width="330" height="140" rx="10" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+        <text x="434" y="48" fill="#bc8cff" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">REMOTE AGENTS (A2A Servers)</text>
+        <g class="svg-node"><rect x="438" y="60" width="140" height="46" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="508" y="78" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Hotel Booking Agent</text><text x="508" y="91" fill="#6e7681" font-size="7" text-anchor="middle">CrewAI · skills: [book_hotel]</text></g>
+        <g class="svg-node"><rect x="596" y="60" width="140" height="46" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="666" y="78" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Flight Agent</text><text x="666" y="91" fill="#6e7681" font-size="7" text-anchor="middle">Semantic Kernel · [book_flight]</text></g>
+        <g class="svg-node"><rect x="438" y="116" width="140" height="40" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="508" y="134" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Restaurant Agent</text><text x="508" y="146" fill="#6e7681" font-size="7" text-anchor="middle">Custom Python</text></g>
+        <g class="svg-node"><rect x="596" y="116" width="140" height="40" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.2"/><text x="666" y="134" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">Weather Agent</text><text x="666" y="146" fill="#6e7681" font-size="7" text-anchor="middle">LangGraph</text></g>
+        <!-- Agent Card discovery -->
+        <rect x="420" y="240" width="330" height="50" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+        <text x="434" y="258" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">DISCOVERY</text>
+        <g class="svg-node"><rect x="438" y="260" width="100" height="22" rx="4" fill="#161b22" stroke="#d29922" stroke-width="1"/><text x="488" y="274" fill="#d29922" font-size="8" text-anchor="middle">Agent Card</text></g>
+        <g class="svg-node"><rect x="550" y="260" width="100" height="22" rx="4" fill="#161b22" stroke="#d29922" stroke-width="1"/><text x="600" y="274" fill="#d29922" font-size="8" text-anchor="middle">Agent Card</text></g>
+        <g class="svg-node"><rect x="662" y="260" width="76" height="22" rx="4" fill="#161b22" stroke="#d29922" stroke-width="1"/><text x="700" y="274" fill="#d29922" font-size="8" text-anchor="middle">...</text></g>
+        <text x="585" y="302" fill="#6e7681" font-size="8" text-anchor="middle">GET /.well-known/agent.json</text>
+        <!-- Data model legend -->
+        <rect x="30" y="310" width="720" height="150" rx="10" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+        <text x="44" y="328" fill="#39d2c0" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">A2A DATA MODEL</text>
+        <g class="svg-node"><rect x="48" y="340" width="120" height="50" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="108" y="360" fill="#39d2c0" font-size="11" text-anchor="middle" font-weight="600">Task</text><text x="108" y="375" fill="#6e7681" font-size="7" text-anchor="middle">id, state, history, artifacts</text></g>
+        <g class="svg-node"><rect x="190" y="340" width="120" height="50" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="250" y="360" fill="#39d2c0" font-size="11" text-anchor="middle" font-weight="600">Message</text><text x="250" y="375" fill="#6e7681" font-size="7" text-anchor="middle">role, parts[], taskId</text></g>
+        <g class="svg-node"><rect x="332" y="340" width="120" height="50" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="392" y="360" fill="#39d2c0" font-size="11" text-anchor="middle" font-weight="600">Part</text><text x="392" y="375" fill="#6e7681" font-size="7" text-anchor="middle">TextPart / FilePart / DataPart</text></g>
+        <g class="svg-node"><rect x="474" y="340" width="120" height="50" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="534" y="360" fill="#39d2c0" font-size="11" text-anchor="middle" font-weight="600">Artifact</text><text x="534" y="375" fill="#6e7681" font-size="7" text-anchor="middle">Task output (immutable)</text></g>
+        <g class="svg-node"><rect x="616" y="340" width="120" height="50" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="676" y="360" fill="#39d2c0" font-size="11" text-anchor="middle" font-weight="600">Agent Card</text><text x="676" y="375" fill="#6e7681" font-size="7" text-anchor="middle">name, skills, endpoint, auth</text></g>
+        <!-- Lifecycle -->
+        <text x="108" y="418" fill="#d29922" font-size="8" font-weight="600" text-anchor="middle">Task lifecycle:</text>
+        <text x="390" y="418" fill="#6e7681" font-size="8" text-anchor="middle">submitted → working → input-required ⟲ → completed | failed | canceled</text>
+        <!-- Connections -->
+        <line x1="95" y1="74" x2="108" y2="100" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="168" y1="198" x2="186" y2="198" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="108" y1="168" x2="108" y2="180" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+
+    <div class="sub">Flow 1: Task Delegation (the core A2A interaction)</div>
+    <div class="svg-diagram">
+      <span class="dia-title">A2A Task Delegation</span>
+      <svg viewBox="0 0 780 580" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="a2a1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="a2a2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#58a6ff" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- User -->
+        <rect x="250" y="10" width="280" height="30" rx="15" fill="#161b22" stroke="#e3b341" stroke-width="1.5"/>
+        <text x="390" y="29" fill="#e3b341" font-size="10" text-anchor="middle" font-weight="600">User: "Book me a hotel in NYC for March 5-8"</text>
+        <line x1="390" y1="40" x2="390" y2="60" stroke="#6e7681" stroke-width="1" marker-end="url(#a2a1)"/>
+
+        <!-- Client Agent -->
+        <rect x="270" y="60" width="240" height="30" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="390" y="79" fill="#58a6ff" font-size="11" text-anchor="middle" font-weight="600">Client Agent (Travel Orchestrator)</text>
+
+        <!-- Step 1: Discover -->
+        <rect x="40" y="105" width="340" height="56" rx="6" fill="rgba(210,153,34,.04)" stroke="rgba(210,153,34,.2)" stroke-width="1"/>
+        <text x="54" y="121" fill="#d29922" font-size="9" font-weight="600">Step 1: DISCOVER</text>
+        <text x="54" y="136" fill="#6e7681" font-size="8">GET /.well-known/agent.json</text>
+        <text x="54" y="150" fill="#6e7681" font-size="8">→ Agent Card: skills, endpoint, auth requirements</text>
+        <line x1="390" y1="90" x2="390" y2="105" stroke="#d29922" stroke-width="1" marker-end="url(#a2a1)"/>
+
+        <!-- Step 2: Auth -->
+        <rect x="400" y="105" width="340" height="56" rx="6" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.2)" stroke-width="1"/>
+        <text x="414" y="121" fill="#bc8cff" font-size="9" font-weight="600">Step 2: AUTHENTICATE</text>
+        <text x="414" y="136" fill="#6e7681" font-size="8">OAuth 2.0 flow → obtain access token</text>
+        <text x="414" y="150" fill="#6e7681" font-size="8">Scoped to hotel-agent capabilities</text>
+
+        <!-- Step 3: Send Message -->
+        <rect x="140" y="176" width="500" height="66" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.2)" stroke-width="1"/>
+        <text x="154" y="192" fill="#58a6ff" font-size="9" font-weight="600">Step 3: SEND MESSAGE — POST /a2a (JSON-RPC)</text>
+        <text x="154" y="207" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">{"method": "message/send", "params": {"message": {</text>
+        <text x="164" y="220" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">  "role": "user", "parts": [{"text": "Book hotel NYC, Mar 5-8, ≤$200"}]}}}</text>
+        <text x="154" y="234" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">  "messageId": "msg-001"</text>
+        <line x1="390" y1="161" x2="390" y2="176" stroke="#58a6ff" stroke-width="1" marker-end="url(#a2a2)"/>
+
+        <!-- Arrow down -->
+        <line x1="390" y1="242" x2="390" y2="264" stroke="#6e7681" stroke-width="1" marker-end="url(#a2a1)"/>
+
+        <!-- Hotel Agent working -->
+        <rect x="180" y="264" width="420" height="70" rx="8" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.2)" stroke-width="1"/>
+        <rect x="280" y="268" width="220" height="24" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/>
+        <text x="390" y="284" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Hotel Agent (A2A Server)</text>
+        <text x="194" y="308" fill="#6e7681" font-size="8">Creates Task(id: "task-42", state: "working")</text>
+        <text x="194" y="322" fill="#6e7681" font-size="8">Searches hotels via MCP tool → finds 3 options → needs user input</text>
+
+        <!-- Returns input-required -->
+        <line x1="390" y1="334" x2="390" y2="356" stroke="#d29922" stroke-width="1" marker-end="url(#a2a1)"/>
+        <rect x="180" y="356" width="420" height="36" rx="6" fill="rgba(210,153,34,.06)" stroke="#d29922" stroke-width="1"/>
+        <text x="390" y="372" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Returns: state = "input-required"</text>
+        <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">messages: [{role: "agent", parts: [{text: "I found 3 options..."}]}]</text>
+
+        <!-- Client relays, user picks -->
+        <line x1="390" y1="392" x2="390" y2="412" stroke="#6e7681" stroke-width="1" marker-end="url(#a2a1)"/>
+        <rect x="240" y="412" width="300" height="24" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1"/>
+        <text x="390" y="428" fill="#58a6ff" font-size="9" text-anchor="middle">Client relays options → User picks "Option 2"</text>
+
+        <!-- Step 4: Continue Task -->
+        <rect x="140" y="450" width="500" height="44" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.2)" stroke-width="1"/>
+        <text x="154" y="466" fill="#58a6ff" font-size="9" font-weight="600">Step 4: CONTINUE TASK — POST /a2a (same taskId)</text>
+        <text x="154" y="480" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">{"method": "message/send", "params": {"message": {...}, "taskId": "task-42"}}</text>
+        <line x1="390" y1="436" x2="390" y2="450" stroke="#58a6ff" stroke-width="1" marker-end="url(#a2a2)"/>
+
+        <!-- Completed -->
+        <line x1="390" y1="494" x2="390" y2="516" stroke="#3fb950" stroke-width="1" marker-end="url(#a2a1)"/>
+        <rect x="180" y="516" width="420" height="40" rx="6" fill="rgba(63,185,80,.06)" stroke="#3fb950" stroke-width="1.2"/>
+        <text x="390" y="533" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Returns: state = "completed"</text>
+        <text x="390" y="548" fill="#6e7681" font-size="8" text-anchor="middle">artifacts: [{parts: [{text: "Confirmed: Marriott NYC, Mar 5-8, $189/night"}]}]</text>
+      </svg>
+    </div>
+
+    <div class="sub">Flow 2: Long-Running Task with Streaming</div>
+    <div class="svg-diagram">
+      <span class="dia-title">SSE Streaming Task</span>
+      <svg viewBox="0 0 780 340" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="a2s1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Client Agent -->
+        <rect x="40" y="20" width="180" height="34" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="130" y="41" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Client Agent</text>
+
+        <!-- Arrow -->
+        <line x1="220" y1="37" x2="380" y2="37" stroke="#58a6ff" stroke-width="1.2" marker-end="url(#a2s1)"/>
+        <text x="300" y="30" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="500">message/stream</text>
+
+        <!-- Research Agent -->
+        <rect x="380" y="20" width="180" height="34" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="470" y="41" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Research Agent</text>
+
+        <!-- Request label -->
+        <text x="580" y="41" fill="#6e7681" font-size="8">"Analyze Q3 sales data"</text>
+
+        <!-- Task created -->
+        <line x1="470" y1="54" x2="470" y2="76" stroke="#6e7681" stroke-width="1" marker-end="url(#a2s1)"/>
+        <rect x="370" y="76" width="200" height="22" rx="4" fill="rgba(210,153,34,.06)" stroke="#d29922" stroke-width=".8"/>
+        <text x="470" y="90" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">Task created: state = "submitted"</text>
+
+        <!-- SSE Stream box -->
+        <rect x="60" y="114" width="660" height="170" rx="8" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.15)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <text x="74" y="132" fill="#bc8cff" font-size="9" font-weight="600" letter-spacing=".06em">SSE STREAM OPEN</text>
+
+        <!-- Event rows -->
+        <rect x="80" y="142" width="620" height="22" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="94" y="156" fill="#bc8cff" font-size="8" font-weight="600" font-family="'JetBrains Mono',monospace">event: task_status</text>
+        <text x="280" y="156" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">data: {state: "working"}</text>
+
+        <rect x="80" y="170" width="620" height="22" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="94" y="184" fill="#bc8cff" font-size="8" font-weight="600" font-family="'JetBrains Mono',monospace">event: task_status</text>
+        <text x="280" y="184" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">data: {state: "working", message: "Processed 50K rows..."}</text>
+
+        <rect x="80" y="198" width="620" height="22" rx="3" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="94" y="212" fill="#d29922" font-size="8" font-weight="600" font-family="'JetBrains Mono',monospace">event: task_artifact</text>
+        <text x="280" y="212" fill="#6e7681" font-size="8" font-family="'JetBrains Mono',monospace">data: {artifact: {parts: [{type:"file", uri:"...report.pdf"}]}}</text>
+
+        <rect x="80" y="226" width="620" height="22" rx="3" fill="rgba(63,185,80,.06)" stroke="#3fb950" stroke-width=".8"/>
+        <text x="94" y="240" fill="#3fb950" font-size="8" font-weight="600" font-family="'JetBrains Mono',monospace">event: task_status</text>
+        <text x="280" y="240" fill="#3fb950" font-size="8" font-family="'JetBrains Mono',monospace">data: {state: "completed"}</text>
+
+        <rect x="80" y="258" width="620" height="18" rx="3" fill="rgba(248,81,73,.04)" stroke="rgba(248,81,73,.2)" stroke-width=".6"/>
+        <text x="390" y="270" fill="#f85149" font-size="8" text-anchor="middle" font-weight="500">Stream closes</text>
+
+        <!-- Timeline arrow on left -->
+        <line x1="50" y1="114" x2="50" y2="284" stroke="#6e7681" stroke-width="1" marker-end="url(#a2s1)"/>
+        <text x="46" y="200" fill="#6e7681" font-size="7" text-anchor="end" transform="rotate(-90, 46, 200)">TIME</text>
+
+        <!-- Legend -->
+        <rect x="80" y="296" width="600" height="30" rx="5" fill="rgba(255,255,255,.01)" stroke="var(--border)" stroke-width=".5"/>
+        <circle cx="110" cy="311" r="4" fill="#bc8cff"/><text x="120" y="314" fill="#6e7681" font-size="8">Status events</text>
+        <circle cx="230" cy="311" r="4" fill="#d29922"/><text x="240" y="314" fill="#6e7681" font-size="8">Artifact delivery</text>
+        <circle cx="370" cy="311" r="4" fill="#3fb950"/><text x="380" y="314" fill="#6e7681" font-size="8">Completion</text>
+        <circle cx="490" cy="311" r="4" fill="#f85149"/><text x="500" y="314" fill="#6e7681" font-size="8">Stream close</text>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4);color:var(--bg)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="dd-discovery">Deep Dive 1: Agent Cards &amp; Discovery (~8 min)</div>
+
+    <div class="callout goal"><strong>Agent Cards are the foundation of A2A interoperability.</strong> Every A2A server publishes a JSON document describing who it is, what it can do, how to authenticate, and where to reach it. Clients fetch these cards to decide which agent to delegate to. Like DNS + API docs in one file.</div>
+
+    <div class="schema"><span class="comment">// Agent Card: GET https://hotel-agent.example/.well-known/agent.json</span>
+{
+  <span class="pk">"name"</span>: "Hotel Booking Agent",
+  "description": "Finds and books hotels based on location, dates, and budget",
+  <span class="pk">"url"</span>: "https://hotel-agent.example/a2a",
+  "protocolVersion": "0.3",
+  "provider": {"organization": "TravelCorp Inc."},
+  <span class="fk">"capabilities"</span>: {
+    "streaming": true,       <span class="comment">// supports message/stream</span>
+    "pushNotifications": true, <span class="comment">// can push via webhook</span>
+    "stateTransitionHistory": true <span class="comment">// preserves full task history</span>
+  },
+  <span class="fk">"skills"</span>: [
+    {
+      "id": "book_hotel",
+      "name": "Book Hotel",
+      "description": "Search and book hotels matching criteria",
+      "tags": ["travel", "booking", "hotels"],
+      "examples": ["Book a hotel in NYC under $200/night for March 5-8"]
+    }
+  ],
+  <span class="fk">"defaultInputModes"</span>: ["text/plain", "application/json"],
+  <span class="fk">"defaultOutputModes"</span>: ["text/plain", "application/json", "application/pdf"],
+  <span class="fk">"authentication"</span>: {
+    "schemes": [
+      {"scheme": "OAuth2", "flows": {"authorizationCode": {
+        "authorizationUrl": "https://auth.travelcorp.com/authorize",
+        "tokenUrl": "https://auth.travelcorp.com/token",
+        "scopes": {"booking:write": "Create bookings", "booking:read": "View bookings"}
+      }}}
+    ]
+  }
+}</div>
+
+    <div class="callout decision"><strong>Why <code>/.well-known/agent.json</code> instead of a central registry?</strong> Decentralized discovery: each agent self-publishes its card at a well-known URL (same pattern as <code>/.well-known/openid-configuration</code>). No single registry to operate, no governance bottleneck, no single point of failure. The tradeoff: discovery requires knowing the agent's base URL first. In practice, enterprises maintain an internal catalog or directory that lists known agent URLs. The A2A protocol standardizes the card format and location — the "how do you find the URL in the first place" is left to the deployment environment (DNS, service mesh, marketplace).</div>
+
+    <div class="callout decision"><strong>Skills vs. tools: why the distinction?</strong> MCP servers expose tools (functions). A2A servers expose skills (capabilities). The difference: a skill is a high-level description of what the agent CAN DO, not a function signature. "Book hotel" is a skill — internally it might involve 20 MCP tool calls, LLM reasoning, and database queries. The client doesn't see any of that. Skills are for human and LLM understanding ("which agent can help with hotel booking?"), not for programmatic invocation. This opacity is intentional: the agent's internal implementation is its IP.</div>
+
+    <!-- DD2 -->
+    <div class="sub" id="dd-task">Deep Dive 2: Task Lifecycle &amp; Messaging (~10 min)</div>
+
+    <div class="callout goal"><strong>Tasks are the central abstraction.</strong> Every A2A interaction is a Task with an ID, a state machine, a message history, and output artifacts. This is what makes A2A fundamentally different from simple request-response protocols — tasks can be long-running, multi-turn, pausable, and resumable.</div>
+
+    <table>
+      <thead><tr><th>State</th><th>Meaning</th><th>Transitions To</th></tr></thead>
+      <tbody>
+        <tr><td>submitted</td><td>Task received, queued for processing</td><td>working, rejected</td></tr>
+        <tr><td>working</td><td>Agent actively processing the task</td><td>input-required, completed, failed, canceled</td></tr>
+        <tr><td>input-required</td><td>Agent needs more info from the client</td><td>working (after client sends more messages)</td></tr>
+        <tr><td>completed</td><td>Task finished successfully. Artifacts available.</td><td>(terminal)</td></tr>
+        <tr><td>failed</td><td>Task failed. Error details in messages.</td><td>(terminal)</td></tr>
+        <tr><td>canceled</td><td>Task canceled by client via tasks/cancel.</td><td>(terminal)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why task-oriented instead of free-form messaging?</strong> Tasks provide: (1) Auditability: every task has an ID, a start time, an end state, and a complete message history. Enterprise compliance requires this. (2) Resumability: if a connection drops, the client can call <code>tasks/get</code> with the task ID to retrieve the current state. Free-form messaging loses this on disconnect. (3) Orchestration: a client agent managing 5 concurrent tasks to 5 different server agents needs structured tracking. Task IDs + states enable this. (4) Billing: task completion events are natural billing anchors. The tradeoff: more structured than simple chat. But A2A agents aren't chatting — they're collaborating on work.</div>
+
+    <div class="callout tip"><strong>Messages vs. Artifacts:</strong> Messages are the conversation (back-and-forth between client and server during task execution). Artifacts are the deliverables (the output of a completed task). A research agent's messages might say "I'm analyzing the data… here's a preview…" while its artifact is the final PDF report. Messages are mutable (the conversation evolves). Artifacts are immutable (the deliverable is fixed once produced). This distinction matters for caching, auditing, and downstream consumption.</div>
+
+    <div class="schema"><span class="comment">// Message structure (Part-based, multimodal)</span>
+<span class="table-name">Message</span>
+{
+  "role": <span class="pk">"user"</span> | <span class="pk">"agent"</span>,
+  "messageId": "msg-uuid",
+  "parts": [
+    {"type": "text", "text": "Here's the sales data for Q3"},
+    {"type": "file", "mimeType": "text/csv",
+     "uri": "https://storage.example/q3-sales.csv"},
+    {"type": "data", "mimeType": "application/json",
+     "data": {"total_revenue": 4200000, "region": "APAC"}}
+  ]
+}
+
+<span class="comment">// Task structure (returned by server)</span>
+<span class="table-name">Task</span>
+{
+  "id": <span class="pk">"task-42"</span>,
+  "state": <span class="fk">"completed"</span>,
+  "messages": [                     <span class="comment">// conversation history</span>
+    {role: "user", parts: [...]},
+    {role: "agent", parts: [...]}
+  ],
+  "artifacts": [                    <span class="comment">// immutable outputs</span>
+    {name: "Q3 Report",
+     parts: [{type: "file", mimeType: "application/pdf",
+              uri: "https://...report.pdf"}]}
+  ]
+}</div>
+
+    <!-- DD3 -->
+    <div class="sub" id="dd-streaming">Deep Dive 3: Streaming &amp; Push Notifications (~5 min)</div>
+
+    <div class="callout goal"><strong>Three interaction patterns for three use cases.</strong> Blocking (sync) for instant tasks, SSE streaming for real-time progress, webhooks for async fire-and-forget. The server's Agent Card declares which it supports.</div>
+
+    <table>
+      <thead><tr><th>Pattern</th><th>Method</th><th>When</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Blocking (sync)</td><td><code>message/send</code></td><td>Quick tasks (&lt;5s). Simple Q&A, lookups.</td><td>HTTP POST. Response body contains the final task state + artifacts. Client blocks until done.</td></tr>
+        <tr><td>Streaming (SSE)</td><td><code>message/stream</code></td><td>Long tasks with progress. Research, analysis.</td><td>HTTP POST returns SSE event stream. Server sends task_status and task_artifact events as they occur. Stream closes on completion.</td></tr>
+        <tr><td>Push (webhook)</td><td><code>message/send</code> + pushNotification config</td><td>Very long tasks. Client can't hold connection.</td><td>Client provides a webhook URL in the task config. Server POSTs status updates to the webhook. Fully async — client's HTTP connection closes immediately.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why SSE instead of WebSocket?</strong> Same reasoning as MCP: SSE works through standard HTTP infrastructure (proxies, load balancers, CDNs) without special configuration. WebSocket requires persistent connection upgrading that enterprise proxies often break. SSE is server→client only, which is exactly what A2A streaming needs (the server pushes progress updates). The client sends messages via standard POST — no need for a bidirectional socket.</div>
+
+    <!-- DD4 -->
+    <div class="sub" id="dd-security">Deep Dive 4: Auth &amp; Trust Model (~7 min)</div>
+
+    <div class="callout goal"><strong>A2A agents operate across organizational boundaries.</strong> A Salesforce agent talking to a ServiceNow agent — these are different companies, different trust domains. Auth must be enterprise-grade, standard, and auditable.</div>
+
+    <table>
+      <thead><tr><th>Auth Mechanism</th><th>When</th><th>How It Works</th></tr></thead>
+      <tbody>
+        <tr><td>OAuth 2.0</td><td>Cross-org agent communication</td><td>Client obtains access token via authorization code flow. Token scoped to specific skills. Short-lived (minutes). Standard enterprise SSO integration.</td></tr>
+        <tr><td>OpenID Connect</td><td>Identity verification</td><td>Server verifies the client agent's identity claim. "Is this really the TravelCorp orchestrator?" ID tokens prove identity; access tokens prove authorization.</td></tr>
+        <tr><td>API Keys</td><td>Internal/trusted agents</td><td>Simple bearer token for intra-org communication. Less secure but lower friction for trusted internal agents.</td></tr>
+        <tr><td>Signed Agent Cards</td><td>Agent identity integrity</td><td>Agent Card is cryptographically signed. Client verifies the signature to ensure the card hasn't been tampered with. Prevents "agent impersonation" — a malicious server pretending to be a legitimate one.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why signed Agent Cards?</strong> Without signatures, a man-in-the-middle could modify an Agent Card to redirect the endpoint to a malicious server. Signed cards (introduced in v0.3) provide cryptographic proof: "This card was published by the organization that controls this domain." The client verifies the signature before trusting the card's endpoint, auth, and capabilities. This is analogous to HTTPS certificates — you verify the server's identity before trusting it. Signed Agent Cards extend this trust model to the agent discovery layer.</div>
+
+    <div class="callout decision"><strong>Task-scoped tokens.</strong> A best practice: tokens should be scoped per task, with expiry measured in minutes. A hotel booking task gets a token that authorizes exactly that booking operation, expiring in 5 minutes. This follows zero-trust principles — no ambient authority, no long-lived credentials, no broad scopes. If a token leaks, the blast radius is one task, not the entire agent's permissions.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5);color:var(--bg)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Remote agent goes down mid-task</span><span class="mitigation">Client calls <code>tasks/get</code> with the task ID to check status. If the server is unreachable, client retries with exponential backoff. If server comes back, it may resume from its last state (if it persisted task state). If the task is lost, client receives an error and can re-submit. The task ID enables idempotent resumption.</span></div>
+    <div class="failure-row"><span class="scenario">SSE stream disconnects during long task</span><span class="mitigation">Client reconnects and calls <code>tasks/get</code> to retrieve current state + history. The task's <code>stateTransitionHistory</code> capability ensures no updates are lost. Client can also re-subscribe via <code>tasks/resubscribe</code> to resume streaming from the current point. The task ID is the reconnection anchor.</span></div>
+    <div class="failure-row"><span class="scenario">Agent Card is stale or tampered with</span><span class="mitigation">Signed Agent Cards (v0.3): client verifies cryptographic signature before trusting. TTL/caching: Agent Cards should have a Cache-Control header. Clients periodically re-fetch to detect capability changes. Card versioning: <code>protocolVersion</code> field enables compatibility checks.</span></div>
+    <div class="failure-row"><span class="scenario">Content type mismatch (client sends image to text-only agent)</span><span class="mitigation">Agent Card declares <code>defaultInputModes</code> (e.g., ["text/plain"]). Client checks before sending. If a mismatch occurs, server returns a JSON-RPC error: "Unsupported content type." This is content negotiation failure — caught at protocol level, not at the application level.</span></div>
+    <div class="failure-row"><span class="scenario">Circular delegation (Agent A delegates to B, B delegates back to A)</span><span class="mitigation">Not solved at the protocol level — this is an orchestration concern. Best practice: each task carries a delegation depth counter or a chain of agent IDs. Agents refuse tasks that would create cycles. The orchestrator agent is responsible for preventing loops in its delegation logic.</span></div>
+    <div class="failure-row"><span class="scenario">Malicious agent returns harmful content</span><span class="mitigation">The client agent (orchestrator) is responsible for validating server responses before presenting to the user. Content filtering, output validation, and human-in-the-loop approval for sensitive actions. A2A doesn't trust remote agent output blindly — the client mediates. This mirrors MCP's host-mediated security model.</span></div>
+
+    <div class="sub">A2A vs. MCP — Complementary, Not Competing</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>MCP</th><th>A2A</th></tr></thead>
+      <tbody>
+        <tr><td>What it connects</td><td>Agent → Tools and data sources</td><td>Agent → Other agents</td></tr>
+        <tr><td>Server opacity</td><td>Transparent: server exposes tool schemas</td><td>Opaque: server's internals are hidden</td></tr>
+        <tr><td>Interaction model</td><td>Tool call: invoke function, get result</td><td>Task collaboration: multi-turn, stateful</td></tr>
+        <tr><td>State</td><td>Stateful session (capability negotiation)</td><td>Stateful tasks (lifecycle, history, artifacts)</td></tr>
+        <tr><td>Discovery</td><td>Manual config (no standard discovery)</td><td>Agent Cards at /.well-known/agent.json</td></tr>
+        <tr><td>Transport</td><td>STDIO (local) + Streamable HTTP (remote)</td><td>JSON-RPC + gRPC + HTTP/REST (remote only)</td></tr>
+        <tr><td>Auth</td><td>OAuth 2.1 for remote</td><td>OAuth 2.0, OpenID, API keys, signed cards</td></tr>
+        <tr><td>Content</td><td>Tool result (text, images)</td><td>Multimodal Parts (text, files, structured data, images)</td></tr>
+        <tr><td>Typical flow</td><td>Host → Client → Server → Tool → Response</td><td>Client Agent → Server Agent → Task → Artifacts</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring.</strong> For A2A server operators: task completion rate, task latency by skill, error rate by client, concurrent tasks, SSE stream duration. For client agents: discovery latency (Agent Card fetch), task delegation success rate, end-to-end task duration, content negotiation failures. Key SLOs: task completion p95 &lt;30s for synchronous, &lt;5min for async; discovery (card fetch) p95 &lt;500ms; streaming event delivery latency &lt;1s. Alerting: task failure rate &gt;10%, SSE disconnection rate &gt;5%, auth failure rate &gt;1% (credential issue), circular delegation detected.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="evolution">What I'd Build Next</div>
+    <ul class="items">
+      <li><strong>Agent marketplace &amp; registry:</strong> Google Cloud already launched an AI Agent Marketplace. Standardized A2A Agent Cards + signed identity + skill metadata enable a searchable catalog. Enterprises browse, evaluate, and connect agents like npm packages.</li>
+      <li><strong>Dynamic UX negotiation:</strong> An agent adds audio or video capability mid-conversation. "Let me show you a screen recording of the bug" — switches from text to video Part. Requires runtime capability upgrade negotiation within an active task.</li>
+      <li><strong>Hierarchical multi-agent orchestration:</strong> Agent A delegates to Agent B, which sub-delegates to C and D. Task dependency graphs with parallel execution and fan-out/fan-in. Requires formalized sub-task linking and progress aggregation.</li>
+      <li><strong>QuerySkill():</strong> Dynamically check if an agent can handle an unanticipated skill. "Can you translate this to Japanese?" without that skill being in the Agent Card. The agent evaluates at runtime and responds with confidence score.</li>
+      <li><strong>Latency-aware agent selection:</strong> Twilio's extension: agents broadcast latency metrics. The orchestrator routes to the most responsive agent. Enables SLA-driven agent selection and graceful degradation (play a filler prompt if all agents are slow).</li>
+      <li><strong>Agent-to-agent trust chains:</strong> Transitive trust: "I trust Agent A. Agent A vouches for Agent B. Therefore I conditionally trust Agent B." Formalized trust delegation with signed attestations. Critical for enterprise-scale agent meshes.</li>
+    </ul>
+
+    <div class="callout say">"A2A complements MCP by solving the agent-to-agent collaboration problem. Where MCP connects agents to tools (transparent, function-call model), A2A connects agents to other agents (opaque, task-oriented model). The key abstractions — Agent Cards for discovery, Tasks for stateful collaboration, Parts for multimodal content, and three interaction patterns (sync, streaming, push) — enable heterogeneous agents built on any framework to interoperate. Protobuf-first data model with JSON-RPC, gRPC, and REST bindings ensures the protocol works across any tech stack. Enterprise auth (OAuth 2.0, signed cards) makes it production-ready. The result: an 'internet of agents' where specialist AI systems collaborate across organizational boundaries to solve problems no single agent can."</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7: Q&A ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div style="margin:8px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why do we need A2A when we already have MCP? Can't agents just expose themselves as MCP servers?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">You could expose an agent as an MCP tool, but you'd lose three critical capabilities. (1) Opacity: MCP tools expose their full schema — input parameters, output format. An A2A agent is a black box: you send it a natural language request and it figures out how to fulfill it. You don't need to know its internal tool signatures. (2) Multi-turn collaboration: MCP is request-response (call a function, get a result). A2A supports stateful tasks where the server agent can ask for clarification, provide progress updates, and deliver artifacts incrementally. A hotel booking agent that asks "Which room type?" can't do that with a single MCP tool call. (3) Long-running tasks: MCP tool calls are expected to complete quickly. A2A tasks can run for minutes with SSE streaming. The fundamental mental model differs: MCP treats the server as a transparent tool. A2A treats it as an autonomous collaborator. Both are needed — use MCP for your own tools, A2A for other agents.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does A2A handle an agent needing clarification mid-task?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is the <code>input-required</code> task state — one of A2A's most important design features. When a server agent needs more information, it transitions the task to <code>input-required</code> and includes a message explaining what it needs ("I found 3 hotels. Which one do you prefer?"). The client agent receives this state, processes it (maybe relays the question to the human user or makes a decision itself), and sends another message to the same task. The server receives the clarification and transitions back to <code>working</code>. This loop can repeat multiple times. The task ID is the anchor — all messages and state transitions are tracked against it. This is fundamentally different from MCP, where a tool call either succeeds or fails — there's no mechanism for the tool to ask a follow-up question. A2A's task lifecycle was explicitly designed for this kind of collaborative, conversational workflow.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What stops a malicious agent from impersonating a trusted one?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Three layers of defense: (1) HTTPS: the Agent Card is fetched over TLS from the agent's domain. You trust the card because you trust the domain's TLS certificate. This prevents network-level MitM. (2) Signed Agent Cards (v0.3): the card itself is cryptographically signed. Even if someone copies the card to a different URL, the signature verification fails because it's bound to the original domain/key. This prevents card-level impersonation. (3) OAuth 2.0: even if an attacker tricks a client into connecting to the wrong server, the OAuth flow redirects through the legitimate authorization server — the attacker can't obtain valid tokens. In practice, enterprise deployments add a fourth layer: an internal agent registry (trusted catalog) that only lists verified agents. The client only communicates with agents in the registry. Unknown agents are rejected regardless of their card contents.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why protobuf as the normative data model instead of JSON Schema?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Protobuf gives three advantages over JSON Schema: (1) Multi-binding generation: a single .proto file generates JSON-RPC types, gRPC stubs, and REST types. JSON Schema can't generate gRPC bindings. (2) Type safety: protobuf has strict typing with required fields, enums, and oneof unions. JSON Schema validation is looser and more error-prone. (3) Canonical serialization: signed Agent Cards require deterministic serialization for signature verification. Protobuf has well-defined canonical encoding; JSON serialization is non-deterministic (key ordering varies). The tradeoff: protobuf is less human-readable than raw JSON. But developers interact with SDKs (Python, TypeScript), not raw proto. The proto file is for machines (code generation, validation), the JSON representation is for humans (debugging, Agent Cards). A2A publishes both — proto is normative, JSON is derived.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How would you design a system where 50 enterprise agents need to discover and communicate with each other?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Layer 1: Each agent publishes its Agent Card at its own <code>/.well-known/agent.json</code> endpoint. This is the A2A standard. Layer 2: An internal Agent Registry (like a service catalog) crawls all agent endpoints, fetches their cards, and indexes them by skill, domain, and trust level. This isn't part of the A2A spec but is necessary for enterprise scale. Layer 3: An Orchestrator Agent queries the registry: "Which agent can handle hotel bookings?" The registry returns matching Agent Cards ranked by capability match and past performance. Layer 4: The orchestrator authenticates via the card's declared OAuth scheme and delegates the task. For auth at scale: a centralized identity provider (Okta, Azure AD) issues tokens. All 50 agents trust the same IdP. Agent-to-agent auth becomes "present a valid token from our IdP." For observability: distributed tracing (OpenTelemetry) across all A2A task delegations. Every task carries a trace ID. You can visualize the full delegation chain: user → orchestrator → hotel agent → payment agent.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+</body>
+</html>

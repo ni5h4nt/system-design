@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Datadog — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:200px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}@media print{nav{display:none}main{margin-left:0;max-width:100%}.phase.collapsed .phase-body{display:block}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Datadog</h1><span>Worked Example · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-metrics">Metrics Pipeline</a>
+  <a href="#dd-logs">Log Aggregation</a>
+  <a href="#dd-alerting">Alerting Engine</a>
+  <a href="#dd-data">Data Model & Storage</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span><span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a cloud monitoring and observability platform. It ingests three pillars of observability data — metrics, logs, and traces — from customers' infrastructure. Users build dashboards, set alerts, and search logs to debug production issues."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What outcome are we optimizing for?</strong> <em>→ Customer Mean Time to Detect (MTTD) and Mean Time to Resolve (MTTR). Datadog exists to make incidents shorter. This means: ingestion lag must be minimal (stale data = late alerts = longer MTTD), dashboards must load fast (slow dashboards = slower diagnosis = longer MTTR), and alerts must be reliable (false positive fatigue → engineers ignore alerts → longer MTTD). The architecture optimizes for FRESHNESS and QUERYABILITY of observability data.</em></li>
+      <li><strong>Which pillars?</strong> <em>→ Three pillars of observability: metrics (time-series numerical data), logs (unstructured text events), traces (distributed request tracking). Each has fundamentally different storage and query patterns.</em></li>
+      <li><strong>Multi-tenant?</strong> <em>→ Yes, thousands of customers sharing infrastructure. Noisy-neighbor isolation is critical — one customer's traffic spike can't degrade another's dashboards.</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Metrics ingestion & time-series storage</td><td>APM / distributed tracing deep dive</td></tr>
+        <tr><td>Log aggregation & search</td><td>Synthetics / browser testing</td></tr>
+        <tr><td>Dashboards & visualization</td><td>Security monitoring (SIEM)</td></tr>
+        <tr><td>Alerting & notification</td><td>CI/CD integration</td></tr>
+        <tr><td>Agent-based collection</td><td>Network monitoring</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Ingestion latency &lt;30s</strong> — metric data points should be queryable within 30 seconds of emission.</li>
+      <li><strong>MASSIVELY write-heavy</strong> — millions of data points per second. Writes dominate reads 100:1.</li>
+      <li><strong>Multi-tenant</strong> — thousands of customers sharing infrastructure. Strict tenant isolation. Noisy neighbor prevention.</li>
+      <li><strong>Alerting must be reliable</strong> — missing an alert during an outage is the worst possible failure. Alert evaluation must be near-real-time (&lt;60s latency).</li>
+      <li><strong>Query flexibility</strong> — users query by arbitrary tag combinations: <code>avg(cpu.usage){env:prod, service:api, region:us-east}</code>. Tags are high-cardinality.</li>
+      <li><strong>Retention tiering</strong> — full resolution for 15 days, downsampled for 15 months, aggregated for 5 years.</li>
+    </ul>
+    <div class="callout tip">The defining tension: ingestion must handle millions of data points/sec (write-optimized, append-only), while queries need sub-second aggregation across arbitrary tag combinations (read-optimized, indexed). Time-series databases exist specifically to resolve this tension.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span><span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Metric Data Points / Sec</div><div class="value">~10M</div><div class="detail">50K customers × avg 200 hosts × ~1000 metrics/host ÷ 10s interval</div></div>
+      <div class="est-card"><div class="label">Unique Time Series</div><div class="value">~1B</div><div class="detail">Each unique {metric_name + tag_set} = one series. High cardinality.</div></div>
+      <div class="est-card"><div class="label">Metrics Storage / Day</div><div class="value">~8 TB</div><div class="detail">10M pts/sec × 86,400 sec × 8 bytes/point (compressed)</div></div>
+      <div class="est-card"><div class="label">Log Events / Sec</div><div class="value">~5M</div><div class="detail">Avg 1KB per log line → ~5 GB/sec → ~430 TB/day raw</div></div>
+      <div class="est-card"><div class="label">Dashboard Queries / Sec</div><div class="value">~50K</div><div class="detail">Each dashboard has ~20 widgets, each widget = 1 query. ~2,500 dashboards viewed/sec.</div></div>
+      <div class="est-card"><div class="label">Active Alerts</div><div class="value">~5M</div><div class="detail">50K customers × avg 100 alert rules. Each evaluated every 30-60s.</div></div>
+    </div>
+    <div class="callout decision"><strong>Key insight #1:</strong> 10M metric writes/sec is the primary throughput challenge. This requires a purpose-built time-series storage engine — no general-purpose DB can handle this.</div>
+    <div class="callout decision"><strong>Key insight #2:</strong> 5M alert evaluations every 30–60s = ~100K-170K queries/sec just for alerting. This is MORE traffic than user dashboards. The alerting engine is a bigger consumer of the query tier than humans are.</div>
+    <div class="callout decision"><strong>Key insight #3:</strong> Logs at 430 TB/day dwarf metrics in raw volume. Different storage strategy needed (append-only, columnar, compressed, full-text indexed).</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span><span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Millions of metrics/sec across thousands of tenants</td><td style="color:var(--accent-cyan);font-weight:500">Custom TSDB (not Prometheus/InfluxDB)</td><td>Multi-tenant by design. Per-tenant quotas, dynamic tag cardinality, pre-aggregation at write. Single-tenant tools (Prometheus) can't do per-tenant isolation.</td><td>—</td></tr>
+      <tr><td>Metrics, logs, and traces are different workloads</td><td style="color:var(--accent-cyan);font-weight:500">Independent pipelines per data type</td><td>Metrics pipeline scales independently from logs pipeline. A log volume spike doesn't affect metrics latency. Shared pipeline would create noisy neighbor issues.</td><td>—</td></tr>
+      <tr><td>Noisy neighbor isolation</td><td style="color:var(--accent-cyan);font-weight:500">Per-tenant rate limits + quotas at every layer</td><td>Ingestion (Kafka partitioned by tenant_id), processing (per-tenant CPU quotas), query (per-tenant concurrency limits). One customer can't degrade service for others.</td><td>—</td></tr>
+      <tr><td>15-month metric retention</td><td style="color:var(--accent-cyan);font-weight:500">Pre-aggregation rollups: 1s → 10s → 60s → 5m</td><td>Raw 1s data for recent queries. Rolled up to 5m for old data. 300x storage reduction over 15 months.</td><td>—</td></tr>
+      <tr><td>Logs: full-text search + structured queries</td><td style="color:var(--accent-cyan);font-weight:500">Custom columnar log store (not Elasticsearch)</td><td>Columnar compression 10x better than ES for structured logs. Full-text index for search. ES struggles at Datadog's ingestion volume.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+
+    <div class="sub">Unified Ingestion Pipeline</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 1060" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a711" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="128" y="40" width="304" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">DD Agent</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">on every host</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="125" y="124" width="310" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Intake API</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">regional endpoints, LB</text>
+    <line x1="280" y1="168" x2="280" y2="206" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="133" y="208" width="295" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="226" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Kafka</text>
+    <text x="280" y="242" fill="#6e7681" font-size="9" text-anchor="middle">partitioned by {tenant_id, data_type}</text>
+    <line x1="280" y1="252" x2="280" y2="290" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="130" y="292" width="301" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="320" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Metrics</text>
+    <line x1="280" y1="336" x2="280" y2="374" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="134" y="376" width="292" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="404" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Logs</text>
+    <line x1="280" y1="420" x2="280" y2="458" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="131" y="460" width="298" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="488" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Traces</text>
+    <line x1="280" y1="504" x2="280" y2="542" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="128" y="544" width="304" height="44" rx="7" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="280" y="572" fill="#e3b341" font-size="12" font-weight="600" text-anchor="middle">Pipeline</text>
+    <line x1="280" y1="588" x2="280" y2="626" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="128" y="628" width="304" height="44" rx="7" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="280" y="656" fill="#f778ba" font-size="12" font-weight="600" text-anchor="middle">Pipeline</text>
+    <line x1="280" y1="672" x2="280" y2="710" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="128" y="712" width="304" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="740" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Pipeline</text>
+    <line x1="280" y1="756" x2="280" y2="794" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="134" y="796" width="292" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="824" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">TSDB</text>
+    <line x1="280" y1="840" x2="280" y2="878" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="127" y="880" width="307" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="908" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Log Store</text>
+    <line x1="280" y1="924" x2="280" y2="994" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="940" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">all three queryable via unified API</text>
+    <text x="296" y="956" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">dashboards + alerting consume query API</text>
+    <rect class="svg-node" x="124" y="996" width="313" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="1024" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Trace Store</text>
+  </svg>
+</div>
+
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 556" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_8683" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_8683h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="333" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_8683)" opacity=".6"/>
+    <line x1="333" y1="154" x2="447" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="447" y1="194" x2="390" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="390" y1="294" x2="219" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="390" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="390" y1="294" x2="447" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="219" y1="394" x2="204" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="333" y1="394" x2="328" y2="454" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_8683)" opacity=".6"/>
+    <line x1="447" y1="394" x2="452" y2="454" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_8683)" opacity=".6"/>
+    <line x1="447" y1="94" x2="561" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" opacity=".5"/>
+    <line x1="204" y1="454" x2="576" y2="494" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8683)" stroke-dasharray="4 3" opacity=".5"/>
+    <text x="394" y="472" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">archive</text>
+    <rect class="svg-node" x="283" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="333" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">🖥️ Customer Hosts</text>
+    <text x="333" y="84" fill="#6e7681" font-size="8" text-anchor="middle">servers · containers · k8s</text>
+    <rect class="svg-node" x="397" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="447" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👤 DevOps / SRE</text>
+    <text x="447" y="84" fill="#6e7681" font-size="8" text-anchor="middle">dashboards · alerts</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🐕 DD Agent</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">per-host collector</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 Intake API</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">regional LBs</text>
+    <rect class="svg-node" x="340" y="254" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="271" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka</text>
+    <text x="390" y="284" fill="#6e7681" font-size="8" text-anchor="middle">partitioned by tenant × type</text>
+    <rect class="svg-node" x="169" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="219" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Metrics Pipeline</text>
+    <text x="219" y="384" fill="#6e7681" font-size="8" text-anchor="middle">aggregate · store</text>
+    <rect class="svg-node" x="283" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="333" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📝 Logs Pipeline</text>
+    <text x="333" y="384" fill="#6e7681" font-size="8" text-anchor="middle">parse · index</text>
+    <rect class="svg-node" x="397" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="447" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔗 Traces Pipeline</text>
+    <text x="447" y="384" fill="#6e7681" font-size="8" text-anchor="middle">sample · analyze</text>
+    <rect class="svg-node" x="511" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="561" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔔 Alert Engine</text>
+    <text x="561" y="384" fill="#6e7681" font-size="8" text-anchor="middle">monitors · PagerDuty</text>
+    <rect class="svg-node" x="149" y="454" width="110" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="204" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📈 Custom TSDB</text>
+    <text x="204" y="484" fill="#6e7681" font-size="8" text-anchor="middle">time-series metrics</text>
+    <rect class="svg-node" x="273" y="454" width="110" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="328" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔎 Log Store</text>
+    <text x="328" y="484" fill="#6e7681" font-size="8" text-anchor="middle">Elasticsearch / custom</text>
+    <rect class="svg-node" x="397" y="454" width="110" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="452" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔗 Trace Store</text>
+    <text x="452" y="484" fill="#6e7681" font-size="8" text-anchor="middle">ClickHouse</text>
+    <rect class="svg-node" x="521" y="454" width="110" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="576" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📦 S3</text>
+    <text x="576" y="484" fill="#6e7681" font-size="8" text-anchor="middle">long-term archive</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card"><h4>🔌 DD Agent <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">EDGE</span></h4>
+        <ul><li>Runs on every customer host</li><li>Collects OS/container/app metrics</li><li>Tails log files, forwards</li><li>Batches + compresses for efficiency</li></ul></div>
+      <div class="comp-card"><h4>📥 Intake API <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">INGESTION</span></h4>
+        <ul><li>Regional endpoints (US, EU, AP)</li><li>AuthN via API key</li><li>Rate limiting per tenant</li><li>Route: metrics → Kafka topic, logs → Kafka topic</li></ul></div>
+      <div class="comp-card"><h4>📊 Metrics TSDB <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">HOT PATH</span></h4>
+        <ul><li>Custom time-series engine</li><li>Inverted index on tags</li><li>Columnar, compressed storage</li><li>Rollup / downsampling</li></ul></div>
+      <div class="comp-card"><h4>📝 Log Store <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">VOLUME</span></h4>
+        <ul><li>Full-text search + structured fields</li><li>430 TB/day ingestion</li><li>ClickHouse or custom columnar</li></ul></div>
+      <div class="comp-card"><h4>🚨 Alerting Engine <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">CRITICAL</span></h4>
+        <ul><li>Evaluates 5M rules every 30-60s</li><li>Queries TSDB, evaluates threshold</li><li>Sends PagerDuty, Slack, email</li></ul></div>
+      <div class="comp-card"><h4>📈 Dashboard Service <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">READ</span></h4>
+        <ul><li>Users compose dashboards with widgets</li><li>Each widget = a TSDB query</li><li>Auto-refresh every 30s</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span><span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div id="dd-metrics">
+    <div class="sub">Deep Dive 1: Metrics Ingestion & TSDB (~12 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Ingest 10M data points/sec with arbitrary tag combinations, store for 15 days at full resolution, and query with sub-second aggregation across any tag filter.</div>
+
+    <div class="schema"><span class="comment">── Metric Data Point ──</span>
+{
+  metric: "cpu.usage",
+  value: 72.5,
+  timestamp: 1707890400,
+  tags: {
+    host: "web-prod-42",
+    env: "production",
+    service: "api-gateway",
+    region: "us-east-1",
+    container_id: "abc123"   <span class="comment">// high cardinality!</span>
+  },
+  tenant_id: "customer_xyz"
+}
+
+<span class="comment">── Unique time series = metric_name × unique tag_set</span>
+<span class="comment">── "cpu.usage{host=web-42,env=prod}" is ONE time series</span>
+<span class="comment">── A customer with 1000 hosts × 500 metrics = 500K unique series</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6"><strong style="color:var(--text)">TSDB Architecture (inspired by Gorilla + Prometheus)</strong></p>
+    <ul class="items">
+      <li><strong>Write path:</strong> Kafka → Metrics Consumer → writes to in-memory buffer (WAL-backed). When buffer fills (every 2 hours), flush to compressed on-disk block. Each block: sorted by series ID, delta-of-delta timestamp encoding, XOR float compression. Achieves ~1.4 bytes/data point.</li>
+      <li><strong>Tag index:</strong> Inverted index mapping tag-value → set of series IDs. <code>env:prod → {series_1, series_5, series_99, ...}</code>. Stored alongside TSDB blocks. Enables fast filter: "give me all series where env=prod AND service=api".</li>
+      <li><strong>Query path:</strong> Parse query → resolve tag filters via inverted index → fetch matching series' data blocks → decompress → aggregate (avg, sum, max, p99) over requested time range → return.</li>
+      <li><strong>Sharding:</strong> By tenant_id + metric_name hash. Each shard handles a subset of time series. Replicated for HA.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why custom TSDB over InfluxDB/TimescaleDB?</strong> At 10M pts/sec across 1B unique series, off-the-shelf TSDBs hit limits in ingestion throughput and tag cardinality. A custom engine (like Datadog's actual backend, or VictoriaMetrics/Thanos-style) gives control over compression, indexing, and multi-tenancy. Tradeoff: massive engineering investment. In an interview, acknowledge this and say "at smaller scale, I'd use InfluxDB or TimescaleDB."</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6"><strong style="color:var(--text)">Retention & Downsampling</strong></p>
+    <ul class="items">
+      <li><strong>0–15 days:</strong> Full resolution (10s intervals). Stored in hot tier (SSD).</li>
+      <li><strong>15 days–15 months:</strong> Downsampled to 5-min intervals. Background job aggregates (avg, min, max, count, sum). Stored in warm tier (HDD/S3).</li>
+      <li><strong>15 months–5 years:</strong> 1-hour intervals. Cold tier (S3).</li>
+      <li>Downsampling reduces storage by ~30× for the 15d→15mo tier and another 12× for the 15mo→5y tier.</li>
+    </ul>
+    </div>
+
+    <div id="dd-logs">
+    <div class="sub">Deep Dive 2: Log Aggregation (~8 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Ingest 5M log events/sec (430 TB/day), enable full-text search and structured field filtering, and return results in &lt;5 seconds even over large time ranges.</div>
+
+    <ul class="items">
+      <li><strong>Ingestion:</strong> Kafka → Log Pipeline → parse structured fields (JSON, key-value) → extract log level, service, timestamp → index → store.</li>
+      <li><strong>Processing:</strong> Log Pipeline applies customer-defined processing rules: grok parsing (extract fields from unstructured logs), remapping attributes, filtering (drop debug-level logs to save cost), enrichment (add geo data from IP).</li>
+      <li><strong>Storage:</strong> ClickHouse (columnar, compressed). Each log line stored with: timestamp, message (full text), parsed attributes (service, level, host, etc.), tenant_id. Partitioned by day and tenant. Full-text indexed on the message field.</li>
+      <li><strong>Query:</strong> Hybrid: structured field filters (ClickHouse columnar scan) + full-text search (inverted index on message). The combination is what makes log search powerful: <code>service:api-gateway level:error "timeout exceeded"</code>.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why ClickHouse for logs over Elasticsearch?</strong> At 430 TB/day, Elasticsearch's indexing overhead becomes prohibitively expensive (RAM for inverted indexes, JVM GC pressure). ClickHouse ingests at higher throughput with lower resource usage due to columnar compression. Tradeoff: ClickHouse's full-text search is less mature than ES's, so we build a lightweight inverted index (bloom filters per column partition) on top. For customers who need heavy full-text search, consider a hybrid with ES for a smaller retention window.</div>
+    </div>
+
+    <div id="dd-alerting">
+    <div class="sub">Deep Dive 3: Alerting Engine (~5 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Evaluate 5M alert rules every 30–60s. Each rule = a TSDB query + threshold condition. Missing an alert during a customer's outage is catastrophic for our business.</div>
+
+    <ul class="items">
+      <li><strong>Architecture:</strong> Alert rules are distributed across a fleet of alert evaluator workers. Each worker owns a partition of rules (sharded by tenant_id). Every 30s, each worker evaluates its rules by querying the TSDB.</li>
+      <li><strong>Evaluation:</strong> Rule: <code>avg(cpu.usage){env:prod} > 90% for 5 min</code>. Worker queries TSDB for the last 5 min of data, computes avg, compares to threshold. If breached → fire alert. If recovered → resolve alert.</li>
+      <li><strong>State management:</strong> Each alert has state: OK, WARN, ALERT, NO_DATA. State transitions stored in PostgreSQL. Prevents duplicate notifications (only notify on state change).</li>
+      <li><strong>Notification:</strong> On state change → publish to notification queue → fan-out to configured channels: PagerDuty, Slack, email, webhook. Retry on failure.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why not stream processing (Flink) for alerting?</strong> Streaming would give lower latency (process each data point as it arrives). But 5M rules × 10M data points/sec creates an explosion of evaluations. Batch evaluation every 30s is more efficient — one query covers all data points in the window. Tradeoff: worst-case 30s alerting latency, which is acceptable for most use cases. For ultra-low-latency alerting (&lt;5s), offer a premium tier that uses stream processing for a subset of rules.</div>
+    </div>
+
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Data Model & Storage Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Scale</th><th>Access Pattern</th></tr></thead>
+      <tbody>
+        <tr><td>Metrics (hot)</td><td>Custom TSDB (SSD)</td><td>10M pts/sec write, 1B series, 15d retention</td><td>Write-heavy, aggregation queries by tags</td></tr>
+        <tr><td>Metrics (warm/cold)</td><td>S3 + query engine</td><td>Downsampled. Years of retention.</td><td>Read-only historical queries</td></tr>
+        <tr><td>Logs</td><td>ClickHouse</td><td>5M events/sec, 430 TB/day</td><td>Full-text search + structured filters</td></tr>
+        <tr><td>Alert Rules & State</td><td>PostgreSQL</td><td>5M rules. Low write frequency.</td><td>Read rules for evaluation, write state changes</td></tr>
+        <tr><td>Dashboard Definitions</td><td>PostgreSQL</td><td>~1M dashboards. User-configured.</td><td>CRUD by user. Read on page load.</td></tr>
+        <tr><td>Ingestion Buffer</td><td>Kafka</td><td>10M+ events/sec combined</td><td>Decouple agents from storage. Absorb spikes.</td></tr>
+        <tr><td>Tenant Metadata</td><td>PostgreSQL + cache</td><td>50K tenants. API keys, rate limits, config.</td><td>Read at auth time. Cached.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span><span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Multi-Tenancy & Noisy Neighbor</div>
+    <ul class="items">
+      <li><strong>Per-tenant rate limiting:</strong> At the Intake API, enforce ingestion limits per API key. Excess data → queued, then dropped with warning.</li>
+      <li><strong>Query isolation:</strong> All queries include tenant_id in the filter. TSDB sharding by tenant ensures one customer's heavy query doesn't starve others.</li>
+      <li><strong>Fair scheduling:</strong> Alert evaluator and query engine use per-tenant quotas. Large tenants get proportionally more resources but can't monopolize.</li>
+    </ul>
+    
+    
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Metrics (time-series)</td>
+        <td style="color:var(--accent-cyan)">Custom TSDB</td>
+        <td>Purpose-built for high cardinality. Tag-based indexing. Rollup: 1s → 10s → 60s → 5m over retention.</td>
+      </tr>
+      <tr>
+        <td>Logs</td>
+        <td style="color:var(--accent-cyan)">Custom log store</td>
+        <td>Columnar storage with full-text index. Retention tiers: online (15 days) → archive (S3, years).</td>
+      </tr>
+      <tr>
+        <td>Traces (APM)</td>
+        <td style="color:var(--accent-cyan)">ClickHouse</td>
+        <td>Distributed traces with spans. Sampled at ingestion (keep 100% of errors, sample OK traces).</td>
+      </tr>
+      <tr>
+        <td>Alert state</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Monitor definitions, alert history, notification routing. Transactional for state machine.</td>
+      </tr>
+      <tr>
+        <td>Long-term archive</td>
+        <td style="color:var(--accent-cyan)">S3</td>
+        <td>Metrics, logs, and traces archived for compliance. Rehydratable on demand.</td>
+      </tr>
+      <tr>
+        <td>Ingestion pipeline</td>
+        <td style="color:var(--accent-cyan)">Kafka</td>
+        <td>Partitioned by {tenant_id, data_type}. Decouples intake from processing. Backpressure handling.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">TSDB shard down</span><span class="mitigation">Replica takes over reads. WAL replayed on recovery. Ingestion buffered in Kafka (hours of retention). Metrics delayed but not lost.</span></div>
+    <div class="failure-row"><span class="scenario">Kafka partition lag</span><span class="mitigation">Consumers behind → metrics delayed. Alerts may evaluate stale data → better to alert on stale data than not alert at all. Dashboard shows "data may be delayed" warning.</span></div>
+    <div class="failure-row"><span class="scenario">Customer sends 100× normal volume</span><span class="mitigation">Rate limiter at Intake API caps ingestion. Excess dropped. Customer notified. Other tenants unaffected.</span></div>
+    <div class="failure-row"><span class="scenario">Alert evaluator fleet overloaded</span><span class="mitigation">Alert evaluation falls behind schedule. PRIORITY: critical alerts evaluated first. Best-effort for info/warning severity. Auto-scale evaluator fleet.</span></div>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Multi-tenant isolation is the primary security concern: thousands of customers share infrastructure, and a metric from Company A must never be visible to Company B. Isolation is enforced at every layer: (1) Kafka partitions include tenant_id — consumers only read their tenant's partitions, (2) TSDB queries inject tenant_id as a mandatory filter (enforced at the query engine level, not the application), (3) API keys are scoped to a specific org — an API key can only submit data to and query from its org, (4) customer data can be configured to stay in specific regions (EU-only for GDPR). The Datadog Agent running on customer hosts is open-source and auditable — customers can verify it only sends the metrics they configure. For enterprise customers: SAML SSO, audit logs of all query access, and RBAC on dashboards/monitors (an SRE can see infrastructure metrics but not application-level PII in logs). SOC 2 Type II and HIPAA BAA available. Data retention policies are configurable per customer.</div>
+<!-- P6 -->
+
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Datadog ingests millions of data points per second across all tenants. The key scaling patterns: (1) Kafka-first architecture: all data hits Kafka before any processing, providing a durable buffer that absorbs traffic spikes. Partitioning by tenant_id ensures tenant data is processed in-order. (2) Horizontal pipeline scaling: metrics, logs, and traces have independent processing pipelines that scale independently. A customer sending 10x more logs doesn't affect metrics pipeline performance. (3) Multi-tenant storage: the custom TSDB is designed for high cardinality (millions of unique tag combinations per tenant). Metrics are pre-aggregated at ingestion: raw 1-second data points are rolled up to 10s, then 60s, then 5m as they age, reducing storage 300x over 15 months. (4) Query scaling: dashboards often have 50+ widgets, each a separate query. These are parallelized across the TSDB cluster. The noisy neighbor problem is addressed via per-tenant query quotas — a single customer running an expensive query can't slow down the cluster for others.</div>
+
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> Key SLOs: metrics queryable within 30 seconds of emission (ingestion freshness), dashboard render time p95 &lt;2s, alert evaluation lag &lt;60 seconds. Per-tenant health monitoring: each customer has a health score based on ingestion rate, query error rate, and alert trigger reliability. Anomaly detection on ingestion volume — if a customer's metric volume drops 50% unexpectedly, a system health alert fires (possible agent misconfiguration). Internal dogfooding: Datadog monitors itself with Datadog — every internal service emits metrics and traces through the same pipeline. Incident management: automated runbooks for common failures (Kafka consumer lag, TSDB compaction storms, query timeout spikes). Error budget tracked per service.</div>
+
+
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span><span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"This system is defined by WRITE-HEAVY ingestion across three distinct data types — metrics, logs, traces — each with different storage and query characteristics. The architecture unifies ingestion through Kafka, then splits into specialized storage engines: a custom TSDB for metrics (optimized for tag-based aggregation), ClickHouse for logs (optimized for columnar scan + text search), and the alerting engine as the most critical consumer — evaluating 5M rules every 30s against the TSDB. Multi-tenancy is enforced at every layer through rate limiting, query isolation, and fair scheduling."</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>APM / Distributed Tracing</td><td>Third storage backend optimized for trace spans. Span → trace assembly. Service dependency map derived from trace data.</td></tr>
+        <tr><td>Anomaly Detection</td><td>ML models trained per time series. Run alongside alerting engine. Detect deviations without user-configured thresholds.</td></tr>
+        <tr><td>Log-to-Metrics</td><td>Generate metric time series from log patterns (e.g., count ERROR logs per service). Reduces log storage costs while preserving signal.</td></tr>
+        <tr><td>Notebooks / Investigations</td><td>Collaborative debugging tool. Combines metrics, logs, traces in a single timeline. Reads from all three storage backends.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Closing framing:</strong> Datadog is defined by the tension between write-optimized ingestion (append-only, high throughput, multi-tenant) and read-optimized querying (arbitrary tag filtering, aggregation, sub-second response). The TSDB resolves this with an inverted tag index (for reads) combined with columnar, compressed storage (for write throughput). The alerting engine — not humans — is the system's biggest query consumer.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why build a custom TSDB instead of using Prometheus or InfluxDB?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Scale and multi-tenancy. Prometheus is designed for single-tenant, pull-based monitoring. It works beautifully for one organization's metrics, but it doesn't have: (1) multi-tenant isolation with per-tenant quotas, (2) push-based ingestion at millions of points/second across thousands of tenants, (3) dynamic tag-based queries across arbitrary time ranges (Prometheus PromQL is great but the storage engine struggles above ~10M active time series). InfluxDB has similar single-tenant limitations. Datadog's custom TSDB is optimized for: high cardinality (millions of unique tag combinations), multi-tenant storage with per-tenant compaction, pre-aggregation at write time (reducing query-time work), and configurable retention tiers. The tradeoff: building a custom TSDB is a massive engineering investment (team of 50+ engineers). It only makes sense at Datadog's scale (trillions of data points). For smaller deployments, Prometheus or InfluxDB are the right choice.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you handle the noisy neighbor problem in a multi-tenant system?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">At every layer with isolation mechanisms. Ingestion: per-tenant rate limits on the Intake API — if a customer suddenly sends 10x their normal volume, excess data is buffered in Kafka (not dropped) but processed at a throttled rate. This prevents one tenant's spike from consuming all Kafka consumer capacity. Processing: per-tenant resource quotas in the pipeline workers — each tenant gets a fair share of CPU/memory. If tenant A's custom log parsing rules are expensive, it slows down tenant A's processing, not tenant B's. Query: per-tenant query concurrency limits and execution time limits. A dashboard with 100 widgets (each a query) from one customer doesn't monopolize the TSDB query workers. Alert evaluation: monitors are distributed across an evaluation cluster — each evaluator handles a fixed number of monitors, and monitors from different tenants are interleaved to prevent hotspots. The key insight: noisy neighbor is not one problem but many problems at different layers, each requiring its own isolation mechanism.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});</script>
+</body>
+</html>

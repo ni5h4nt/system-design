@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Bank of America — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Bank of America</h1><span>Core Banking Platform · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-ledger">Core Ledger & Double-Entry</a>
+  <a href="#dd-payments">Payments (ACH/Wire/Card)</a>
+  <a href="#dd-eod">End-of-Day & Batch Processing</a>
+  <a href="#dd-fraud">Real-Time Fraud Detection</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing the core banking platform for a tier-1 bank like Bank of America. This is NOT a fintech — it's the foundational system of record that has operated continuously for decades and holds $1.9 trillion in deposits. The core banking system is the LEDGER: it records every account, every transaction, every balance. Everything else — mobile app, card processing, lending — depends on this ledger being correct, available, and auditable at all times. The fundamental challenge: the system must operate 24/7 with zero tolerance for financial discrepancies, while simultaneously processing millions of real-time transactions AND massive batch jobs that reconcile the entire bank's position every night."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ Transaction accuracy: zero financial errors. Every penny must be accounted for, every ledger must balance, every regulatory report must be correct. Secondary: customer experience (card auth in &lt;100ms, mobile deposit in seconds, no false fraud declines). This shapes everything: the ledger is the source of truth, double-entry is non-negotiable, and reconciliation is the immune system that catches what the real-time path misses.</em></li>
+      <li><strong>Core products?</strong> <em>→ Deposit accounts (checking, savings, CD), credit cards, loans (mortgage, auto, personal), payments (ACH, wire, Zelle, bill pay), debit card transactions.</em></li>
+      <li><strong>Channels?</strong> <em>→ Mobile app (~40M active users), web, 3,700 branches, 15,000 ATMs, phone banking, and third-party integrations (payroll providers, billers).</em></li>
+      <li><strong>Real-time vs. batch?</strong> <em>→ BOTH. Customer-facing transactions (transfers, card swipes) must be real-time. But the bank's books close nightly — interest accrual, fee assessment, regulatory reporting, and reconciliation happen in a massive end-of-day (EOD) batch window.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~68M consumer/small-business clients, ~200M accounts, ~50M+ transactions/day, $1.9T in deposits.</em></li>
+      <li><strong>Regulatory?</strong> <em>→ OCC, Federal Reserve, FDIC, CFPB regulated. Every transaction auditable. Capital adequacy ratios computed daily. BSA/AML compliance mandatory.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Core ledger (accounts, balances, transactions)</td><td>Investment / wealth management (Merrill)</td></tr>
+        <tr><td>Payment processing (ACH, wire, card auth)</td><td>Commercial / institutional banking</td></tr>
+        <tr><td>End-of-day batch processing</td><td>Mortgage origination workflow</td></tr>
+        <tr><td>Real-time fraud detection</td><td>Branch teller system UI</td></tr>
+        <tr><td>Account opening & KYC</td><td>Treasury / FX trading desk</td></tr>
+        <tr><td>Interest accrual & fee engine</td><td>Mobile app frontend</td></tr>
+        <tr><td>General Ledger (GL) posting</td><td>Data warehouse / analytics</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (Deposit/Withdrawal):</strong> Customer deposits $500 at ATM → system credits account, updates available balance, records transaction, posts to GL. Balance visible immediately across all channels.</li>
+      <li><strong>UC2 (Transfer):</strong> Customer transfers $1,000 from checking to savings → atomic double-entry: debit checking, credit savings. Both accounts update in the same transaction.</li>
+      <li><strong>UC3 (Card Authorization):</strong> Customer swipes debit card at a store → card network sends auth request → system checks balance, places hold, returns approve/decline in &lt;100ms.</li>
+      <li><strong>UC4 (ACH Payment):</strong> Payroll provider sends ACH batch crediting 50,000 employees' accounts → system processes batch, credits each account, makes funds available per Reg CC schedule.</li>
+      <li><strong>UC5 (End of Day):</strong> At 11 PM ET, batch processing runs: accrue interest on all 200M accounts, assess monthly fees, process pending ACH, generate regulatory reports, reconcile sub-ledgers to GL.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Absolute financial integrity:</strong> The ledger must ALWAYS balance. Sum of all debits = sum of all credits across the entire bank. A $0.01 discrepancy triggers investigation.</li>
+      <li><strong>24/7 availability:</strong> Unlike legacy systems that "closed" at 5 PM, modern banking is always on. But batch processing MUST run nightly. The system must handle real-time transactions AND batch processing concurrently without conflicts.</li>
+      <li><strong>Auditability:</strong> Every balance change must be traceable to a source transaction with full provenance: who, what, when, why, which system, which approval.</li>
+      <li><strong>Regulatory deadlines:</strong> EOD processing must complete before market open. Regulatory reports (call reports, stress tests) have hard deadlines with severe penalties for missed filing.</li>
+      <li><strong>Multi-product consistency:</strong> A customer's checking account, savings account, credit card, and loan must all reflect a consistent view — no partial updates visible across products.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: REAL-TIME TRANSACTIONS coexisting with MASSIVE BATCH PROCESSING. The bank must process a card authorization in &lt;100ms while simultaneously accruing interest on 200M accounts overnight. Legacy systems solved this by shutting down real-time during batch ("stand-in mode"). Modern systems must do BOTH concurrently. This is the hardest architectural challenge in core banking.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Customers</div><div class="value">~68M</div><div class="detail">Consumer + small business. Each with 2-5 accounts on average.</div></div>
+      <div class="est-card"><div class="label">Accounts</div><div class="value">~200M</div><div class="detail">Checking, savings, CD, credit card, mortgage, auto loan, etc.</div></div>
+      <div class="est-card"><div class="label">Transactions / Day</div><div class="value">~50M+</div><div class="detail">Card auths (~30M), ACH (~10M), internal transfers (~5M), wire (~500K), ATM (~5M).</div></div>
+      <div class="est-card"><div class="label">Card Auths / Sec (peak)</div><div class="value">~5K</div><div class="detail">Each must respond in &lt;100ms. Holiday shopping peaks: 2-3× normal.</div></div>
+      <div class="est-card"><div class="label">ACH Batch Volume</div><div class="value">~10M items/day</div><div class="detail">Processed in batch windows. Payroll credits are time-sensitive (available by 9 AM).</div></div>
+      <div class="est-card"><div class="label">EOD Batch Operations</div><div class="value">~200M accounts</div><div class="detail">Interest accrual, fee assessment, statement generation, GL posting. Must complete in ~4-6 hour window.</div></div>
+      <div class="est-card"><div class="label">Deposits (AUM)</div><div class="value">~$1.9T</div><div class="detail">Every dollar tracked with double-entry precision. FDIC insured up to $250K per depositor.</div></div>
+      <div class="est-card"><div class="label">Ledger Entries / Day</div><div class="value">~200M+</div><div class="detail">Each transaction generates 2+ ledger entries. EOD batch generates another 200M+ (interest, fees).</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> The EOD batch is the DEFINING operation. Processing 200M accounts for interest/fees in a 4-6 hour window = ~10K-15K accounts/sec sustained. This is not a real-time workload — it's a massive parallel computation that touches every account. The architecture must support both the real-time card auth path (5K/sec, &lt;100ms) AND the batch path (15K accts/sec, throughput-optimized) without conflict.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> A bank has TWO levels of ledger. The SUBLEDGER tracks individual customer accounts (your checking account has $5,000). The GENERAL LEDGER (GL) tracks the bank's aggregate position (total checking deposits = $500B). Every subledger transaction must eventually post to the GL. The GL is what regulators and auditors examine.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> Unlike Robinhood (one product: brokerage), a bank has MANY products with different rules. A checking account has overdraft logic, minimum balance fees, and Reg D limits. A mortgage has amortization schedules, escrow, and interest rate adjustments. A credit card has revolving balance, minimum payments, and grace periods. The PRODUCT ENGINE must be configurable, not hard-coded.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"A core banking system is structured in concentric layers: the LEDGER at the center (source of truth), surrounded by the PRODUCT ENGINE (business rules per account type), then the PAYMENT GATEWAYS (connecting to external networks), then the CHANNEL LAYER (mobile, web, ATM, branch). Let me draw this and the key transaction flows."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Ledger must balance to the penny</td><td style="color:var(--accent-cyan);font-weight:500">Double-entry bookkeeping in single ACID transaction</td><td>Stored procedure inserts debit + credit atomically. CHECK constraint verifies sum = 0. Any other approach risks financial discrepancy.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Card authorization in &lt;100ms</td><td style="color:var(--accent-cyan);font-weight:500">Redis for auth cache + inline ML fraud scoring</td><td>Visa/Mastercard contractually require &lt;100ms. DB lookup alone = 20ms. Redis cache + pre-loaded fraud model features enable real-time decision.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>ACH processing in scheduled Fed windows</td><td style="color:var(--accent-cyan);font-weight:500">Batch pipeline (not real-time)</td><td>Federal Reserve accepts NACHA files in time windows. ACH is inherently batch. Real-time architecture would add complexity with zero benefit.</td><td>—</td></tr>
+      <tr><td>40+ years of battle-tested core banking logic</td><td style="color:var(--accent-cyan);font-weight:500">Mainframe for core ledger (wrapped with modern APIs)</td><td>COBOL handles every edge case. Rewriting is multi-year, multi-billion risk (TSB UK 2018 disaster). Wrap with REST/gRPC gateway.</td><td>—</td></tr>
+      <tr><td>SOX compliance: immutable audit trail</td><td style="color:var(--accent-cyan);font-weight:500">Append-only audit store (no UPDATE/DELETE allowed)</td><td>Every balance change logged with before/after, timestamp, and actor. Cannot be modified — regulatory requirement.</td><td>—</td></tr>
+      <tr><td>Nightly reconciliation must catch every discrepancy</td><td style="color:var(--accent-cyan);font-weight:500">Independent balance recalculation from ledger entries</td><td>Recalculate all balances by summing ledger entries. Compare to cached balances. Any difference = P1 investigation. Belt-and-suspenders.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_9262" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_9262h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CORE BANKING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="333" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_9262)" opacity=".6"/>
+    <line x1="447" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_9262)" opacity=".6"/>
+    <line x1="447" y1="194" x2="162" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="333" y1="194" x2="390" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="162" y1="254" x2="504" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="162" y1="294" x2="276" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="276" y1="294" x2="276" y2="354" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_9262)" opacity=".6"/>
+    <line x1="390" y1="294" x2="276" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="504" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="276" y1="394" x2="332" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="618" y1="294" x2="504" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <line x1="276" y1="394" x2="448" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9262)" opacity=".5"/>
+    <rect class="svg-node" x="283" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="333" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👤 Customer</text>
+    <text x="333" y="84" fill="#6e7681" font-size="8" text-anchor="middle">mobile · web · ATM</text>
+    <rect class="svg-node" x="397" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="447" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">🏪 Merchant</text>
+    <text x="447" y="84" fill="#6e7681" font-size="8" text-anchor="middle">POS terminal</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">📱 Channel Gateway</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · encryption</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">💳 Card Network</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">Visa · Mastercard</text>
+    <rect class="svg-node" x="112" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="162" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💳 Card Auth</text>
+    <text x="162" y="284" fill="#6e7681" font-size="8" text-anchor="middle">real-time · 100ms</text>
+    <rect class="svg-node" x="226" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="276" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔄 ACH/Wire GW</text>
+    <text x="276" y="284" fill="#6e7681" font-size="8" text-anchor="middle">batch · Fed/EPN</text>
+    <rect class="svg-node" x="340" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💸 Transfer Svc</text>
+    <text x="390" y="284" fill="#6e7681" font-size="8" text-anchor="middle">internal moves</text>
+    <rect class="svg-node" x="454" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="504" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🛡️ Fraud Engine</text>
+    <text x="504" y="284" fill="#6e7681" font-size="8" text-anchor="middle">ML scoring</text>
+    <rect class="svg-node" x="568" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="618" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🌙 EOD Batch</text>
+    <text x="618" y="284" fill="#6e7681" font-size="8" text-anchor="middle">settlement · interest</text>
+    <rect class="svg-node" x="226" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="276" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📒 Core Ledger</text>
+    <text x="276" y="384" fill="#6e7681" font-size="8" text-anchor="middle">double-entry</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">⚙️ Product Engine</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">rules · fees</text>
+    <rect class="svg-node" x="454" y="354" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="504" y="371" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 General Ledger</text>
+    <text x="504" y="384" fill="#6e7681" font-size="8" text-anchor="middle">accounting</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="390" y="471" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">session · auth cache</text>
+    <rect class="svg-node" x="281" y="554" width="102" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="332" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🏛️ Core DB</text>
+    <text x="332" y="584" fill="#6e7681" font-size="8" text-anchor="middle">accounts · balances</text>
+    <rect class="svg-node" x="397" y="554" width="102" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="448" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📜 Audit Log</text>
+    <text x="448" y="584" fill="#6e7681" font-size="8" text-anchor="middle">immutable · compliance</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>📒 Core Ledger <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">HEART</span></h4>
+        <ul>
+          <li>Double-entry subledger: every account, every transaction</li>
+          <li>Immutable append-only journal</li>
+          <li>Materialized balances (current, available, held)</li>
+          <li>Source of truth for the entire bank</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚙️ Product Engine <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">RULES</span></h4>
+        <ul>
+          <li>Configurable rules per product type</li>
+          <li>Interest calculation (daily accrual, monthly credit)</li>
+          <li>Fee assessment (monthly maintenance, overdraft)</li>
+          <li>Overdraft / credit limit logic</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>💳 Card Authorization <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">REAL-TIME</span></h4>
+        <ul>
+          <li>Visa/Mastercard network integration</li>
+          <li>Auth request → balance check → hold → approve/decline</li>
+          <li>Must respond &lt;100ms (network SLA)</li>
+          <li>Settlement batch arrives next day</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔄 ACH / Wire Gateway <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">PAYMENTS</span></h4>
+        <ul>
+          <li>ACH: batch-based, files exchanged with Fed/EPN</li>
+          <li>Wire: real-time via Fedwire or SWIFT</li>
+          <li>Zelle: real-time P2P via RTP/FedNow</li>
+          <li>OFAC screening on every outbound payment</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🌙 EOD Batch Engine <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">BATCH</span></h4>
+        <ul>
+          <li>Nightly processing: interest, fees, statements</li>
+          <li>GL aggregation and posting</li>
+          <li>Regulatory report generation</li>
+          <li>Must complete in 4-6 hour window</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🛡️ Fraud Engine <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">GUARD</span></h4>
+        <ul>
+          <li>Real-time scoring on every transaction</li>
+          <li>ML model: device, location, amount, velocity</li>
+          <li>BSA/AML: suspicious activity detection</li>
+          <li>Must not add &gt;20ms to auth latency</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 General Ledger (GL) <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">ACCOUNTING</span></h4>
+        <ul>
+          <li>Bank-level aggregate accounting</li>
+          <li>Chart of accounts (assets, liabilities, equity, income, expense)</li>
+          <li>Fed from subledger postings</li>
+          <li>Source of truth for regulators and auditors</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📱 Channel Gateway <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">ACCESS</span></h4>
+        <ul>
+          <li>Mobile app, web, ATM, branch, phone</li>
+          <li>API layer abstracting core from channels</li>
+          <li>Session management, MFA, biometrics</li>
+          <li>Consistent view across all channels</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Debit Card Purchase ($50 at a store)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 484" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a5553" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="128" y="40" width="304" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Customer</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">swipes debit card at merchant POS terminal</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5553)"/>
+    <rect class="svg-node" x="106" y="124" width="349" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Visa/Mastercard Network</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">→ routes auth request to issuing bank (BofA</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5553)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">&lt;100ms total budget</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Decode ISO 8583 auth message (card#, amount, merchant, MCC)</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Look up account from card number (Redis cache, &lt;1ms)</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. FRAUD CHECK (parallel, &lt;20ms):</text>
+    <rect class="svg-node" x="101" y="272" width="358" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Card Authorization Service</text>
+    <line x1="280" y1="316" x2="280" y2="418" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5553)"/>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">NEXT DAY (settlement):</text>
+    <text x="296" y="348" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Visa sends settlement batch file</text>
+    <text x="296" y="364" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Release hold → debit actual balance → credit Visa settlement acco</text>
+    <text x="296" y="380" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Post to General Ledger</text>
+    <rect class="svg-node" x="128" y="420" width="304" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="438" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Merchant</text>
+    <text x="280" y="454" fill="#6e7681" font-size="9" text-anchor="middle">receives approval, completes sale</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: ACH Direct Deposit (Payroll)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: ACH Direct Deposit (Payroll)</span>
+  <svg viewBox="0 0 560 500" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1009" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="118" y="40" width="325" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Employer&#x27;s Bank</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">submits ACH file to</text>
+    <line x1="280" y1="84" x2="280" y2="138" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1009)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">ACH batch: credit $3,500 to employee account #12345 at BofA</text>
+    <rect class="svg-node" x="109" y="140" width="343" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="168" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Federal Reserve / EPN</text>
+    <line x1="280" y1="184" x2="280" y2="286" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1009)"/>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Parse NACHA-formatted file (could contain 500K+ items)</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. OFAC screening: check originator against sanctions lists</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. For each item: validate routing #, account #, amount</text>
+    <text x="296" y="248" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. Sort by value date, priority</text>
+    <rect class="svg-node" x="124" y="288" width="313" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="306" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">ACH Gateway</text>
+    <text x="280" y="322" fill="#6e7681" font-size="9" text-anchor="middle">BofA receives inbound ACH file</text>
+    <line x1="280" y1="332" x2="280" y2="434" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1009)"/>
+    <text x="296" y="348" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">5. For each valid credit:</text>
+    <text x="296" y="364" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Ledger: debit ACH_clearing_account, credit customer_account</text>
+    <text x="296" y="380" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Apply Reg CC hold schedule (payroll = next-day availability)</text>
+    <text x="296" y="396" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Update available_balance</text>
+    <rect class="svg-node" x="110" y="436" width="340" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="464" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Batch Posting Engine</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 3: Internal Transfer (Checking → Savings, $1,000)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 3: Internal Transfer (Checking → Savings, $1,000)</span>
+  <svg viewBox="0 0 560 336" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a8768" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="128" y="40" width="304" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Customer</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">→ Mobile App → "Transfer $1,000 from Checking</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8768)"/>
+    <rect class="svg-node" x="118" y="124" width="325" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Channel Gateway</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">→ auth, rate limit →</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8768)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Validate: both accounts belong to this customer</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Balance check: checking available_balance ≥ $1,000</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. SINGLE ATOMIC TRANSACTION in Core Ledger:</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Debit: checking_account $1,000</text>
+    <rect class="svg-node" x="116" y="272" width="328" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Transfer Service</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The deep dives: (1) Core Ledger — how double-entry works at 200M accounts with multiple balance types. (2) Payments — how ACH, wire, and card networks each have radically different processing models. (3) EOD batch — the nightly reconciliation that keeps the bank's books correct. (4) Fraud detection — real-time ML scoring in &lt;20ms on every transaction."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-ledger">
+    <div class="sub">Deep Dive 1: Core Ledger & Double-Entry (~10 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> The ledger is the single source of truth for $1.9 trillion. Every cent must be tracked with double-entry precision across 200M accounts, supporting real-time queries (card auth in &lt;100ms) AND batch operations (accrue interest on all accounts nightly). Multiple balance types per account (current, available, held) must be consistent at all times.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Account Data Model</strong></p>
+    <div class="schema"><span class="table-name">accounts</span>
+  <span class="pk">account_id</span>       <span class="type">BIGINT PK</span>
+  <span class="fk">customer_id</span>      <span class="type">BIGINT FK → customers</span>
+  <span class="fk">product_id</span>       <span class="type">FK → product_definitions (checking, savings, CC, mortgage...)</span>
+  account_number   <span class="type">VARCHAR (displayed to customer, NOT the PK)</span>
+  status           <span class="type">ENUM (active, dormant, frozen, closed)</span>
+  currency         <span class="type">CHAR(3) (USD, EUR, etc.)</span>
+  opened_at        <span class="type">TIMESTAMP</span>
+
+<span class="table-name">account_balances</span>  <span class="comment">// materialized, updated atomically with each ledger entry</span>
+  <span class="pk">account_id</span>       <span class="type">BIGINT PK FK</span>
+  <span class="pk">balance_type</span>     <span class="type">ENUM:</span>
+     <span class="fk">CURRENT</span>       <span class="comment">// "book balance" — all settled transactions</span>
+     <span class="fk">AVAILABLE</span>     <span class="comment">// current - holds - pending_debits + pending_credits</span>
+     <span class="fk">HELD</span>          <span class="comment">// card auth holds, Reg CC deposit holds</span>
+     <span class="fk">PENDING</span>       <span class="comment">// authorized but not yet settled</span>
+  amount           <span class="type">DECIMAL(18,2)</span>
+  as_of            <span class="type">TIMESTAMP (last updated)</span>
+
+<span class="table-name">ledger_entries</span>  <span class="comment">// immutable, append-only</span>
+  <span class="pk">entry_id</span>         <span class="type">BIGINT PK (monotonic)</span>
+  <span class="pk">transaction_id</span>   <span class="type">UUID (groups debit + credit pair)</span>
+  <span class="fk">account_id</span>       <span class="type">BIGINT FK</span>
+  entry_type       <span class="type">ENUM (debit, credit)</span>
+  amount           <span class="type">DECIMAL(18,2)</span>
+  balance_type_affected <span class="type">ENUM (current, available, held)</span>
+  effective_date   <span class="type">DATE (business date, may differ from posting date)</span>
+  posting_date     <span class="type">TIMESTAMP (when actually recorded)</span>
+  description      <span class="type">TEXT</span>
+  <span class="fk">source_system</span>    <span class="type">VARCHAR (ACH, CARD, WIRE, INTERNAL, EOD_BATCH)</span>
+  <span class="fk">reference_id</span>     <span class="type">VARCHAR (external reference: ACH trace #, auth code, etc.)</span>
+
+<span class="comment">INVARIANT: For every transaction_id, SUM(debits) = SUM(credits)</span>
+<span class="comment">INVARIANT: account_balances.CURRENT = SUM(credits) - SUM(debits) for that account</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Multiple Balance Types — Why It Matters</strong></p>
+    <table>
+      <thead><tr><th>Balance Type</th><th>What It Represents</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>CURRENT</td><td>Settled, "book" balance. All completed transactions.</td><td>$5,000 after payroll deposit settled.</td></tr>
+        <tr><td>AVAILABLE</td><td>What the customer can actually spend RIGHT NOW.</td><td>$4,800 (current - $200 card hold). This is what ATM shows.</td></tr>
+        <tr><td>HELD</td><td>Funds reserved but not yet settled. Card auths, deposit holds.</td><td>$200 gas station pre-auth hold.</td></tr>
+        <tr><td>PENDING</td><td>Transactions in flight — not yet posted.</td><td>ACH credit arriving tomorrow but not yet in current balance.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why materialized balances instead of computing from ledger entries?</strong> Computing balance from scratch: <code>SELECT SUM(CASE WHEN type='credit' THEN amount ELSE -amount END) FROM ledger_entries WHERE account_id=X</code>. For an account with 10 years of transactions (~50K entries), this is too slow for a &lt;100ms card auth. Materialized balances are updated IN THE SAME transaction as each ledger entry, giving O(1) read performance. The tradeoff: more complex write path (must update both ledger entries AND balance table atomically). But the raw ledger remains the source of truth — balances can always be recomputed for reconciliation.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Subledger → General Ledger Flow</strong></p>
+    <ul class="items">
+      <li><strong>Subledger:</strong> Individual account balances (Customer A's checking has $5,000). This is what the customer sees.</li>
+      <li><strong>General Ledger (GL):</strong> Aggregate bank-level balances. "Total consumer checking deposits = $500B." This is what regulators see.</li>
+      <li><strong>GL posting:</strong> Each subledger transaction maps to GL accounts via a chart of accounts. A deposit: subledger credits customer's checking → GL debits "Cash & Due from Banks" and credits "Consumer Deposits (liability)."</li>
+      <li><strong>Timing:</strong> Real-time subledger updates. GL postings are batched (accumulated during the day, posted to GL in EOD batch). The GL is always slightly behind the subledger during the day — reconciled at EOD.</li>
+    </ul>
+
+    <div class="callout tip"><strong>Suspense accounts:</strong> When a transaction can't be immediately classified (e.g., incoming wire with an ambiguous reference), it posts to a suspense account. Suspense accounts must be cleared daily — an aging suspense balance indicates operational problems. Regulators monitor suspense account levels as a health indicator.</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-payments">
+    <div class="sub">Deep Dive 2: Payments (ACH / Wire / Card) (~7 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> A bank connects to MULTIPLE external payment networks, each with fundamentally different processing models. ACH is batch (files exchanged 5× daily). Wire is real-time (Fedwire settles instantly). Card is two-phase (authorize now, settle later). Each requires different latency, different error handling, and different regulatory compliance.</div>
+
+    <table>
+      <thead><tr><th>Network</th><th>Model</th><th>Speed</th><th>Cost</th><th>Reversible?</th></tr></thead>
+      <tbody>
+        <tr><td>ACH</td><td>Batch files (NACHA format)</td><td>Next day (same-day ACH: hours)</td><td>~$0.25/txn</td><td>Yes (returns within 2 days)</td></tr>
+        <tr><td>Wire (Fedwire)</td><td>Real-time gross settlement</td><td>Minutes (irrevocable once sent)</td><td>~$25/txn</td><td>No — final and irrevocable</td></tr>
+        <tr><td>SWIFT</td><td>Message-based (correspondent banking)</td><td>1-3 business days</td><td>~$30-50/txn</td><td>Very difficult</td></tr>
+        <tr><td>Card (Visa/MC)</td><td>Two-phase: auth → settlement</td><td>Auth: &lt;100ms. Settle: T+1</td><td>Interchange fee (~1-3%)</td><td>Chargeback process (60 days)</td></tr>
+        <tr><td>Zelle/RTP</td><td>Real-time push payment</td><td>Seconds</td><td>~$0.01-0.50</td><td>No — irrevocable once sent</td></tr>
+      </tbody>
+    </table>
+
+    <div class="schema"><span class="comment">── ACH Processing Pipeline ──</span>
+
+<span class="pk">OUTBOUND ACH (BofA customer sends money out):</span>
+  1. Customer initiates transfer via app
+  2. OFAC screening: check recipient against sanctions lists
+  3. Fraud check: unusual amount? new recipient? velocity?
+  4. Debit customer's account (ledger entry)
+  5. Queue item for next ACH batch window
+  6. Assemble NACHA file with all queued items
+  7. Submit file to Fed/EPN at scheduled cutoff time
+  8. Wait for acknowledgment / return
+
+<span class="pk">INBOUND ACH (someone sends money TO a BofA customer):</span>
+  1. Receive NACHA file from Fed/EPN
+  2. Parse file: validate routing #, account #, amount
+  3. OFAC screening on originator
+  4. For valid items: credit customer accounts
+  5. Apply Reg CC hold schedule:
+     - Direct deposit (payroll): next-day availability
+     - Regular ACH credit: 1-2 business day hold
+     - First-time originator: up to 9 days hold
+  6. Return invalid items (wrong account, closed, etc.)
+
+<span class="comment">ACH CUTOFF TIMES (Fed operates 5 windows per day):</span>
+<span class="comment">  Same-day ACH: 10:30 AM, 2:45 PM ET</span>
+<span class="comment">  Next-day ACH: 2:15 AM ET (overnight batch)</span></div>
+
+    <div class="callout decision"><strong>Why does the bank need separate gateways per payment network?</strong> Each network has a different protocol (NACHA files vs. ISO 20022 XML vs. ISO 8583 binary), different timing (batch vs. real-time), different settlement mechanics (net vs. gross), and different regulatory requirements (OFAC screening timing, return windows). A single "payments" service would be a god object. Separate gateways allow: independent scaling (card auth needs &lt;100ms, ACH can take minutes), independent deployment (update wire format without touching card auth), and independent failure domains (ACH gateway outage doesn't block card auths).</div>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-eod">
+    <div class="sub">Deep Dive 3: End-of-Day & Batch Processing (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Every night, the bank must: accrue interest on 200M accounts, assess fees, generate statements, reconcile sub-ledgers to GL, compute regulatory capital ratios, and generate reports. This must complete in a 4-6 hour window (typically 11 PM – 5 AM ET) while real-time transaction processing continues.</div>
+
+    <div class="schema"><span class="comment">── EOD Batch Sequence ──</span>
+
+<span class="pk">Phase 1: Day Close (11 PM ET)</span>
+  - Set business date to next day for new transactions
+  - Freeze the "day's" subledger snapshot for reconciliation
+  - Real-time transactions continue posting to the NEW business date
+
+<span class="pk">Phase 2: Interest Accrual</span>
+  - For every interest-bearing account (savings, CD, loan, mortgage):
+    daily_interest = balance × (annual_rate / 365)
+  - Accrue: ledger entry crediting interest_accrued (memo, not yet paid)
+  - Monthly: pay accrued interest → credit customer's balance
+  - Volume: ~150M interest-bearing accounts, ~25K accounts/sec
+
+<span class="pk">Phase 3: Fee Assessment</span>
+  - Check each account against product rules:
+    Monthly maintenance fee (waived if balance > minimum?)
+    Overdraft fees (any overdraft events today?)
+    Wire transfer fees
+  - Debit customer account, credit bank fee income account
+
+<span class="pk">Phase 4: ACH Processing</span>
+  - Process overnight ACH files (inbound and outbound)
+  - Post credits and debits
+  - Generate return files for exceptions
+
+<span class="pk">Phase 5: GL Posting</span>
+  - Aggregate all day's subledger transactions by GL account code
+  - Post summary entries to General Ledger
+  - Compute trial balance: total debits must equal total credits
+  - ANY IMBALANCE → CRITICAL ALERT → investigation before market open
+
+<span class="pk">Phase 6: Regulatory Reports</span>
+  - Capital adequacy ratios (risk-weighted assets / capital)
+  - Liquidity coverage ratio
+  - Large transaction reports (&gt;$10K cash transactions → FinCEN CTR)
+  - Suspicious activity reports (SARs)
+
+<span class="pk">Phase 7: Statement Generation</span>
+  - Generate monthly statements for accounts whose cycle ends today
+  - ~7M statements/night (200M accounts / 30 days)
+  - PDF generation → archive → email/mail delivery
+
+<span class="comment">Target completion: 5 AM ET (before market opens)</span>
+<span class="comment">If batch runs late → "extended processing" → some features degraded</span></div>
+
+    <div class="callout decision"><strong>How to accrue interest on 150M accounts without blocking real-time transactions?</strong> The key technique: SNAPSHOT ISOLATION. At day-close, take a logical snapshot of all account balances. The batch job reads from this snapshot (consistent point-in-time view). Real-time transactions continue writing to the live tables under the new business date. There's no lock contention because the batch reads a frozen snapshot while live traffic writes to current state. At the end of batch, the accrued interest entries are posted as new ledger entries (dated to the closed business day) — they don't conflict with new-day transactions. This is essentially MVCC (Multi-Version Concurrency Control) at the application level.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-fraud">
+    <div class="sub">Deep Dive 4: Real-Time Fraud Detection (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Score every card authorization for fraud in &lt;20ms (within the 100ms card auth budget). The model must balance: catching fraud (minimize false negatives — real fraud slipping through) vs. not blocking legitimate transactions (minimize false positives — annoying customers). At 5K auths/sec, even a 0.1% false positive rate = 5 wrongly declined transactions per second.</div>
+
+    <ul class="items">
+      <li><strong>Feature vector (computed in &lt;5ms):</strong> Transaction amount, merchant category (MCC), time of day, distance from last transaction, device fingerprint, IP geolocation, transaction velocity (# transactions in last hour), average transaction amount for this customer, whether this merchant is new for this customer.</li>
+      <li><strong>Model:</strong> Gradient-boosted tree (XGBoost/LightGBM) or neural network. Trained on historical labeled fraud data. Updated weekly with new fraud patterns. Inference: &lt;5ms on GPU or optimized CPU.</li>
+      <li><strong>Score → Action:</strong> Score 0-1000. &lt;300 = approve. 300-700 = step-up auth (SMS code, app notification). &gt;700 = decline. Thresholds tuned by product team balancing fraud loss vs. customer friction.</li>
+      <li><strong>Real-time feature store:</strong> Redis cluster holding per-customer aggregates: last N transactions, running sums, last known location. Updated on every transaction. Read latency: &lt;1ms.</li>
+      <li><strong>Consortium data:</strong> Shared fraud signals across the banking industry. Known compromised cards from Visa/MC alerts. Merchant fraud reports. These feed into the model as additional features.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why ML scoring inline (synchronous) rather than async?</strong> Async fraud detection (score after approval) catches fraud for future prevention but doesn't STOP the fraudulent transaction in progress. For card-present transactions, once approved, the merchant has delivered goods — the bank eats the loss. Inline scoring within the auth path is the only way to PREVENT fraud in real-time. Tradeoff: adds ~10-20ms to every auth. But this is within the 100ms budget, and the fraud savings (billions/year industry-wide) vastly outweigh the latency cost.</div>
+
+    <ul class="items">
+      <li><strong>BSA/AML (Anti-Money Laundering):</strong> Separate from card fraud. Analyzes PATTERNS across days/weeks: structuring (multiple deposits just under $10K), unusual international wires, rapid movement of funds. Runs as a batch + streaming hybrid — not inline. Generates Suspicious Activity Reports (SARs) for FinCEN.</li>
+      <li><strong>Account takeover detection:</strong> Monitors login patterns: new device, unusual time, impossible travel (login from NYC, then London 2 hours later). Triggers step-up authentication or account lock.</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Account balances</td>
+        <td style="color:var(--accent-cyan)">Core banking DB (mainframe)</td>
+        <td>Current balance, available balance, holds. Updated by every transaction. Strong consistency. ACID guaranteed.</td>
+      </tr>
+      <tr>
+        <td>Transaction ledger</td>
+        <td style="color:var(--accent-cyan)">Append-only relational DB</td>
+        <td>Every debit and credit entry. Immutable. Double-entry: sum of all entries = 0. Partitioned by account + date.</td>
+      </tr>
+      <tr>
+        <td>General ledger</td>
+        <td style="color:var(--accent-cyan)">Relational DB</td>
+        <td>Aggregated accounting entries per GL code. Updated by EOD batch. Source of truth for regulators and auditors.</td>
+      </tr>
+      <tr>
+        <td>Card authorization cache</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>Recent auth decisions, velocity counters (transactions per card per hour), merchant category caches. Sub-ms lookups.</td>
+      </tr>
+      <tr>
+        <td>Fraud model features</td>
+        <td style="color:var(--accent-cyan)">Feature store + Redis</td>
+        <td>Real-time features: spending patterns, location history, device fingerprints. Fed into ML scoring engine.</td>
+      </tr>
+      <tr>
+        <td>ACH/wire files</td>
+        <td style="color:var(--accent-cyan)">Secure file storage</td>
+        <td>NACHA-format batch files sent to/from Federal Reserve. Archived for 7 years (regulatory requirement).</td>
+      </tr>
+      <tr>
+        <td>Audit trail</td>
+        <td style="color:var(--accent-cyan)">Immutable append-only store</td>
+        <td>Every balance change, every admin action, every policy override. SOX compliance. Cannot be modified or deleted.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Core ledger database failure</span><span class="mitigation">Synchronous replication to standby (zero data loss). Automatic failover in &lt;30 seconds. During failover: card auths enter "stand-in" mode — approve low-risk transactions based on cached balances and historical patterns, queue for posting when ledger recovers. Real-time transfers blocked until recovery.</span></div>
+    <div class="failure-row"><span class="scenario">EOD batch fails mid-run</span><span class="mitigation">Batch is idempotent and checkpoint-based. On failure: restart from last checkpoint, not from the beginning. If batch can't complete by 5 AM: escalate, extend window, potentially delay market-open features. Regulators notified if regulatory reports are late.</span></div>
+    <div class="failure-row"><span class="scenario">ACH file processing error</span><span class="mitigation">ACH files have built-in checksums (batch control totals). If file is corrupt: reject entire file, request retransmission from Fed. Individual item errors: return the item with appropriate return reason code (R01=insufficient funds, R02=account closed, etc.).</span></div>
+    <div class="failure-row"><span class="scenario">Card network connectivity loss</span><span class="mitigation">"Stand-in processing" — bank approves/declines based on local rules and cached data without network confirmation. Risk: some fraudulent transactions approved. Mitigation: conservative stand-in limits (e.g., max $200 per transaction, $500/day). Reconcile when connectivity restores.</span></div>
+    <div class="failure-row"><span class="scenario">Fraud model returns stale/wrong scores</span><span class="mitigation">Circuit breaker: if model latency exceeds 50ms or returns errors, fall back to rule-based system (hard-coded velocity limits, amount caps). Rule-based system is less accurate but never adds latency. Model degradation monitored — alert if false positive rate spikes.</span></div>
+    <div class="failure-row"><span class="scenario">GL trial balance doesn't balance</span><span class="mitigation">CRITICAL — the bank's books don't balance. All-hands investigation. Trace: compare subledger totals to GL postings, find the discrepancy. Likely a posting error or a missing batch. Correcting journal entries posted. This must be resolved before any regulatory filing.</span></div>
+    <div class="failure-row"><span class="scenario">Customer disputes a transaction</span><span class="mitigation">Provisional credit issued immediately (Reg E requirement for debit disputes). Investigation: pull auth log, merchant records, fraud score. If dispute upheld: credit is permanent, bank charges back the merchant. If denied: reverse provisional credit.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Banking has a unique scaling pattern: steady-state traffic is predictable, but specific events create concentrated load. Direct deposit day (typically 1st and 15th of the month) generates 10x normal ACH volume. Black Friday generates 5x card authorization volume. The ACH processing pipeline is inherently batch-oriented — files are submitted to the Federal Reserve in scheduled windows — so &quot;scaling&quot; means processing larger batches faster, not handling more concurrent requests. The card authorization path IS real-time: &lt;100ms from card swipe to approval. This scales horizontally by adding auth service instances behind a load balancer. Each authorization is independent (reads account balance + fraud score, returns approve/decline), so there's no shared-state bottleneck. The Core Ledger is the one component that doesn't scale horizontally easily — it maintains strict ACID invariants across all accounts. Large banks address this with mainframe vertical scaling (still the highest-throughput transaction processing available) or sharding by account range with distributed transaction coordination for cross-account transfers.</div>
+
+    <div class="sub">Reconciliation (The Bank's Immune System)</div>
+    <ul class="items">
+      <li><strong>Internal reconciliation:</strong> Every night, subledger account balances are re-computed from raw ledger entries and compared to materialized balances. Any discrepancy → alert.</li>
+      <li><strong>Subledger-to-GL:</strong> Sum of all subledger checking accounts must equal the GL "Consumer Checking Deposits" line item. Checked nightly.</li>
+      <li><strong>External reconciliation:</strong> Compare bank's records to: (a) Fed's records (ACH, wire), (b) card network settlement files, (c) correspondent bank statements (Nostro/Vostro accounts). Differences → suspense account → investigation.</li>
+      <li><strong>Nostro/Vostro:</strong> BofA holds accounts at other banks (Nostro = "ours at theirs") and other banks hold accounts at BofA (Vostro = "theirs at ours"). These must reconcile daily — a mismatch means money went somewhere unexpected.</li>
+    </ul>
+
+    <div class="sub">Disaster Recovery</div>
+    <ul class="items">
+      <li><strong>RPO (Recovery Point Objective):</strong> Zero. Synchronous replication — no committed transaction can be lost.</li>
+      <li><strong>RTO (Recovery Time Objective):</strong> &lt;4 hours for full system, &lt;30 seconds for database failover.</li>
+      <li><strong>Active-active vs. active-passive:</strong> Most tier-1 banks run active-passive for the core ledger (write-primary + read-replicas). Active-active for the core ledger is extremely difficult due to the need for global ordering of transactions affecting the same account. Card auth and read-heavy services can be active-active across data centers.</li>
+      <li><strong>Regulatory requirement:</strong> OCC requires bank to demonstrate ability to resume critical operations within 2 hours of a disaster. Regular DR drills with documented results.</li>
+    </ul>
+
+    <div class="sub">Security</div>
+    <ul class="items">
+      <li><strong>Data at rest:</strong> AES-256 encryption. PCI DSS for card data. Tokenization: card numbers never stored in plain text — replaced with tokens that map to a secure vault.</li>
+      <li><strong>Data in transit:</strong> TLS 1.3 everywhere. Internal service-to-service: mTLS.</li>
+      <li><strong>Access control:</strong> Role-based (teller vs. manager vs. compliance officer). Least privilege. Dual control for high-risk operations (wire transfers &gt;$1M require two approvals).</li>
+      <li><strong>Data residency:</strong> Customer financial data must stay within US jurisdiction. No cloud region outside US for core banking data.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> Banking monitoring has regulatory requirements beyond standard SRE practices. SLOs: card authorization latency &lt;100ms (p99) — Visa/Mastercard enforce this contractually; exceeding it risks losing card processing privileges. ACH processing must complete before Federal Reserve deadlines — a missed window delays millions of direct deposits by a full business day. Reconciliation monitoring: the automated reconciliation engine runs post-EOD and must balance to the penny — any discrepancy triggers an immediate P1 investigation. Fraud alerting has its own latency SLO: a fraud detection must occur before the authorization response (within the 100ms window). Regulatory reporting: all system availability and incident data is reported to OCC (Office of the Comptroller of the Currency) quarterly. Business metrics monitored alongside technical: daily deposit totals, card transaction volume, ACH failure rates. Every outage requires a written explanation to regulators.</div>
+
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: the core banking system is structured in concentric layers — the double-entry LEDGER at the center (200M accounts, immutable append-only journal, materialized multi-type balances), surrounded by a configurable PRODUCT ENGINE (interest rules, fee schedules, overdraft logic per product type), connected to PAYMENT GATEWAYS for each external network (ACH batch, Fedwire real-time, Visa/MC card auth, Zelle/RTP), all feeding up to the GENERAL LEDGER which is the bank's aggregate accounting truth for regulators and auditors. The defining architectural challenge — real-time and batch coexistence — is solved by snapshot isolation: EOD batch reads a frozen point-in-time snapshot while real-time transactions continue writing under the new business date. Reconciliation is the immune system: internal (subledger re-computation), cross-layer (subledger-to-GL), and external (bank vs. Fed, bank vs. card network, Nostro vs. Vostro) checks run nightly and catch any discrepancy before it compounds. Card fraud is scored inline in &lt;20ms using ML models backed by a real-time feature store, while AML runs as a batch/streaming hybrid for pattern detection across days and weeks."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Real-Time Payments (FedNow)</td><td>Instant settlement 24/7/365 — no more T+1. Eliminates the batch-oriented ACH model for covered transactions. Requires always-on ledger with no maintenance windows. Fundamentally challenges the EOD batch concept.</td></tr>
+        <tr><td>Open Banking (APIs for fintechs)</td><td>Expose account data and payment initiation via standardized APIs. Requires consent management (OAuth2), rate limiting, and a new trust model where third parties can read balances and initiate payments with customer permission.</td></tr>
+        <tr><td>Multi-Currency / Cross-Border</td><td>Accounts holding multiple currencies. FX conversion on the hot path. SWIFT gpi integration for traceable cross-border payments. Nostro account management becomes critical infrastructure.</td></tr>
+        <tr><td>Event-Driven Architecture (replacing batch)</td><td>Move from nightly batch to continuous processing: interest accrues in real-time, fees assessed at the moment the trigger occurs, GL updated continuously. Eliminates the EOD bottleneck but requires massive re-architecture of systems that assume batch timing.</td></tr>
+        <tr><td>AI-Powered Financial Advisor</td><td>Analyze transaction patterns → recommend savings strategies, detect upcoming cash shortfalls, suggest bill payment timing. Requires read-only access to transaction history and ML inference pipeline separate from the core.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This system is defined by a truth that sounds simple but has enormous architectural consequences: A BANK IS A LEDGER. Everything else — mobile apps, card networks, branches, ATMs, fraud detection — exists to put entries INTO the ledger or read entries OUT of the ledger. The ledger's invariants (debits = credits, materialized balances match raw entries, subledgers reconcile to GL) are not just software constraints — they are LEGAL requirements. A discrepancy in the ledger is not a bug; it's a regulatory incident. This is why banks have survived for centuries with essentially the same bookkeeping model: double-entry accounting, invented in 1494, remains the most reliable way to track money. The architecture modernizes the TECHNOLOGY around the ledger (real-time processing, ML fraud detection, cloud infrastructure), but the ledger itself is a 500-year-old design pattern that has never been improved upon.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why do banks still use mainframes in 2026?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Because no other technology matches their transaction throughput with ACID guarantees at scale. A modern IBM zSystem can process 100,000+ transactions per second with sub-millisecond latency, with hardware-level encryption and fault tolerance. More importantly, the core banking software (often COBOL) has been battle-tested over 40+ years. It handles every edge case: leap years, currency conversions, regulatory holds, overdraft protection chains, interest compounding — all proven correct by decades of operation. Rewriting this in a modern stack is a multi-year, multi-billion-dollar project with enormous risk. Several banks have tried and failed (TSB UK's 2018 migration disaster is a cautionary tale). The pragmatic approach is to wrap the mainframe with modern APIs (REST/gRPC gateway) and build new features in microservices that call the mainframe for core ledger operations. The mainframe does what it's best at (ACID transactions at scale), and modern services handle what it's worst at (mobile UX, real-time notifications, ML-based fraud detection).</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does double-entry bookkeeping prevent financial errors?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Every financial movement is recorded as exactly two entries: a debit and a credit of equal amounts. When you transfer $100 from checking to savings: debit checking $100, credit savings $100. The invariant: the sum of all entries in the entire ledger must equal zero. This is checked continuously — any non-zero sum means an error occurred. The beauty is that it's self-auditing: you can't accidentally create money (a credit without a matching debit), and you can't accidentally destroy money (a debit without a matching credit). In code: the stored procedure that creates ledger entries takes (from_account, to_account, amount) and atomically inserts both rows in a single transaction. If either INSERT fails, both are rolled back. There's a CHECK constraint that verifies the sum remains zero. For complex transactions (fee charges, interest accrual), there may be 4-6 entries, but they always sum to zero. The nightly reconciliation independently verifies this by summing the entire ledger.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

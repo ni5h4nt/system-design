@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Google Search — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:200px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}@media print{nav{display:none}main{margin-left:0;max-width:100%}.phase.collapsed .phase-body{display:block}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Google Search</h1><span>Worked Example · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-crawler">Web Crawler</a>
+  <a href="#dd-index">Inverted Index</a>
+  <a href="#dd-ranking">Query & Ranking</a>
+  <a href="#dd-data">Data Model & Storage</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span><span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a web search engine. There are THREE major subsystems: (1) a web crawler that discovers and fetches pages, (2) an indexer that builds a searchable inverted index, and (3) a query serving system that takes a user's query, finds matching documents, ranks them, and returns results in &lt;500ms."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What outcome are we optimizing for?</strong> <em>→ Query satisfaction: did the user find what they were looking for? Measured by: click-through rate on results, absence of "pogo-sticking" (clicking result → immediately returning to search), and query abandonment rate. Secondary: time-to-answer (zero-click results like featured snippets resolve the query without a click). This shapes ranking: relevance IS the product, not a feature. Every architectural decision (index freshness, crawl frequency, serving latency) exists to improve result quality.</em></li>
+      <li><strong>Scope of web?</strong> <em>→ Billions of pages. The crawler discovers and indexes the web continuously. But not all pages are equally important — PageRank and freshness determine crawl priority.</em></li>
+      <li><strong>Query types?</strong> <em>→ Navigational ("facebook login"), informational ("how to make pasta"), transactional ("buy running shoes"). Each has different ranking signals and result formats.</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Web crawling & page fetching</td><td>Ads / auction system</td></tr>
+        <tr><td>Inverted index construction</td><td>Image / video search</td></tr>
+        <tr><td>Query serving & ranking</td><td>Knowledge panels / featured snippets</td></tr>
+        <tr><td>Autocomplete / query suggestions</td><td>Personalization (search history)</td></tr>
+        <tr><td>Snippet generation</td><td>Safe search filtering</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Query latency &lt;500ms p99</strong> — users expect near-instant results.</li>
+      <li><strong>Index freshness</strong> — news pages recrawled within minutes; average pages within days-weeks.</li>
+      <li><strong>Index completeness</strong> — crawl billions of pages. Prioritize by importance (PageRank-like).</li>
+      <li><strong>High availability</strong> — search must never be down. Replicated serving tier.</li>
+      <li><strong>The system is TWO separate planes:</strong> the OFFLINE plane (crawl + index, batch/streaming) and the ONLINE plane (query serving, real-time). They share the index as the interface.</li>
+    </ul>
+    <div class="callout tip">The defining tension: the OFFLINE plane is a massive batch system that processes billions of pages (hours-days latency acceptable), while the ONLINE plane must respond in &lt;500ms. The inverted index is the bridge — built offline, served online.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span><span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Indexed Pages</div><div class="value">~100B</div><div class="detail">~100 billion web pages in the index.</div></div>
+      <div class="est-card"><div class="label">Queries / Day</div><div class="value">~8.5B</div><div class="detail">~100K queries/sec avg, ~300K/sec peak.</div></div>
+      <div class="est-card"><div class="label">Pages Crawled / Day</div><div class="value">~10B</div><div class="detail">~115K pages/sec. Mix of new + recrawled pages.</div></div>
+      <div class="est-card"><div class="label">Index Size</div><div class="value">~100+ PB</div><div class="detail">100B docs × avg 1KB compressed inverted index entry.</div></div>
+      <div class="est-card"><div class="label">Raw Page Store</div><div class="value">~5+ PB</div><div class="detail">100B pages × avg 50KB compressed HTML → stored for snippet generation.</div></div>
+      <div class="est-card"><div class="label">Unique Terms</div><div class="value">~1 Trillion</div><div class="detail">Across 100B pages. Inverted index has ~1T term → posting list mappings.</div></div>
+    </div>
+    <div class="callout decision"><strong>Key insight #1:</strong> The index (100+ PB) cannot fit on a single machine. It must be SHARDED across thousands of machines. Each shard holds a subset of documents. A query fans out to all shards in parallel, each returns its top-K results, then a merger selects the global top-K.</div>
+    <div class="callout decision"><strong>Key insight #2:</strong> At 300K queries/sec, each touching thousands of index shards, the total internal fan-out is billions of sub-queries/sec. This requires a custom distributed serving infrastructure, not off-the-shelf databases.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span><span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Query latency &lt;500ms at 100K QPS</td><td style="color:var(--accent-cyan);font-weight:500">Sharded inverted index (scatter-gather)</td><td>Index split across 10K+ servers. Query fans out to shards in parallel. Each shard returns top-K in &lt;200ms. Merge in &lt;100ms.</td><td>—</td></tr>
+      <tr><td>Offline crawl/index decoupled from online serving</td><td style="color:var(--accent-cyan);font-weight:500">Separate offline and online planes</td><td>Crawling is batch/continuous. Serving is real-time. Different scaling characteristics. Coupling them would make both worse.</td><td>—</td></tr>
+      <tr><td>Index freshness for breaking news</td><td style="color:var(--accent-cyan);font-weight:500">Incremental delta index (not full rebuild)</td><td>Small in-memory delta index merged with main index at query time. New content searchable in minutes without rebuilding petabyte-scale main index.</td><td>—</td></tr>
+      <tr><td>Rank quality over raw speed</td><td style="color:var(--accent-cyan);font-weight:500">Two-phase ranking: fast retrieval → ML re-ranking</td><td>Phase 1: inverted index retrieves top 1000 candidates (fast). Phase 2: ML model re-ranks with 100s of signals (slow but only on 1000 docs).</td><td>—</td></tr>
+      <tr><td>Crawl billions of pages with priorities</td><td style="color:var(--accent-cyan);font-weight:500">Custom URL frontier (not Kafka/SQS)</td><td>Priority queue by PageRank + freshness + change frequency. Standard queues lack per-URL priority and deduplication at billion-scale.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+
+    <div class="sub">Offline Plane: Crawl → Index</div>
+
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">High-Level Architecture</span>
+      <svg viewBox="0 0 780 380" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs><marker id="gs_a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+
+        <!-- OFFLINE PLANE -->
+        <rect x="24" y="16" width="350" height="340" rx="8" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.15)" stroke-dasharray="4 2"/>
+        <text x="44" y="36" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".08em">OFFLINE PLANE (CRAWL / INDEX)</text>
+
+        <rect class="svg-node" x="70" y="52" width="130" height="38" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+        <text x="135" y="68" fill="#58a6ff" font-size="11" font-weight="600" text-anchor="middle">URL Frontier</text>
+        <text x="135" y="82" fill="#6e7681" font-size="8" text-anchor="middle">Priority queue</text>
+
+        <line x1="200" y1="71" x2="225" y2="71" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="228" y="52" width="130" height="38" rx="6" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+        <text x="293" y="68" fill="#3fb950" font-size="11" font-weight="600" text-anchor="middle">Crawler Fleet</text>
+        <text x="293" y="82" fill="#6e7681" font-size="8" text-anchor="middle">1000s of workers</text>
+
+        <line x1="200" y1="90" x2="200" y2="115" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="100" y="118" width="200" height="38" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+        <text x="200" y="134" fill="#f85149" font-size="11" font-weight="600" text-anchor="middle">Page Store</text>
+        <text x="200" y="148" fill="#6e7681" font-size="8" text-anchor="middle">Raw HTML · distributed blob storage</text>
+
+        <line x1="200" y1="156" x2="200" y2="181" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="100" y="184" width="200" height="38" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+        <text x="200" y="200" fill="#39d2c0" font-size="11" font-weight="600" text-anchor="middle">Parser / Extractor</text>
+        <text x="200" y="214" fill="#6e7681" font-size="8" text-anchor="middle">Content, links, PageRank signals</text>
+
+        <line x1="200" y1="222" x2="200" y2="247" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="100" y="250" width="200" height="38" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+        <text x="200" y="266" fill="#bc8cff" font-size="11" font-weight="600" text-anchor="middle">Indexer</text>
+        <text x="200" y="280" fill="#6e7681" font-size="8" text-anchor="middle">MapReduce · inverted index</text>
+
+        <line x1="200" y1="288" x2="200" y2="310" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="70" y="313" width="260" height="32" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+        <text x="200" y="333" fill="#e3b341" font-size="11" font-weight="600" text-anchor="middle">Index Shards (10,000+ servers)</text>
+
+        <!-- ONLINE PLANE -->
+        <rect x="400" y="16" width="356" height="340" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-dasharray="4 2"/>
+        <text x="420" y="36" fill="#58a6ff" font-size="9" font-weight="600" letter-spacing=".08em">ONLINE PLANE (QUERY SERVING)</text>
+
+        <rect class="svg-node" x="490" y="52" width="140" height="38" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+        <text x="560" y="68" fill="#58a6ff" font-size="11" font-weight="600" text-anchor="middle">👤 User</text>
+        <text x="560" y="82" fill="#6e7681" font-size="8" text-anchor="middle">100K QPS</text>
+
+        <line x1="560" y1="90" x2="560" y2="115" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="470" y="118" width="180" height="38" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+        <text x="560" y="134" fill="#d29922" font-size="11" font-weight="600" text-anchor="middle">Web Server / LB</text>
+        <text x="560" y="148" fill="#6e7681" font-size="8" text-anchor="middle">Route to nearest cluster</text>
+
+        <line x1="560" y1="156" x2="560" y2="181" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="460" y="184" width="200" height="38" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+        <text x="560" y="200" fill="#39d2c0" font-size="11" font-weight="600" text-anchor="middle">Query Processor</text>
+        <text x="560" y="214" fill="#6e7681" font-size="8" text-anchor="middle">Parse, expand, spell-correct</text>
+
+        <line x1="560" y1="222" x2="560" y2="247" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <!-- Fan-out to shards -->
+        <line x1="560" y1="247" x2="450" y2="260" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="560" y1="247" x2="560" y2="260" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+        <line x1="560" y1="247" x2="670" y2="260" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2"/>
+
+        <rect class="svg-node" x="420" y="260" width="60" height="28" rx="4" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.25)"/>
+        <text x="450" y="278" fill="#e3b341" font-size="9" font-weight="600" text-anchor="middle">Shard 1</text>
+        <rect class="svg-node" x="530" y="260" width="60" height="28" rx="4" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.25)"/>
+        <text x="560" y="278" fill="#e3b341" font-size="9" font-weight="600" text-anchor="middle">Shard N</text>
+        <rect class="svg-node" x="640" y="260" width="60" height="28" rx="4" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.25)"/>
+        <text x="670" y="278" fill="#e3b341" font-size="9" font-weight="600" text-anchor="middle">Shard K</text>
+
+        <text x="560" y="306" fill="#6e7681" font-size="8" text-anchor="middle" font-style="italic">scatter results</text>
+        <line x1="560" y1="312" x2="560" y2="328" stroke="#6e7681" stroke-width="1.2" marker-end="url(#gs_a)"/>
+
+        <rect class="svg-node" x="470" y="313" width="180" height="32" rx="6" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+        <text x="560" y="333" fill="#3fb950" font-size="11" font-weight="600" text-anchor="middle">Merger / Ranker</text>
+
+        <!-- Cross-link: Index Shards shared -->
+        <path d="M 330 329 Q 400 370 420 274" fill="none" stroke="#e3b341" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#gs_a)" opacity=".5"/>
+        <text x="380" y="360" fill="#e3b341" font-size="8" text-anchor="middle" opacity=".6">shared index</text>
+      </svg>
+    </div>
+
+
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 540" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a4140" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="122" y="40" width="316" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">URL Frontier</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">priority queue of URLs to crawl</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <rect class="svg-node" x="121" y="124" width="319" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Crawler Fleet</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">thousands of workers</text>
+    <line x1="280" y1="168" x2="280" y2="206" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <rect class="svg-node" x="125" y="208" width="310" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="226" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Page Store</text>
+    <text x="280" y="242" fill="#6e7681" font-size="9" text-anchor="middle">raw HTML in distributed blob store</text>
+    <line x1="280" y1="252" x2="280" y2="290" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <rect class="svg-node" x="113" y="292" width="334" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="320" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Parser / Extractor</text>
+    <line x1="280" y1="336" x2="280" y2="374" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <rect class="svg-node" x="130" y="376" width="301" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="394" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Indexer</text>
+    <text x="280" y="410" fill="#6e7681" font-size="9" text-anchor="middle">MapReduce / Spark</text>
+    <line x1="280" y1="420" x2="280" y2="474" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <text x="296" y="436" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">replicated 3× for availability</text>
+    <rect class="svg-node" x="122" y="476" width="316" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="494" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Index Shards</text>
+    <text x="280" y="510" fill="#6e7681" font-size="9" text-anchor="middle">distributed across 10,000+ servers</text>
+  </svg>
+</div>
+
+    <div class="sub">Online Plane: Query Serving</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Online Plane: Query Serving</span>
+  <svg viewBox="0 0 560 788" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a4913" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <rect class="svg-node" x="125" y="124" width="310" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Web Server</text>
+    <line x1="280" y1="168" x2="280" y2="238" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. parse &amp; rewrite query (tokenize, stem, expand synonyms)</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. fan out to ALL index shards in parallel</text>
+    <rect class="svg-node" x="118" y="240" width="325" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="268" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Query Processor</text>
+    <line x1="280" y1="284" x2="280" y2="322" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <rect class="svg-node" x="130" y="324" width="301" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="352" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Shard 1</text>
+    <line x1="280" y1="368" x2="280" y2="406" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <rect class="svg-node" x="130" y="408" width="301" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="436" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Shard 2</text>
+    <line x1="280" y1="452" x2="280" y2="490" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <rect class="svg-node" x="130" y="492" width="301" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="510" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Shard 3</text>
+    <text x="280" y="526" fill="#6e7681" font-size="9" text-anchor="middle">...</text>
+    <line x1="280" y1="536" x2="280" y2="590" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <text x="296" y="552" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">each: intersect posting lists, score top-K local results</text>
+    <rect class="svg-node" x="130" y="592" width="301" height="44" rx="7" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="280" y="620" fill="#e3b341" font-size="12" font-weight="600" text-anchor="middle">Shard N</text>
+    <line x1="280" y1="636" x2="280" y2="722" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <text x="296" y="652" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">merge shard results, apply ML ranking model</text>
+    <text x="296" y="668" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">generate snippets from page store</text>
+    <text x="296" y="684" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">return top 10 results</text>
+    <rect class="svg-node" x="118" y="724" width="325" height="44" rx="7" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="280" y="752" fill="#f778ba" font-size="12" font-weight="600" text-anchor="middle">Merger / Ranker</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The most interesting deep dives are: (1) how the crawler manages billions of URLs without re-crawling excessively, (2) how the inverted index is structured and sharded, and (3) how we serve queries in &lt;500ms across 10,000 shards."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span><span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div id="dd-crawler">
+    <div class="sub">Deep Dive 1: Web Crawler (~10 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Crawl 10B pages/day. Prioritize important/fresh pages. Don't overwhelm any single website. Don't recrawl unchanged pages. Discover new pages efficiently.</div>
+
+    <ul class="items">
+      <li><strong>URL Frontier:</strong> A priority queue of URLs to crawl. Priority based on: PageRank of the domain, freshness (how stale is our copy?), change frequency (news sites recrawled hourly, static sites monthly). Implemented as a distributed priority queue (custom, sharded by domain hash).</li>
+      <li><strong>Politeness:</strong> Per-domain rate limiting. Max 1 request/sec per domain. Respect <code>robots.txt</code> and <code>Crawl-delay</code>. This means the frontier must be domain-aware — dequeue URLs from different domains to maximize parallelism while respecting per-domain limits.</li>
+      <li><strong>Deduplication:</strong> Before adding a discovered URL to the frontier, check if we've already crawled it recently. Use a Bloom filter (space-efficient) for fast "probably seen" checks. For content dedup (same page, different URL), hash the page content (simhash for near-duplicate detection).</li>
+      <li><strong>Crawl workers:</strong> Thousands of stateless workers. Each: dequeue URL → DNS resolve (cached) → fetch with timeout → store HTML → extract links → add new URLs to frontier.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why a custom URL frontier over Kafka/SQS?</strong> The frontier needs priority ordering (not FIFO), per-domain rate limiting, and deduplication — none of which standard queues provide. It's essentially a priority queue with fairness constraints. Typically implemented as a two-level system: a priority scheduler that selects which URLs are ready, and per-domain FIFO queues for politeness. Tradeoff: more complex to build, but gives us precise control over crawl behavior.</div>
+
+    <div class="callout decision"><strong>Incremental vs. full recrawl?</strong> Incremental. We track <code>last_crawled_at</code> and <code>estimated_change_frequency</code> per URL. Pages that change often (news homepages) get recrawled every few minutes. Stable pages (Wikipedia articles) get recrawled every few weeks. This maximizes index freshness per crawl budget. Full recrawl would waste 90%+ of resources on unchanged pages.</div>
+    </div>
+
+    <div id="dd-index">
+    <div class="sub">Deep Dive 2: Inverted Index (~10 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Build and serve an index mapping ~1 trillion unique terms to their posting lists (which documents contain this term, at what position, how frequently). The index is 100+ PB and must support sub-second query serving.</div>
+
+    <div class="schema"><span class="comment">── Inverted Index Structure ──</span>
+
+<span class="table-name">Term Dictionary</span> (sorted, in-memory or SSD)
+  "pizza"  → pointer to posting list on disk
+  "best"   → pointer to posting list on disk
+  "nyc"    → pointer to posting list on disk
+
+<span class="table-name">Posting List</span> for "pizza":
+  [doc_17: freq=5, positions=[3,15,42,88,102],
+   doc_42: freq=2, positions=[7,34],
+   doc_99: freq=1, positions=[21],
+   ... millions of entries ...]
+
+  <span class="comment">// Sorted by doc_id for efficient intersection</span>
+  <span class="comment">// Compressed with variable-byte / PForDelta encoding</span>
+  <span class="comment">// Stores: doc_id, term frequency, positions</span>
+
+<span class="table-name">Document Store</span> (for snippet generation):
+  doc_17 → {url, title, cached_html_snippet, PageRank, ...}</div>
+
+    <ul class="items">
+      <li><strong>Sharding:</strong> The 100B documents are divided across ~10,000 shards (document-based sharding). Each shard holds ~10M documents and their complete inverted index. A query is sent to ALL shards in parallel; each returns its local top-K.</li>
+      <li><strong>Replication:</strong> Each shard is replicated 3× for availability and load distribution. At 300K queries/sec fan-out to 10K shards = 3B sub-queries/sec. With 3 replicas, each replica handles ~1B sub-queries/sec ÷ 10K shards = ~100K per shard per sec.</li>
+      <li><strong>Query execution on a single shard:</strong> (1) Look up each query term in the term dictionary. (2) Fetch posting lists. (3) Intersect posting lists (for AND queries) or union (for OR). (4) Score each matching document using BM25 + PageRank + hundreds of other signals. (5) Return top-K with scores.</li>
+      <li><strong>Posting list intersection:</strong> Use skip pointers (jump ahead in sorted lists) to avoid scanning every entry. For a 2-term AND query, start with the shorter posting list and skip through the longer one. This turns O(n+m) into O(min(n,m) × log(max(n,m))).</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why document-based sharding over term-based sharding?</strong> With term-based sharding, each term's posting list lives on one shard. A multi-term query must gather from multiple shards then intersect — expensive cross-shard joins. With document-based sharding, each shard has a complete mini-index for its documents. Intersection happens locally on each shard — no cross-shard data movement. The merger just picks the best results from each shard. Tradeoff: every query hits all shards (fan-out), but each shard responds fast and independently.</div>
+    </div>
+
+    <div id="dd-ranking">
+    <div class="sub">Deep Dive 3: Query Serving & Ranking (~5 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Rank results by relevance. Combine hundreds of signals in &lt;500ms total.</div>
+
+    <ul class="items">
+      <li><strong>Two-phase ranking:</strong> (1) On each shard, use a fast scoring function (BM25 + static PageRank) to get top-1000 candidates. (2) At the merger, apply a heavier ML-based re-ranker on the top ~200 global candidates to produce the final top 10.</li>
+      <li><strong>Ranking signals:</strong> BM25 (term frequency / inverse document frequency), PageRank (link authority), domain authority, title match, URL match, content freshness, page speed, mobile-friendliness, user engagement signals (click-through rate from past queries).</li>
+      <li><strong>Snippet generation:</strong> For each top-10 result, extract the most relevant passage from the cached page that contains the query terms. Highlight matching terms. Done at the merger stage.</li>
+      <li><strong>Autocomplete:</strong> Separate system. Trie-based prefix search over the most popular queries (precomputed from query logs). Served from in-memory cache. &lt;50ms latency. Fires on every keystroke.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why two-phase ranking?</strong> Running a heavy ML model on every candidate across all shards would be too slow. The fast first phase (BM25 + PageRank) is cheap enough to run on thousands of candidates per shard. The expensive ML model only runs on ~200 candidates at the merger. Tradeoff: we might miss some relevant documents that scored low in phase 1 but would have ranked high in phase 2. Acceptable because phase 1 captures the vast majority of relevant results.</div>
+    </div>
+
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Data Model & Storage Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Scale</th><th>Access Pattern</th></tr></thead>
+      <tbody>
+        <tr><td>Inverted Index</td><td>Custom (SSTable-like on SSD)</td><td>100+ PB, 10K shards × 3 replicas</td><td>Read at query time. Written in batch by indexer.</td></tr>
+        <tr><td>Page Store</td><td>Bigtable / custom blob store</td><td>5+ PB compressed HTML</td><td>Read for snippet generation. Written by crawler.</td></tr>
+        <tr><td>URL Frontier</td><td>Custom distributed priority queue</td><td>~100B URLs tracked</td><td>Dequeue by priority + domain fairness.</td></tr>
+        <tr><td>Link Graph</td><td>Custom (adjacency list, sharded)</td><td>~1T edges</td><td>Batch read for PageRank computation.</td></tr>
+        <tr><td>Query Logs</td><td>Kafka → data warehouse</td><td>8.5B queries/day</td><td>For autocomplete, ranking model training, analytics.</td></tr>
+        <tr><td>Autocomplete</td><td>In-memory trie (replicated)</td><td>~100M popular queries</td><td>Prefix lookup per keystroke. &lt;50ms.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span><span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Raw crawled pages</td>
+        <td style="color:var(--accent-cyan)">Distributed blob store (Bigtable-like)</td>
+        <td>Compressed HTML of billions of pages. Key = URL hash. Used by indexer and for cache/snippet generation.</td>
+      </tr>
+      <tr>
+        <td>Inverted index</td>
+        <td style="color:var(--accent-cyan)">Custom sharded index</td>
+        <td>Term → posting lists (doc_ids + positions). Sharded across 10,000+ servers. The core data structure for query serving.</td>
+      </tr>
+      <tr>
+        <td>URL frontier</td>
+        <td style="color:var(--accent-cyan)">Distributed priority queue</td>
+        <td>URLs to crawl, prioritized by PageRank and freshness. Deduplication via URL hash. Billions of entries.</td>
+      </tr>
+      <tr>
+        <td>PageRank scores</td>
+        <td style="color:var(--accent-cyan)">Distributed KV store</td>
+        <td>Pre-computed per-URL importance scores. Updated in batch (MapReduce). Used by ranking at query time.</td>
+      </tr>
+      <tr>
+        <td>Knowledge Graph</td>
+        <td style="color:var(--accent-cyan)">Graph database</td>
+        <td>Entities, relationships, attributes. Powers info boxes and structured answers. Billions of facts.</td>
+      </tr>
+      <tr>
+        <td>Serving index (per DC)</td>
+        <td style="color:var(--accent-cyan)">In-memory + SSD</td>
+        <td>Hot subset of the full index, replicated per data center. Memory-mapped for sub-ms term lookups.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Index shard replica down</span><span class="mitigation">Two other replicas serve traffic. Auto-heal by rebuilding from the index pipeline. Query quality unaffected.</span></div>
+    <div class="failure-row"><span class="scenario">Slow shard (straggler)</span><span class="mitigation">Query processor sets timeout per shard (50ms). If a shard doesn't respond, proceed without it — results are slightly less complete but still good. Hedged requests: send to 2 replicas, take first response.</span></div>
+    <div class="failure-row"><span class="scenario">Crawler flood / hostile site</span><span class="mitigation">Per-domain rate limiting. Respect robots.txt. Timeout on fetch (10s). Skip and deprioritize consistently slow/hostile domains.</span></div>
+    <div class="failure-row"><span class="scenario">Index corruption</span><span class="mitigation">Indexes are built offline and deployed atomically. If a new index build is corrupted, roll back to the previous version. Canary deployment: new index served to 1% of traffic first.</span></div>
+    <div class="failure-row"><span class="scenario">Spam / SEO manipulation</span><span class="mitigation">Spam classifier in the indexing pipeline. Penalize link farms. Use click-through signals (real users) to validate ranking quality.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Google Search operates at two fundamentally different scales: (1) Offline: crawling and indexing the entire web — billions of pages, petabytes of data, processed continuously by MapReduce/Spark pipelines. This scales by adding more crawler workers and indexing nodes — it's a batch processing problem. (2) Online: serving 100K+ queries per second with sub-500ms latency. This scales via sharding the inverted index across 10,000+ servers. A single query fans out to many shards (each holding a subset of the index), each returns its top-K results, and a merger combines and re-ranks them. The number of shards determines throughput — more shards = more parallelism. Within each shard, the index is memory-mapped for microsecond-level term lookups. The key scaling insight: the offline and online planes are decoupled. The indexer writes new index segments, and the serving infrastructure atomically swaps them in — queries never see a partially-updated index. This means the crawl/index rate (how fast you update) and the query rate (how fast you serve) scale independently.</div>
+
+    <div class="sub">Index Freshness Strategy</div>
+    <ul class="items">
+      <li><strong>Base index:</strong> Full rebuild weekly (batch MapReduce over entire page store → new index shards). Atomic swap.</li>
+      <li><strong>Real-time layer:</strong> For breaking news, a separate fast-update index ingests recently crawled pages within seconds. Query serving merges base index results with real-time index results.</li>
+      <li><strong>Priority recrawl:</strong> News sites, social media, high-PageRank sites recrawled every few minutes. Feeds into the real-time layer.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Search security operates at multiple levels: (1) Crawl-side: the crawler respects robots.txt (ethical crawling), and the indexer filters known malware/phishing sites using Safe Browsing lists — these are flagged in search results with warnings. (2) Query-side: SafeSearch filtering removes explicit content from results (enabled by default for minors). (3) Privacy: search queries are logged for quality improvement but anonymized after 18 months. Users can delete their search history. In the EU, right-to-be-forgotten requests remove specific URLs from results. (4) Index integrity: the index must not be manipulated by SEO spam. The ranking algorithm includes hundreds of signals specifically to detect and demote artificially boosted content (link farms, keyword stuffing, cloaked pages). (5) Infrastructure: each data center runs the full search stack independently — no single DC compromise affects others. Internal access to the index and query logs requires strong authentication and is audit-logged.</div>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> Core SLOs: query latency p99 &lt;500ms, availability 99.999% (about 5 minutes downtime per year), index freshness &lt;5 minutes for breaking news. Query latency is decomposed: query parsing (&lt;10ms), shard scatter (&lt;50ms network), per-shard search (&lt;200ms), merge/rank (&lt;100ms), rendering (&lt;50ms). Each stage has its own SLO. Index freshness is monitored by &quot;canary URLs&quot; — known pages are modified, and the time until the change appears in search results is measured. The crawl pipeline has throughput SLOs: X new pages crawled per hour, Y pages re-crawled per hour. Each data center reports independent health metrics. If a DC's query latency degrades, traffic is shed to neighboring DCs via load balancing. Quality monitoring goes beyond latency: human raters continuously evaluate search result quality, and automated metrics (click-through rate on top results, pogo-sticking rate) serve as proxies for relevance. A ranking algorithm change that improves latency but hurts relevance would be rolled back.</div>
+
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span><span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"This system is defined by the separation of the offline and online planes. The offline plane — crawling, parsing, indexing, PageRank — operates over hours to days and processes the entire web. The online plane — query parsing, fan-out to 10,000 shards, merge, rank — operates in &lt;500ms. The inverted index is the bridge: built offline, served online. The key architectural decisions are document-based sharding (enables local intersection), two-phase ranking (cheap first pass + expensive re-rank), and a custom URL frontier with priority + politeness for the crawler."</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Semantic / Vector Search</td><td>Embedding-based retrieval alongside inverted index. ANN (approximate nearest neighbor) index for dense vectors. Hybrid scoring: BM25 + vector similarity.</td></tr>
+        <tr><td>AI Overviews (LLM answers)</td><td>Top-K retrieval → feed results as context to an LLM → generate summary. Adds ~2-5s latency. Shown alongside traditional results.</td></tr>
+        <tr><td>Personalization</td><td>User search history → user embedding → personalized ranking signal. Privacy-sensitive — can be done on-device or with federated learning.</td></tr>
+        <tr><td>Image / Video Search</td><td>Separate index per media type. Vision models for content understanding. Cross-modal retrieval (text query → image results).</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Closing framing:</strong> Google Search is defined by SCALE of indexing. 100B documents, 1T terms, 10K shards — everything is a distributed systems problem. The key insight is that the offline and online planes have fundamentally different latency requirements, connected by the inverted index as a shared data structure built for read-optimized serving.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does the inverted index handle a query like &quot;Barack Obama birthday&quot;?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The query is processed in stages. First, the query processor tokenizes and normalizes: &quot;barack&quot;, &quot;obama&quot;, &quot;birthday&quot;. It may also expand with synonyms or correct spelling. Then, the query is sent to the index shards. Each shard looks up the posting lists for each term — a posting list is a sorted array of document IDs that contain that term. For &quot;barack&quot; there might be 500M documents, &quot;obama&quot; 800M, &quot;birthday&quot; 2B. The intersection of these three lists gives documents containing all three terms. The intersection is computed efficiently using skip lists — since posting lists are sorted, you can skip ahead when IDs don't match. After intersection, each matching document is scored using hundreds of ranking signals: term frequency, document PageRank, freshness, user location, and many more. The top ~1000 results per shard are returned to the merger, which combines results from all shards and re-ranks globally. For this particular query, the Knowledge Graph would also fire, returning a direct answer panel (&quot;August 4, 1961&quot;) alongside the organic results.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you handle index freshness for breaking news?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The crawler has a priority system. Most of the web is crawled on a days-to-weeks schedule based on PageRank and change frequency. But news sites (CNN, NYT, Reuters, etc.) are in a &quot;real-time&quot; crawl tier — checked every few minutes. When a breaking story is detected (via trending queries, social signals, or crawler discovering new URLs on news sites), the pipeline accelerates: (1) the URL is fast-tracked through crawl, parse, and index within 2-5 minutes, (2) the serving index can do &quot;incremental updates&quot; — instead of waiting for a full index rebuild, a small delta index is merged with the main index at query time. This delta is in memory and can be updated in seconds. (3) For truly breaking events, Google may also surface results from Twitter/social media or its own news aggregation. The tradeoff: fast-indexed pages have less ranking signal (no PageRank computed yet, no link analysis), so Google applies a &quot;freshness boost&quot; — newer content from trusted sources is ranked higher than the steady-state algorithm would suggest.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});</script>
+</body>
+</html>

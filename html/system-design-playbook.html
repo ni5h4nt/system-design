@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Interview Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b22;
+    --surface-raised: #1c2129;
+    --border: #2d333b;
+    --border-light: #373e47;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #d29922;
+    --accent-red: #f85149;
+    --accent-purple: #bc8cff;
+    --accent-cyan: #39d2c0;
+    --phase1: #58a6ff;
+    --phase2: #d29922;
+    --phase3: #3fb950;
+    --phase4: #f85149;
+    --phase5: #bc8cff;
+    --phase6: #39d2c0;
+    --nav-width: 260px;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Fraunces', Georgia, serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Sidebar Nav ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--nav-width);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  nav .logo {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  nav .logo h1 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+
+  nav .logo span {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 12px 20px 6px;
+  }
+
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 20px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  nav a:hover {
+    color: var(--text);
+    background: var(--surface-raised);
+  }
+
+  nav a.active {
+    color: var(--text);
+    border-left-color: var(--accent-blue);
+    background: rgba(88, 166, 255, 0.06);
+  }
+
+  .nav-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .nav-time {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    background: var(--surface-raised);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── Main Content ── */
+  main {
+    margin-left: var(--nav-width);
+    padding: 32px 48px 120px;
+    max-width: 920px;
+  }
+
+  /* ── Phase Sections ── */
+  .phase {
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .phase-header:hover { background: var(--surface-raised); }
+
+  .phase-number {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .phase-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .phase-time {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .phase-chevron {
+    width: 20px; height: 20px;
+    color: var(--text-dim);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .phase.collapsed .phase-chevron { transform: rotate(-90deg); }
+  .phase.collapsed .phase-body { display: none; }
+
+  .phase-body {
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .phase-goal {
+    margin: 16px 0 12px;
+    padding: 10px 14px;
+    background: rgba(88, 166, 255, 0.05);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .phase-goal strong { color: var(--accent-blue); }
+
+  /* ── Checklist Items ── */
+  .checklist { list-style: none; margin: 12px 0; }
+
+  .checklist li {
+    position: relative;
+    padding: 6px 0 6px 24px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .checklist li::before {
+    content: '';
+    position: absolute;
+    left: 2px; top: 11px;
+    width: 12px; height: 12px;
+    border: 1.5px solid var(--border-light);
+    border-radius: 3px;
+  }
+
+  .checklist li strong { color: var(--text); font-weight: 600; }
+
+  .checklist li em {
+    font-style: normal;
+    color: var(--text-dim);
+    font-size: 12.5px;
+  }
+
+  /* ── Pro Tip Callouts ── */
+  .pro-tip {
+    margin: 14px 0;
+    padding: 10px 14px;
+    background: rgba(210, 153, 34, 0.06);
+    border-left: 3px solid var(--accent-orange);
+    border-radius: 0 6px 6px 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .pro-tip::before {
+    content: '💡';
+    margin-right: 6px;
+  }
+
+  /* ── Subsection Headers ── */
+  .sub-header {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 20px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Tech Tables ── */
+  .tech-section {
+    margin-bottom: 36px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .tech-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .tech-header:hover { background: var(--surface-raised); }
+
+  .tech-header h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .tech-chevron {
+    width: 18px; height: 18px;
+    color: var(--text-dim);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .tech-section.collapsed .tech-chevron { transform: rotate(-90deg); }
+  .tech-section.collapsed .tech-body { display: none; }
+
+  .tech-body {
+    padding: 0 20px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .tech-body .criteria {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 10px 0 12px;
+    font-style: italic;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 600;
+  }
+
+  tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody td:first-child {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+  }
+
+  tbody td:last-child { color: var(--accent-orange); font-size: 12px; }
+
+  /* ── Interview Move Pattern ── */
+  .interview-move {
+    margin: 14px 0;
+    padding: 10px 14px;
+    background: rgba(63, 185, 80, 0.06);
+    border-left: 3px solid var(--accent-green);
+    border-radius: 0 6px 6px 0;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .interview-move::before {
+    content: '🎯';
+    margin-right: 6px;
+  }
+
+  .interview-move code {
+    background: rgba(63, 185, 80, 0.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--accent-green);
+  }
+
+  /* ── Meta Principles ── */
+  .principles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .principle-card {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-raised);
+  }
+
+  .principle-card .num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .principle-card p {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .principle-card strong {
+    color: var(--text);
+  }
+
+  /* ── Section Divider ── */
+  .section-divider {
+    text-align: center;
+    margin: 48px 0 32px;
+    position: relative;
+  }
+
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-divider span {
+    position: relative;
+    background: var(--bg);
+    padding: 0 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+  }
+
+  /* ── Compact deep-dive dimensions ── */
+  .dimension-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .dim-card {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface-raised);
+  }
+
+  .dim-card h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    margin-bottom: 6px;
+  }
+
+  .dim-card ul {
+    list-style: none;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .dim-card ul li::before {
+    content: '→ ';
+    color: var(--text-dim);
+  }
+
+  /* ── Sync/Async quick reference ── */
+  .split-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 12px 0;
+  }
+
+  .split-item {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .split-item.sync {
+    background: rgba(88, 166, 255, 0.06);
+    border: 1px solid rgba(88, 166, 255, 0.15);
+    color: var(--accent-blue);
+  }
+
+  .split-item.async {
+    background: rgba(188, 140, 255, 0.06);
+    border: 1px solid rgba(188, 140, 255, 0.15);
+    color: var(--accent-purple);
+  }
+
+  .split-item strong { display: block; margin-bottom: 2px; }
+
+  /* ── Keyboard shortcut hint ── */
+  .shortcut-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: var(--nav-width);
+    padding: 10px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    z-index: 101;
+  }
+
+  kbd {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-light);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 20px 16px 80px; }
+    .shortcut-bar { display: none; }
+    .principles-grid, .dimension-grid, .split-box { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    nav, .shortcut-bar { display: none; }
+    main { margin-left: 0; max-width: 100%; }
+    .phase.collapsed .phase-body { display: block; }
+    .tech-section.collapsed .tech-body { display: block; }
+    .phase, .tech-section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR NAV ── -->
+<nav>
+  <div class="logo">
+    <h1>System Design<br>Playbook</h1>
+    <span>Principal Engineer · 75 min</span>
+  </div>
+
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#phase1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#phase2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#phase3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#phase4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#phase5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#phase6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+
+  <div class="nav-section-label">Tech Reference</div>
+  <a href="#tech-storage">Data Storage</a>
+  <a href="#tech-comms">Communication Patterns</a>
+  <a href="#tech-compute">Compute & Deployment</a>
+  <a href="#tech-caching">Caching</a>
+  <a href="#tech-events">Event Patterns</a>
+  <a href="#tech-consistency">Consistency</a>
+  <a href="#tech-lb">Load Balancing</a>
+
+  <div class="nav-section-label">Guides</div>
+  <a href="#decision-pattern">Decision Pattern</a>
+  <a href="#meta-principles">Meta Principles</a>
+  <a href="#detours">Handling Pivots</a>
+</nav>
+
+<div class="shortcut-bar">
+  <kbd>Click</kbd> section headers to collapse/expand
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<main>
+
+<!-- ═══════════════ PHASE 1 ═══════════════ -->
+<div class="phase" id="phase1">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span>
+    <span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Goal:</strong> Collapse ambiguity. Demonstrate product thinking. Negotiate scope before touching the whiteboard.</div>
+    <ul class="checklist">
+      <li><strong>Restate the problem</strong> in your own words — confirm your understanding before designing anything.</li>
+      <li><strong>Identify 2–3 core use cases</strong> — ask "what must this system absolutely do?" Prioritize ruthlessly.</li>
+      <li><strong>Users & scale</strong> — Who are the users? DAU/MAU? Growth trajectory?</li>
+      <li><strong>Access patterns</strong> — Read-heavy or write-heavy? Bursty or steady? Real-time or batch?</li>
+      <li><strong>Non-functional requirements</strong> — Latency (p50/p99)? Consistency vs. availability? Durability? Compliance?</li>
+      <li><strong>Define scope explicitly</strong> — "I'll focus on X and Y, treating Z as out of scope — sound good?"</li>
+      <li><strong>Write requirements on the Excalidraw canvas</strong> — this becomes your contract for the rest of the interview.</li>
+    </ul>
+    <div class="pro-tip">If the interviewer says "it's up to you" — make a decision, state the assumption, and move on. Don't stall.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PHASE 2 ═══════════════ -->
+<div class="phase" id="phase2">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span>
+    <span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Goal:</strong> Establish quantitative foundation that justifies architecture choices. Reason from numbers, not vibes.</div>
+    <ul class="checklist">
+      <li><strong>Traffic</strong> — DAU × avg requests/user ÷ 86,400 = QPS. <em>Separate reads & writes. Apply peak multiplier (2–5×).</em></li>
+      <li><strong>Storage</strong> — Avg object size × new records/day × retention. <em>Distinguish hot vs. cold data.</em></li>
+      <li><strong>Bandwidth</strong> — Write QPS × payload size (in). Read QPS × response size (out).</li>
+      <li><strong>Memory (caching)</strong> — 80/20 rule: cache 20% of daily data. <em>Cache size = 0.2 × daily reads × avg size.</em></li>
+      <li><strong>Highlight the numbers that drive decisions</strong> — "At 50K reads/sec, we need a cache. At 2TB/day, we need partitioning early."</li>
+    </ul>
+    <div class="pro-tip">Round aggressively: 86,400 ≈ 100K. 1M seconds ≈ 12 days. Write key numbers on the canvas — you'll reference them later.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PHASE 3 ═══════════════ -->
+<div class="phase" id="phase3">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span>
+    <span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Goal:</strong> Sketch end-to-end architecture on Excalidraw. Establish the skeleton you'll flesh out in the deep dive.</div>
+    <ul class="checklist">
+      <li><strong>Start at the client, work inward</strong> — Client → CDN/LB → API Gateway → Services → Data Stores.</li>
+      <li><strong>Draw read path and write path separately</strong> — narrate each as you draw.</li>
+      <li><strong>Label each service</strong> with its responsibility (e.g., "User Service," "Feed Service").</li>
+      <li><strong>Show data stores</strong> with what they hold and rough tech choice. <em>Don't over-commit yet.</em></li>
+      <li><strong>Show async pathways</strong> — queues, event buses, consumers.</li>
+      <li><strong>Show external dependencies</strong> — third-party APIs, CDNs, DNS.</li>
+    </ul>
+    <div class="pro-tip"><strong>Narrate as you draw.</strong> Don't sketch silently for 5 minutes. Color-code: one color for reads, another for writes. Leave space around components you'll deep-dive.</div>
+    <div class="interview-move">Checkpoint: <code>"Does this high-level flow make sense before I go deeper?"</code></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PHASE 4 ═══════════════ -->
+<div class="phase" id="phase4">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dive into Key Components</span>
+    <span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Goal:</strong> Go deep on 3–4 components. Show principal-level depth in data modeling, storage, scaling, and tradeoffs.</div>
+    <div class="interview-move">Open with: <code>"I think the most interesting challenges are X and Y — shall I start there?"</code></div>
+
+    <div class="sub-header">For each component, cover these dimensions</div>
+    <div class="dimension-grid">
+      <div class="dim-card">
+        <h4>Data Model & Schema</h4>
+        <ul>
+          <li>Core entities & relationships</li>
+          <li>Primary access patterns</li>
+          <li>Schema evolution over time</li>
+          <li>Sketch key tables/collections</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Storage Technology</h4>
+        <ul>
+          <li>Why this tech over alternatives?</li>
+          <li>Frame as tradeoff: gain X, lose Y</li>
+          <li>Match to access pattern</li>
+          <li>Name what you considered & rejected</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Partitioning & Sharding</h4>
+        <ul>
+          <li>Partition key choice & rationale</li>
+          <li>Hot partition mitigation</li>
+          <li>Re-partitioning strategy</li>
+          <li>Interaction with access patterns</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Caching Strategy</h4>
+        <ul>
+          <li>Which layer(s) benefit?</li>
+          <li>Policy: aside / through / behind</li>
+          <li>Invalidation: TTL / event / version</li>
+          <li>Thundering herd mitigation</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Async Processing</h4>
+        <ul>
+          <li>What's async and why?</li>
+          <li>Delivery: at-least-once / exactly-once</li>
+          <li>Failures, retries, dead-letter queues</li>
+          <li>Consumer idempotency</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>API Design</h4>
+        <ul>
+          <li>Key endpoints & methods</li>
+          <li>Pagination (cursor vs. offset)</li>
+          <li>Rate limiting & auth</li>
+          <li>Versioning approach</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pro-tip"><strong>Lead with "why" before "what."</strong> Don't say "I'd use Kafka." Say "We need durable, replayable event delivery with multiple consumers, so a log-based broker fits — the tradeoff is operational complexity."</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PHASE 5 ═══════════════ -->
+<div class="phase" id="phase5">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span>
+    <span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Goal:</strong> Show systems maturity. You think about how the system lives and dies in production, not just how it looks on a diagram.</div>
+    <div class="dimension-grid">
+      <div class="dim-card">
+        <h4>Fault Tolerance</h4>
+        <ul>
+          <li>Single node failure → what happens?</li>
+          <li>AZ failure → what happens?</li>
+          <li>Downstream timeout → what happens?</li>
+          <li>Circuit breakers, bulkheads, retries w/ backoff</li>
+          <li>Graceful degradation</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Consistency Model</h4>
+        <ul>
+          <li>Where eventual? Where strong? Why?</li>
+          <li>Conflict resolution strategy</li>
+          <li>Stale reads: cache vs. DB</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Scalability Bottlenecks</h4>
+        <ul>
+          <li>What breaks at 10×? At 100×?</li>
+          <li>Walk each component: compute, storage, network</li>
+          <li>Hardest thing to scale?</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Security</h4>
+        <ul>
+          <li>AuthN/AuthZ (OAuth, JWT, RBAC)</li>
+          <li>Encryption at rest & in transit</li>
+          <li>Input validation, rate limiting</li>
+          <li>PII handling</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Observability</h4>
+        <ul>
+          <li>Golden signals: latency, traffic, errors, saturation</li>
+          <li>Structured logging</li>
+          <li>Distributed tracing</li>
+          <li>Alerting without fatigue</li>
+        </ul>
+      </div>
+      <div class="dim-card">
+        <h4>Operational Readiness</h4>
+        <ul>
+          <li>Deployment strategy (blue/green, canary)</li>
+          <li>Runbooks & on-call</li>
+          <li>Capacity planning</li>
+          <li>Chaos engineering</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pro-tip"><strong>Pick the 2–3 most relevant.</strong> Proactively raising failure scenarios — don't wait for the interviewer to ask — is one of the strongest principal-level signals.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PHASE 6 ═══════════════ -->
+<div class="phase" id="phase6">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span>
+    <span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Goal:</strong> Summarize, show strategic thinking, demonstrate you see the system's future.</div>
+    <ul class="checklist">
+      <li><strong>Summarize in 2–3 sentences</strong> — the architecture, key decisions, and why they fit the requirements.</li>
+      <li><strong>Acknowledge deferred work</strong> — "I intentionally kept X simple — in production I'd add Y."</li>
+      <li><strong>System evolution</strong> — What changes at 10× or 100×? What's in v2 vs. v1?</li>
+      <li><strong>Operational investments</strong> — Better observability, chaos engineering, automated scaling.</li>
+      <li><strong>Tech debt & migration paths</strong> — "The denormalized schema works now, but we'd need CDC for analytics later."</li>
+    </ul>
+    <div class="pro-tip">This is your closing argument. Don't introduce new components. Tie a bow on what you already discussed.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ TECH REFERENCE ═══════════════ -->
+<div class="section-divider"><span>Technology Decision Reference</span></div>
+
+<!-- DATA STORAGE -->
+<div class="tech-section" id="tech-storage">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>📦 Data Storage</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <div class="criteria">Decide by: access pattern, consistency needs, schema flexibility, scale, query complexity</div>
+    <table>
+      <thead><tr><th>Option</th><th>Reach For It When…</th><th>Watch Out For…</th></tr></thead>
+      <tbody>
+        <tr><td>Relational</td><td>ACID transactions, complex joins, strong consistency, stable schema</td><td>Horizontal write scaling is hard</td></tr>
+        <tr><td>Document</td><td>Flexible schema, denormalized reads, key-document access</td><td>No joins — pay with data duplication</td></tr>
+        <tr><td>Wide-Column</td><td>Massive write throughput, time-series, range scans</td><td>Query patterns must be known upfront</td></tr>
+        <tr><td>Key-Value</td><td>Ultra-low latency lookups by key. Sessions, caches, flags</td><td>Zero query flexibility beyond the key</td></tr>
+        <tr><td>Graph</td><td>Relationships ARE the data — social graphs, fraud detection</td><td>Niche. Don't use just for foreign keys</td></tr>
+        <tr><td>Search</td><td>Full-text search, faceted filtering, log analytics</td><td>Not a primary store — always pair with source of truth</td></tr>
+        <tr><td>Time-Series</td><td>Metrics, IoT, event logs. Append-heavy, time-range queries</td><td>Limited non-time access patterns</td></tr>
+        <tr><td>Object Store</td><td>Blobs: images, videos, files, backups. Cheap & durable</td><td>High latency. Not for transactional data</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- COMMUNICATION PATTERNS -->
+<div class="tech-section" id="tech-comms">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>🔗 Communication Patterns</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <div class="criteria">Decide by: who talks to whom, latency tolerance, coupling, payload shape, need for response</div>
+    <table>
+      <thead><tr><th>Option</th><th>Reach For It When…</th><th>Watch Out For…</th></tr></thead>
+      <tbody>
+        <tr><td>REST</td><td>Request-response, CRUD, public APIs, broad compatibility</td><td>Over-fetching / under-fetching, chatty</td></tr>
+        <tr><td>GraphQL</td><td>Flexible queries, multiple frontends with different data needs</td><td>Server complexity, N+1, harder caching</td></tr>
+        <tr><td>gRPC</td><td>Service-to-service, latency/bandwidth matters, streaming, typed contracts</td><td>Not browser-friendly, binary = harder debug</td></tr>
+        <tr><td>Queue</td><td>Point-to-point async, task offloading, write buffering</td><td>Not great for fan-out, consumed once</td></tr>
+        <tr><td>Event Stream</td><td>Fan-out, multiple consumers, replay, high throughput, event-driven</td><td>Ops complexity, ordering per partition only</td></tr>
+        <tr><td>WebSocket</td><td>Real-time bidirectional — chat, collab editing, live updates</td><td>Stateful connections complicate scaling</td></tr>
+        <tr><td>SSE</td><td>Server→client push, one-directional. Live feeds, notifications</td><td>One-way only, less control than WS</td></tr>
+      </tbody>
+    </table>
+    <div class="split-box">
+      <div class="split-item sync">
+        <strong>Use Sync (REST / gRPC)</strong>
+        Caller needs the result to continue
+      </div>
+      <div class="split-item async">
+        <strong>Use Async (Queue / Events)</strong>
+        Work can be deferred, retried, or fan-out to multiple consumers
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPUTE & DEPLOYMENT -->
+<div class="tech-section" id="tech-compute">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>⚙️ Compute & Deployment</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <div class="criteria">Decide by: team size, ops maturity, scaling granularity, deployment frequency, cost</div>
+    <table>
+      <thead><tr><th>Option</th><th>Reach For It When…</th><th>Watch Out For…</th></tr></thead>
+      <tbody>
+        <tr><td>Monolith</td><td>Early stage, small team, simple domain. Don't prematurely distribute</td><td>Can't scale individual components</td></tr>
+        <tr><td>Microservices</td><td>Independent teams, independent deploy, different scaling profiles</td><td>Distributed systems complexity everywhere</td></tr>
+        <tr><td>Serverless</td><td>Bursty traffic, event-driven glue, low ops overhead</td><td>Cold starts, time limits, vendor lock-in</td></tr>
+        <tr><td>Containers + K8s</td><td>Many services needing orchestration, discovery, auto-scaling</td><td>Significant ops overhead. Overkill for simple systems</td></tr>
+      </tbody>
+    </table>
+    <div class="interview-move">Don't justify K8s unless asked. Focus on <code>what</code> needs to scale and <code>why</code>, not deployment tooling.</div>
+  </div>
+</div>
+
+<!-- CACHING -->
+<div class="tech-section" id="tech-caching">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>🗄️ Caching</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <div class="criteria">Decide by: what's slow, what's read-heavy, what can tolerate staleness</div>
+    <table>
+      <thead><tr><th>Layer</th><th>When</th><th>Invalidation</th></tr></thead>
+      <tbody>
+        <tr><td>Client / Browser</td><td>Static assets, predictable-TTL API responses</td><td>TTL, cache-control headers</td></tr>
+        <tr><td>CDN</td><td>Static content, media, geo-distributed users</td><td>TTL, purge on deploy</td></tr>
+        <tr><td>App (Redis)</td><td>Hot reads, query results, sessions, aggregations</td><td>Cache-aside + TTL (default), event-driven</td></tr>
+        <tr><td>Local / In-proc</td><td>Config, feature flags, small lookups</td><td>Short TTL, risk of cross-instance inconsistency</td></tr>
+      </tbody>
+    </table>
+    <div class="split-box">
+      <div class="split-item sync">
+        <strong>Cache-Aside (most common)</strong>
+        Read cache → miss → read DB → populate cache. Watch for thundering herd.
+      </div>
+      <div class="split-item async">
+        <strong>Write-Through / Write-Behind</strong>
+        Through: write both, stronger consistency. Behind: write cache, async flush, risk data loss.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT PATTERNS -->
+<div class="tech-section" id="tech-events">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>⚡ Event-Driven Patterns</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <table>
+      <thead><tr><th>Pattern</th><th>When</th><th>Tradeoff</th></tr></thead>
+      <tbody>
+        <tr><td>Notification</td><td>"Something happened" — lightweight trigger</td><td>Consumers may need callback for details</td></tr>
+        <tr><td>State Transfer</td><td>Include full state so consumers don't call back</td><td>Larger payloads, data duplication</td></tr>
+        <tr><td>Event Sourcing</td><td>Full audit trail, rebuild state by replaying events</td><td>Complexity, eventual consistency</td></tr>
+        <tr><td>CQRS</td><td>Read/write models have different shapes or scale needs</td><td>Two models to maintain, sync lag</td></tr>
+        <tr><td>Saga</td><td>Distributed transactions where 2PC isn't feasible</td><td>Complex failure handling, compensating txns</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CONSISTENCY & COORDINATION -->
+<div class="tech-section" id="tech-consistency">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>🔒 Consistency & Coordination</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <table>
+      <thead><tr><th>Pattern</th><th>When</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Strong (single leader)</td><td>Financial txns, inventory — stale reads cause harm</td><td>Higher latency, write bottleneck</td></tr>
+        <tr><td>Eventual</td><td>Feeds, analytics, notifications — staleness OK</td><td>Simpler to scale, possible stale reads</td></tr>
+        <tr><td>Read Replicas</td><td>Scale reads without sharding, tolerate lag</td><td>Stale reads from replicas</td></tr>
+        <tr><td>Multi-Leader</td><td>Multi-region writes</td><td>Conflict resolution is hard</td></tr>
+        <tr><td>Consensus</td><td>Leader election, distributed locks, config mgmt</td><td>Quorum latency. Not for hot-path data</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LOAD BALANCING -->
+<div class="tech-section" id="tech-lb">
+  <div class="tech-header" onclick="toggleTech(this)">
+    <h3>🌐 Load Balancing & API Gateway</h3>
+    <svg class="tech-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="tech-body">
+    <table>
+      <thead><tr><th>Option</th><th>When</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>L4 (TCP)</td><td>Raw throughput, simple round-robin, no content inspection</td><td>Fastest, least flexible</td></tr>
+        <tr><td>L7 (HTTP)</td><td>Path routing, header inspection, SSL termination, rate limiting</td><td>Most common choice</td></tr>
+        <tr><td>API Gateway</td><td>AuthN, rate limiting, request transform, multi-backend routing</td><td>Single entry point for clients</td></tr>
+        <tr><td>Service Mesh</td><td>mTLS, fine-grained traffic control, network-level observability</td><td>Only at significant microservice scale</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ DECISION PATTERN ═══════════════ -->
+<div class="section-divider"><span>Guides</span></div>
+
+<div class="phase" id="decision-pattern">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--accent-green);color:var(--bg)">🎯</span>
+    <span class="phase-title">The 5-Step Decision Pattern</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="phase-goal"><strong>Use this every time you hit a technology decision point.</strong> Steps 4 and 5 are what separate principal-level answers from mid-level ones.</div>
+    <ul class="checklist">
+      <li><strong>1. State the requirement</strong> — "We need low-latency reads at 100K QPS with a simple key-based access pattern."</li>
+      <li><strong>2. Name the decision criteria</strong> — "I'm optimizing for read latency and horizontal scalability over query flexibility."</li>
+      <li><strong>3. Make the choice</strong> — "A key-value store like DynamoDB fits here."</li>
+      <li><strong>4. Name the tradeoff</strong> — "We give up ad-hoc querying, but our access patterns are well-defined."</li>
+      <li><strong>5. Mention what you rejected</strong> — "I considered Postgres with read replicas, but at this QPS with key lookups, a purpose-built KV store is more efficient."</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════ HANDLING PIVOTS ═══════════════ -->
+<div class="phase" id="detours">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--accent-orange);color:var(--bg)">🔄</span>
+    <span class="phase-title">Handling Interviewer Pivots</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <ul class="checklist">
+      <li><strong>Don't panic</strong> — Constraints aren't traps. Say: "Great constraint. Let me think about how that changes the design."</li>
+      <li><strong>Trace the impact</strong> — Walk through which components are affected and which aren't.</li>
+      <li><strong>Revise the diagram live</strong> — Cross out the old approach, draw the new one, narrate your reasoning.</li>
+      <li><strong>Acknowledge uncertainty</strong> — "I haven't worked with this exact pattern, but my instinct is X because of Y."</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════ META PRINCIPLES ═══════════════ -->
+<div class="phase" id="meta-principles">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">★</span>
+    <span class="phase-title">Meta Principles</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="principles-grid">
+      <div class="principle-card">
+        <div class="num">01</div>
+        <p><strong>Think out loud.</strong> The interviewer evaluates your reasoning, not your final diagram. Silence is your enemy.</p>
+      </div>
+      <div class="principle-card">
+        <div class="num">02</div>
+        <p><strong>Drive the conversation.</strong> At principal level, you lead. Don't wait for "what about caching?" — bring it up.</p>
+      </div>
+      <div class="principle-card">
+        <div class="num">03</div>
+        <p><strong>Stay grounded in requirements.</strong> Every decision traces to Phase 1. Catch yourself gold-plating → refocus.</p>
+      </div>
+      <div class="principle-card">
+        <div class="num">04</div>
+        <p><strong>Name the tradeoffs.</strong> "We gain X, give up Y, acceptable because Z." This is the principal-level sentence pattern.</p>
+      </div>
+      <div class="principle-card">
+        <div class="num">05</div>
+        <p><strong>"It depends" is fine</strong> — but always follow with <em>what it depends on.</em></p>
+      </div>
+      <div class="principle-card">
+        <div class="num">06</div>
+        <p><strong>Excalidraw is a living doc.</strong> Annotate decisions, write numbers, mark failure zones. It should tell the story alone.</p>
+      </div>
+      <div class="principle-card">
+        <div class="num">07</div>
+        <p><strong>Manage your time.</strong> If 10 min on one component with 2 more to go — say so and move on.</p>
+      </div>
+      <div class="principle-card">
+        <div class="num">08</div>
+        <p><strong>Treat interviewer as collaborator.</strong> Ask preferences. Respond to cues. It's a design conversation, not a presentation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+function togglePhase(header) {
+  header.closest('.phase').classList.toggle('collapsed');
+}
+function toggleTech(header) {
+  header.closest('.tech-section').classList.toggle('collapsed');
+}
+
+// Active nav link tracking
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+document.querySelectorAll('.phase, .tech-section').forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

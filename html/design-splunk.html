@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Splunk — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Splunk</h1><span>Log Analytics Platform · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-ingest">Ingestion & Parsing Pipeline</a>
+  <a href="#dd-index">Indexing & Storage Engine</a>
+  <a href="#dd-search">Distributed Search</a>
+  <a href="#dd-data">Data Model & Tiering</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a distributed log analytics platform like Splunk. The system collects machine-generated data from thousands of sources — servers, applications, network devices, cloud services — ingests and indexes terabytes per day, then enables real-time search, alerting, dashboards, and historical analysis over that data. The fundamental proposition: index EVERYTHING, search ANYTHING, in SECONDS."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome does the customer measure?</strong> <em>→ Mean Time to Detect (MTTD) and Mean Time to Resolve (MTTR) for production incidents. Splunk exists to make those numbers smaller. This means: ingestion latency matters (faster data in → faster detection), query speed matters (faster search → faster root cause), and alert reliability matters (fewer false positives → faster human response).</em></li>
+      <li><strong>Data sources?</strong> <em>→ Any machine data: application logs, syslogs, metrics, API events, network flows, security events. Schema-on-read — no predefined schema required.</em></li>
+      <li><strong>Query model?</strong> <em>→ Ad-hoc full-text search with a custom query language (SPL-like). Supports filtering, aggregation, statistical functions, time-range scoping. Results in seconds even over TB of data.</em></li>
+      <li><strong>Real-time vs. batch?</strong> <em>→ Both. Real-time alerting (detect anomaly within seconds of ingestion) AND historical search (query data from months ago).</em></li>
+      <li><strong>Retention?</strong> <em>→ Hot (searchable, fast): 30-90 days. Warm/Cold (searchable, slower): up to years. Frozen (archived, restore-on-demand): unlimited.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~10 TB/day ingestion, ~50K search queries/day, retention of ~1 PB searchable, ~50K forwarder agents.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Data collection (forwarders, HEC)</td><td>SIEM correlation rules engine</td></tr>
+        <tr><td>Parsing & event extraction</td><td>Machine learning toolkit internals</td></tr>
+        <tr><td>Indexing engine & storage tiers</td><td>Visualization / dashboard rendering</td></tr>
+        <tr><td>Distributed search</td><td>Billing / license management</td></tr>
+        <tr><td>Alerting & scheduled searches</td><td>App marketplace</td></tr>
+        <tr><td>Data replication & high availability</td><td>User authentication (RBAC exists, not deep-dived)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1:</strong> SRE searches <code>index=web status=500 | stats count by host | sort -count</code> → within 5 seconds, sees which hosts are throwing the most 500 errors in the last 24 hours.</li>
+      <li><strong>UC2:</strong> Security analyst creates alert: "If more than 100 failed login attempts from the same IP in 5 minutes, fire PagerDuty." Alert evaluates in real-time as data is ingested.</li>
+      <li><strong>UC3:</strong> Compliance team searches 6 months of access logs for a specific user's activity. Searches across warm/cold data tiers, takes ~30 seconds.</li>
+      <li><strong>UC4:</strong> 50K forwarder agents continuously stream data → system must never drop events, even during spikes.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Ingest reliability:</strong> ZERO data loss. Every log event that enters the system must be indexed and searchable. Data is the product.</li>
+      <li><strong>Time-to-search:</strong> Event should be searchable within 1-5 seconds of ingestion (near-real-time).</li>
+      <li><strong>Search speed:</strong> Ad-hoc queries over 24 hours of data (&lt;5 seconds). Queries over 30 days (&lt;30 seconds). Queries over 1 year (minutes, acceptable).</li>
+      <li><strong>Schema-on-read:</strong> Data is indexed WITHOUT a predefined schema. Structure (fields, key-value pairs) is extracted at SEARCH TIME, not ingest time. This is the fundamental difference from structured databases.</li>
+      <li><strong>Horizontal scalability:</strong> Add more indexers for more throughput, more search heads for more concurrent queries.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: WRITE-OPTIMIZED ingestion (append-only, schema-free, 10 TB/day sustained) vs. READ-OPTIMIZED search (ad-hoc queries over unstructured text returning in seconds). Most databases optimize for one or the other. Splunk's bucket-based indexing + inverted index + time-partitioning is the architectural answer to both.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Daily Ingestion</div><div class="value">~10 TB/day</div><div class="detail">~120 MB/sec sustained, ~500 MB/sec peak. ~100B events/day (avg 100 bytes/event).</div></div>
+      <div class="est-card"><div class="label">Forwarder Agents</div><div class="value">~50K</div><div class="detail">Deployed on servers, containers, network devices. Each sends ~200 MB/day avg.</div></div>
+      <div class="est-card"><div class="label">Indexer Nodes</div><div class="value">~20-40</div><div class="detail">Each handles ~300-500 GB/day. Scales linearly with volume.</div></div>
+      <div class="est-card"><div class="label">Searchable Data</div><div class="value">~1 PB</div><div class="detail">90 days hot (900 TB) + 1 year warm (3.65 PB compressed to ~1 PB).</div></div>
+      <div class="est-card"><div class="label">Search Queries / Day</div><div class="value">~50K</div><div class="detail">Mix of ad-hoc (~10K), scheduled alerts (~30K), dashboard panels (~10K).</div></div>
+      <div class="est-card"><div class="label">Compression Ratio</div><div class="value">~10:1</div><div class="detail">Log data compresses well. 10 TB raw → ~1 TB on disk. Critical for storage cost.</div></div>
+      <div class="est-card"><div class="label">Index Overhead</div><div class="value">~10-15%</div><div class="detail">Inverted index (tsidx) adds ~10-15% storage on top of compressed raw data.</div></div>
+      <div class="est-card"><div class="label">Replication Factor</div><div class="value">3×</div><div class="detail">3 copies of data across indexer cluster. 1 TB compressed → 3 TB on disk.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> 10 TB/day ingestion is fundamentally a WRITE THROUGHPUT problem. At 120 MB/sec sustained, this requires an append-only storage engine with minimal write amplification. No B-tree updates, no random I/O — pure sequential writes.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> Search speed over 1 PB of data requires TIME-BASED PARTITIONING. Every query has a time range ("last 24 hours," "last 7 days"). By organizing data into time-bounded buckets, the search engine skips 99% of data that's outside the query's time range.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> Schema-on-read means the inverted index must be GENERAL PURPOSE — index all tokens, not just predefined fields. At query time, fields like <code>status=500</code> are extracted from raw events using configurable extraction rules. This trades query-time CPU for ingest-time simplicity.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The architecture has three tiers matching the data pipeline: Collection (forwarders gather data), Indexing (indexers parse, index, and store), and Search (search heads coordinate distributed queries). Let me draw all three."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>100K+ events/sec ingest with zero data loss</td><td style="color:var(--accent-cyan);font-weight:500">Custom bucket-based storage (not standard DB)</td><td>Append-only buckets with TSIDX index. Bloom filters skip non-matching buckets. Standard DB would need full-text index + time partitioning — slower.</td><td>—</td></tr>
+      <tr><td>Search across distributed indexers</td><td style="color:var(--accent-cyan);font-weight:500">MapReduce: scatter to indexers, gather at Search Head</td><td>Each indexer searches its local data. Search Head merges results. Parallelism scales with indexer count.</td><td>—</td></tr>
+      <tr><td>Long-term retention at reasonable cost</td><td style="color:var(--accent-cyan);font-weight:500">SmartStore: hot (SSD) → warm (SSD) → cold (S3)</td><td>Recent data on fast SSD for real-time search. Aged-off data on S3 (10x cheaper). Transparently thawed on search.</td><td>—</td></tr>
+      <tr><td>Schema-less data (logs have unpredictable fields)</td><td style="color:var(--accent-cyan);font-weight:500">Schema-on-read (not schema-on-write)</td><td>Extract fields at search time, not ingest time. Any log format works without pre-defining columns. Tradeoff: search-time extraction is slower than pre-indexed fields.</td><td>—</td></tr>
+      <tr><td>Multi-tenant: each index isolated</td><td style="color:var(--accent-cyan);font-weight:500">Role-based access per index</td><td>Analyst sees their indexes only. Raw data stored once, access policies applied at query time. No data duplication per role.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Three-Tier Architecture</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 456" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_5412" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_5412h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">INDEXER CLUSTER</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="333" y1="94" x2="266" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="333" y1="94" x2="390" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <text x="365" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">HTTP</text>
+    <line x1="266" y1="194" x2="276" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="266" y1="194" x2="390" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="390" y1="194" x2="504" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="447" y1="94" x2="514" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="514" y1="194" x2="276" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <text x="399" y="222" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">scatter</text>
+    <line x1="514" y1="194" x2="390" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="514" y1="194" x2="504" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="276" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="390" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" opacity=".5"/>
+    <line x1="333" y1="354" x2="447" y2="394" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5412)" stroke-dasharray="4 3" opacity=".5"/>
+    <text x="394" y="372" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">age-off</text>
+    <rect class="svg-node" x="283" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="333" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">🖥️ Source Machines</text>
+    <text x="333" y="84" fill="#6e7681" font-size="8" text-anchor="middle">servers · containers · network</text>
+    <rect class="svg-node" x="397" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="447" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👤 Security Analyst</text>
+    <text x="447" y="84" fill="#6e7681" font-size="8" text-anchor="middle">search · dashboards</text>
+    <rect class="svg-node" x="211" y="154" width="110" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="266" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📤 Universal Forward…</text>
+    <text x="266" y="184" fill="#6e7681" font-size="8" text-anchor="middle">lightweight agent</text>
+    <rect class="svg-node" x="335" y="154" width="110" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔌 HEC</text>
+    <text x="390" y="184" fill="#6e7681" font-size="8" text-anchor="middle">HTTP Event Collector</text>
+    <rect class="svg-node" x="459" y="154" width="110" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="514" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔍 Search Head</text>
+    <text x="514" y="184" fill="#6e7681" font-size="8" text-anchor="middle">SPL · map-reduce</text>
+    <rect class="svg-node" x="226" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="276" y="278" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Indexer 1</text>
+    <rect class="svg-node" x="340" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="278" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Indexer 2</text>
+    <rect class="svg-node" x="454" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="504" y="278" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Indexer N</text>
+    <rect class="svg-node" x="283" y="354" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="333" y="371" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔥 Hot/Warm Buckets</text>
+    <text x="333" y="384" fill="#6e7681" font-size="8" text-anchor="middle">fast SSD · recent data</text>
+    <rect class="svg-node" x="397" y="354" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="447" y="371" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">❄️ Cold / Frozen</text>
+    <text x="447" y="384" fill="#6e7681" font-size="8" text-anchor="middle">S3 · SmartStore</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>📡 Universal Forwarder <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">COLLECTION</span></h4>
+        <ul>
+          <li>Lightweight agent on source machines</li>
+          <li>Monitors log files, collects metrics</li>
+          <li>Forwards raw data to indexers</li>
+          <li>Load-balances across indexer pool</li>
+          <li>~1-2% CPU overhead on host</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📡 Heavy Forwarder <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">COLLECTION</span></h4>
+        <ul>
+          <li>Full parsing pipeline at the source</li>
+          <li>Can filter, mask, route data</li>
+          <li>Used for: data masking (PII), API collection</li>
+          <li>Higher resource usage than UF</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📥 HTTP Event Collector (HEC) <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">COLLECTION</span></h4>
+        <ul>
+          <li>REST API endpoint for event ingestion</li>
+          <li>Applications POST JSON events directly</li>
+          <li>Token-based auth, no agent needed</li>
+          <li>Ideal for cloud-native / container workloads</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚙️ Indexer <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">INDEXING</span></h4>
+        <ul>
+          <li>THE core component. Receives, parses, indexes, stores.</li>
+          <li>Breaks raw data into events (line breaking, timestamp extraction)</li>
+          <li>Builds inverted index (tsidx) for fast search</li>
+          <li>Stores in time-bucketed directories</li>
+          <li>Responds to search queries from search heads</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔍 Search Head <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">SEARCH</span></h4>
+        <ul>
+          <li>User interface + search coordinator</li>
+          <li>Parses SPL query, creates search plan</li>
+          <li>Dispatches search jobs to indexers in parallel</li>
+          <li>Merges results from all indexers</li>
+          <li>Runs scheduled searches and alerts</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>👑 Cluster Manager <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">MANAGEMENT</span></h4>
+        <ul>
+          <li>Manages indexer cluster membership</li>
+          <li>Coordinates data replication</li>
+          <li>Handles bucket fixup (repair under-replicated data)</li>
+          <li>Distributes configuration to indexers</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Data Ingestion Pipeline</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 336" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a4140" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="119" y="40" width="322" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Source Machine</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">app server, network device, container</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <rect class="svg-node" x="127" y="124" width="307" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Forwarder</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4140)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">INPUT PHASE:</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Break raw data stream into 64KB blocks</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Annotate with metadata keys (source, sourcetype, host)</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">PARSING PHASE:</text>
+    <rect class="svg-node" x="101" y="272" width="358" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Indexer Pool (20-40 nodes)</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Distributed Search</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Distributed Search</span>
+  <svg viewBox="0 0 560 700" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a711" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <line x1="280" y1="84" x2="280" y2="186" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Parse SPL → create search plan</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Identify time range → determines which buckets to scan</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. Split into: "streaming" part (runs on indexers) + "reducing" p</text>
+    <text x="296" y="148" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">dispatch in parallel</text>
+    <rect class="svg-node" x="124" y="188" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="216" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Search Head</text>
+    <line x1="280" y1="232" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="127" y="272" width="307" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Indexer 1</text>
+    <line x1="280" y1="316" x2="280" y2="354" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="127" y="356" width="307" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="384" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Indexer 2</text>
+    <line x1="280" y1="400" x2="280" y2="502" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="416" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Each indexer: scan local buckets in time range</text>
+    <text x="296" y="432" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Use tsidx index to quickly find matching events</text>
+    <text x="296" y="448" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Apply filters, extract fields (schema-on-read)</text>
+    <text x="296" y="464" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Compute partial aggregations (streaming commands)</text>
+    <rect class="svg-node" x="127" y="504" width="307" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="532" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Indexer N</text>
+    <line x1="280" y1="548" x2="280" y2="634" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="564" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. Merge partial results from all indexers</text>
+    <text x="296" y="580" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">5. Apply reducing commands (stats, sort, top, dedup)</text>
+    <text x="296" y="596" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">6. Return final results to user</text>
+    <rect class="svg-node" x="124" y="636" width="313" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="664" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Search Head</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The deep dives I want to cover: (1) How the indexing engine achieves 10 TB/day sustained writes with the bucket + inverted index model. (2) How distributed search parallelizes queries across indexers to search a PB in seconds. (3) How storage tiering (hot/warm/cold/frozen + SmartStore) balances cost and performance."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-ingest">
+    <div class="sub">Deep Dive 1: Ingestion & Parsing Pipeline (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Ingest 10 TB/day of arbitrary machine data — logs, JSON, XML, custom formats — without a predefined schema. Parse each event to extract a timestamp, break multi-line logs correctly, and assign metadata. Never drop an event.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">The Data Pipeline (4 phases)</strong></p>
+
+    <table>
+      <thead><tr><th>Phase</th><th>Where It Runs</th><th>What It Does</th></tr></thead>
+      <tbody>
+        <tr><td>1. Input</td><td>Forwarder</td><td>Read data from source (file tail, TCP/UDP listen, API poll). Break into 64KB blocks. Annotate with metadata: source, sourcetype, host. Forward to indexer.</td></tr>
+        <tr><td>2. Parsing</td><td>Indexer (or Heavy Forwarder)</td><td>Line breaking: split block into individual log events (newline-delimited, or multi-line patterns like Java stack traces). Timestamp extraction: parse timestamp from event text, assign <code>_time</code>. Character encoding normalization.</td></tr>
+        <tr><td>3. Indexing</td><td>Indexer</td><td>Tokenize event text → add tokens to inverted index (tsidx). Compress raw event → write to journal. Assign event to current "hot" bucket based on <code>_time</code>.</td></tr>
+        <tr><td>4. Replication</td><td>Indexer Cluster</td><td>Replicate bucket data to peer indexers for HA. Replication factor (RF) = number of copies. Search factor (SF) = number of searchable copies.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why "sourcetype" matters so much:</strong> The sourcetype tells the parser HOW to parse. <code>sourcetype=apache:access</code> → parse as Apache combined log format, extract timestamp from position 1, line break on newline. <code>sourcetype=log4j</code> → multi-line, look for timestamp pattern <code>yyyy-MM-dd HH:mm:ss</code>. Getting sourcetype wrong means wrong timestamps, wrong events, wrong search results. Best practice: ALWAYS configure sourcetype explicitly rather than relying on auto-detection.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Forwarder Load Balancing</strong></p>
+    <ul class="items">
+      <li><strong>Auto-balancing:</strong> Each forwarder distributes data across the indexer pool. Uses a round-robin or volume-based strategy. If an indexer goes down, forwarder automatically redirects to surviving indexers.</li>
+      <li><strong>Even distribution is critical:</strong> If indexer A has 2× the data of indexer B, searches over time ranges where A has data will be 2× slower (more data to scan on A). The search head waits for the SLOWEST indexer. Even distribution = even search performance.</li>
+      <li><strong>Persistent queue:</strong> Forwarder has an on-disk queue. If all indexers are unreachable, events queue locally until connectivity is restored. Zero data loss.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why Universal Forwarder over direct API ingestion?</strong> UF handles: file tailing (with bookmarking — knows where it left off after restart), reliable delivery (persistent queue), load balancing, and SSL transport. HEC (HTTP Event Collector) is simpler for cloud-native apps that can POST directly, but lacks the file-tailing and OS-level collection capabilities. Tradeoff: UF requires agent deployment (50K installations to manage), but provides the most reliable, feature-rich collection.</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-index">
+    <div class="sub">Deep Dive 2: Indexing & Storage Engine (~10 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Store 10 TB/day in a format that supports sub-second full-text search. Traditional databases (B-tree, LSM) are designed for structured data with predefined schemas. We need an engine optimized for UNSTRUCTURED TIME-SERIES TEXT data.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">The Bucket Model</strong></p>
+
+    <div class="schema"><span class="comment">── Bucket: The fundamental storage unit ──</span>
+
+A <span class="table-name">bucket</span> is a directory containing all events within a TIME RANGE:
+
+bucket/
+  <span class="pk">rawdata/</span>        <span class="comment">// Compressed raw events (journal.gz)</span>
+                    <span class="comment">// Append-only. Sequential writes. ~10:1 compression.</span>
+  <span class="pk">Hosts.data</span>      <span class="comment">// Bloom filter: "does this bucket contain events from host X?"</span>
+  <span class="pk">Sources.data</span>    <span class="comment">// Bloom filter: "does this bucket contain source Y?"</span>
+  <span class="pk">SourceTypes.data</span><span class="comment">// Bloom filter: "does this bucket contain sourcetype Z?"</span>
+  <span class="pk">index.data</span>      <span class="comment">// tsidx: inverted index mapping tokens → event offsets</span>
+                    <span class="comment">// "status" → [event_7, event_42, event_891, ...]</span>
+                    <span class="comment">// "500"    → [event_42, event_103, ...]</span>
+                    <span class="comment">// "error"  → [event_7, event_42, event_567, ...]</span>
+
+<span class="comment">Each bucket covers a specific time range:</span>
+<span class="comment">  bucket_1: events from 2024-01-15T00:00 to 2024-01-15T06:00</span>
+<span class="comment">  bucket_2: events from 2024-01-15T06:00 to 2024-01-15T12:00</span>
+<span class="comment">  ...</span>
+
+<span class="comment">Bucket lifecycle: hot → warm → cold → frozen → deleted</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Bucket Lifecycle</strong></p>
+    <table>
+      <thead><tr><th>State</th><th>Storage</th><th>Writable?</th><th>Searchable?</th><th>Typical Duration</th></tr></thead>
+      <tbody>
+        <tr><td>Hot</td><td>SSD (local)</td><td>✅ Yes — actively receiving new events</td><td>✅ Full speed</td><td>Minutes to hours</td></tr>
+        <tr><td>Warm</td><td>SSD or HDD (local)</td><td>❌ Closed — no new writes</td><td>✅ Full speed</td><td>Days to weeks</td></tr>
+        <tr><td>Cold</td><td>HDD or network storage</td><td>❌</td><td>✅ Slower (disk seek)</td><td>Weeks to months</td></tr>
+        <tr><td>Frozen</td><td>S3 / object store (SmartStore)</td><td>❌</td><td>⚠️ Restore-on-demand</td><td>Months to years</td></tr>
+        <tr><td>Deleted</td><td>—</td><td>—</td><td>—</td><td>After retention policy</td></tr>
+      </tbody>
+    </table>
+
+    <ul class="items">
+      <li><strong>Hot bucket:</strong> One per index per indexer. Actively written to. When it exceeds a size limit or time range, it "rolls" to warm.</li>
+      <li><strong>Rolling:</strong> Hot → warm: bucket is closed (no more writes), tsidx is finalized and optimized. This is a local operation, very fast.</li>
+      <li><strong>Warm → cold:</strong> Bucket moved to cheaper storage. Searchable but slower (HDD random access instead of SSD sequential).</li>
+      <li><strong>SmartStore (frozen/archive):</strong> Bucket data moved to S3. Only the tsidx metadata stays local (tiny). On search, the cache manager fetches the bucket from S3 to local SSD. LRU eviction of local cache.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why this bucket model instead of a standard LSM tree (like ClickHouse or Elasticsearch)?</strong> The bucket model is uniquely optimized for time-series log data: (1) Time-partitioning means queries with time ranges skip entire buckets — a 24-hour query only opens ~4 buckets, not the entire dataset. (2) Append-only writes to the hot bucket means zero write amplification (no compaction like LSM). (3) Each bucket is self-contained — can be replicated, moved, archived, or deleted as a unit. (4) Bloom filters give O(1) "does this bucket have what I need?" checks before reading any data. Tradeoff: no real-time updates or deletes of individual events. Events are immutable once indexed. This is fine for log data (you never edit a log line).</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">The Inverted Index (tsidx)</strong></p>
+    <ul class="items">
+      <li><strong>Tokenization:</strong> Every event is broken into tokens at major delimiters (spaces, punctuation, special chars). <code>2024-01-15 10:30:22 ERROR [auth] login failed for user=admin ip=10.0.0.1</code> produces tokens: <code>2024, 01, 15, 10, 30, 22, ERROR, auth, login, failed, user, admin, ip, 10.0.0.1</code></li>
+      <li><strong>Inverted index maps:</strong> token → list of event offsets within the bucket. <code>"ERROR" → [offset_42, offset_891]</code>, <code>"admin" → [offset_42, offset_1203]</code>.</li>
+      <li><strong>Search for <code>"ERROR admin"</code>:</strong> Intersect posting lists → <code>[offset_42]</code>. One matching event. No need to scan all events in the bucket.</li>
+      <li><strong>Schema-on-read:</strong> The tsidx indexes ALL tokens, not just predefined fields. At search time, if user queries <code>user=admin</code>, the search engine: (a) uses tsidx to find events containing "admin," then (b) applies a field extraction regex to determine if "admin" is the value of the "user" field. This is slower than pre-extracted fields but infinitely more flexible.</li>
+    </ul>
+
+    <div class="callout tip"><strong>Indexed fields vs. search-time fields:</strong> By default, all fields are extracted at search time (flexible, no ingest overhead). For very frequently queried fields (e.g., <code>status</code>, <code>host</code>), you can configure "indexed extraction" which creates a dedicated field index at ingest time. This makes queries on those fields 10-100× faster but increases storage and reduces ingest throughput. The tradeoff: index the fields you search constantly, leave everything else as search-time.</div>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-search">
+    <div class="sub">Deep Dive 3: Distributed Search (~7 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> A query like <code>index=web status=500 | stats count by host</code> must scan potentially 1 PB of data across 40 indexers and return results in seconds. The search must parallelize across indexers AND within each indexer.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Map-Reduce Search Architecture</strong></p>
+
+    <div class="schema"><span class="comment">── Query: index=web status=500 | stats count by host ──</span>
+
+Search Head decomposes into:
+
+<span class="pk">STREAMING PHASE</span> (runs on each indexer in parallel — the "map"):
+  1. Identify buckets in time range for index=web
+  2. For each bucket: check Bloom filter — does it contain "500"?
+     If NO → skip entire bucket (huge optimization)
+     If YES → open tsidx, look up "500" → get event offsets
+  3. For each matching event: extract raw event from journal
+  4. Apply field extraction: parse "status" field
+  5. Filter: status == 500? If yes, include.
+  6. Compute partial aggregation: count per host (on this indexer)
+  7. Return partial results to search head
+
+<span class="pk">REDUCING PHASE</span> (runs on search head — the "reduce"):
+  1. Receive partial counts from all 40 indexers
+  2. Merge: sum counts per host across all indexers
+  3. Sort by count descending
+  4. Return top results to user
+
+<span class="comment">Why this is fast:</span>
+<span class="comment">  - Time range eliminates ~95% of buckets (never opened)</span>
+<span class="comment">  - Bloom filters eliminate ~80% of remaining buckets</span>
+<span class="comment">  - tsidx inverted index narrows to matching events (no full scan)</span>
+<span class="comment">  - Parallel across 40 indexers: each scans 1/40th of data</span>
+<span class="comment">  - Partial aggregation at indexer reduces data sent to search head</span></div>
+
+    <div class="callout decision"><strong>Why map-reduce over a centralized query engine?</strong> With 1 PB across 40 nodes, shipping all raw events to a central query engine would be 25 TB of network I/O (for a 1-day query). Map-reduce pushes computation TO the data — each indexer filters and partially aggregates locally, then sends only the small result set (KBs) to the search head. Tradeoff: complex queries that require global ordering or joins are harder to distribute. For most log analytics queries (filter + aggregate), map-reduce is optimal.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Search Head Cluster</strong></p>
+    <ul class="items">
+      <li><strong>Problem:</strong> A single search head can coordinate ~50-100 concurrent searches. With 50K queries/day (~30K scheduled), one search head isn't enough.</li>
+      <li><strong>Solution:</strong> Search Head Cluster (SHC) — 3+ search heads behind a load balancer. Searches are distributed across members. Scheduled searches and dashboards are replicated so any member can run them.</li>
+      <li><strong>Captain election:</strong> Majority-based protocol. Odd number of members (3, 5, 7) to prevent split-brain. Captain assigns scheduled searches to members evenly.</li>
+      <li><strong>Artifact replication:</strong> Search results (for dashboards, saved searches) replicated across SHC members for HA.</li>
+    </ul>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Storage Tiering & SmartStore (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Storing 1 PB on local SSDs is prohibitively expensive (~$100K/month). But search performance demands fast storage. SmartStore decouples compute from storage by using S3 for persistence and local SSDs as a cache.</div>
+
+    <table>
+      <thead><tr><th>Tier</th><th>Storage</th><th>Cost (approx)</th><th>Search Latency</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr><td>Hot/Warm</td><td>Local SSD</td><td>$$$$</td><td>&lt;1 sec</td><td>Recent data. Actively queried. Last 7-30 days.</td></tr>
+        <tr><td>SmartStore Cache</td><td>Local SSD (cache)</td><td>$$</td><td>&lt;5 sec (cache hit) / ~30s (fetch from S3)</td><td>Older data. Cache recently searched buckets.</td></tr>
+        <tr><td>SmartStore Remote</td><td>S3 / GCS</td><td>$</td><td>~30-60 sec (fetch + search)</td><td>Bulk of retained data. Pay only for storage.</td></tr>
+        <tr><td>Frozen Archive</td><td>S3 Glacier / equivalent</td><td>¢</td><td>Minutes to hours (restore)</td><td>Compliance data. Rarely accessed.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="schema"><span class="comment">── SmartStore Data Flow ──</span>
+
+<span class="pk">Ingest:</span>
+  Events → hot bucket (local SSD) → tsidx built locally
+  When hot rolls to warm → bucket uploaded to S3 (remote store)
+  Local copy remains in cache (recently indexed data is frequently searched)
+
+<span class="pk">Search:</span>
+  Search head dispatches query to indexer
+  Indexer checks: is the bucket in local cache?
+    YES → search locally, fast
+    NO  → <span class="fk">cache manager fetches bucket from S3 to local SSD</span>
+           → search locally
+           → bucket stays in cache (LRU eviction)
+
+<span class="pk">Cache Management:</span>
+  Cache manager tracks bucket access frequency
+  Hot/frequently-searched buckets stay in cache
+  Cold/rarely-searched buckets evicted (LRU)
+  If cache is full, oldest/least-searched buckets evicted first
+
+<span class="comment">Key benefit: indexer COMPUTE scales independently of STORAGE.</span>
+<span class="comment">Add indexers for throughput. Add S3 for retention. Decouple the two.</span></div>
+
+    <div class="callout decision"><strong>Why SmartStore over traditional coupled storage?</strong> Traditional Splunk: each indexer stores data on its own disks. Replication factor 3 means 3× storage cost. Adding retention requires adding indexers (expensive — you're paying for compute you don't need). SmartStore: S3 provides durability and replication (11 nines). No need for Splunk-level replication of remote data. Indexers become stateless compute nodes with a cache. Tradeoff: first search against uncached data takes ~30s (S3 fetch). Mitigated by pre-warming caches for commonly queried time ranges and by the LRU cache keeping recently searched data local.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Hot buckets</td>
+        <td style="color:var(--accent-cyan)">Local SSD</td>
+        <td>Currently being written. One per index per indexer. Raw + TSIDX (time-series index). &lt;24 hours of data typically.</td>
+      </tr>
+      <tr>
+        <td>Warm buckets</td>
+        <td style="color:var(--accent-cyan)">Local SSD</td>
+        <td>Closed for writing, still on fast storage. Searchable. Rolled from hot when size/time threshold hit.</td>
+      </tr>
+      <tr>
+        <td>Cold buckets</td>
+        <td style="color:var(--accent-cyan)">Cheap disk / NFS</td>
+        <td>Aged-off from warm. Still searchable but slower. Retention policy driven (30-90 days typical).</td>
+      </tr>
+      <tr>
+        <td>Frozen / archived</td>
+        <td style="color:var(--accent-cyan)">S3 (SmartStore)</td>
+        <td>Long-term archive. Not searchable without thawing. Compliance retention (1-7 years). Cheapest storage tier.</td>
+      </tr>
+      <tr>
+        <td>Search artifacts</td>
+        <td style="color:var(--accent-cyan)">Local disk</td>
+        <td>Search job results cached for re-display. TTL-based cleanup. Per-user isolation.</td>
+      </tr>
+      <tr>
+        <td>Configuration</td>
+        <td style="color:var(--accent-cyan)">Filesystem</td>
+        <td>Splunk configs (.conf files) replicated across cluster. Props, transforms, indexes, inputs.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Indexer node crashes</span><span class="mitigation">Replication factor ensures data exists on peer indexers. Cluster manager detects failure, initiates "bucket fixup" to re-replicate under-replicated buckets to healthy nodes. Forwarders auto-redirect to surviving indexers. Zero data loss if RF ≥ 2.</span></div>
+    <div class="failure-row"><span class="scenario">Search head crashes</span><span class="mitigation">SHC captain detects member failure. Scheduled searches reassigned to surviving members. Users connect through load balancer, routed to healthy member. Active search jobs on crashed member must be re-run.</span></div>
+    <div class="failure-row"><span class="scenario">Forwarder can't reach indexers</span><span class="mitigation">Forwarder's persistent on-disk queue buffers events. Default queue size: 500MB–5GB. When connectivity restores, queued events are forwarded. If queue fills (extended outage), oldest events can be dropped or written to local emergency file.</span></div>
+    <div class="failure-row"><span class="scenario">Ingestion spike (10× normal volume)</span><span class="mitigation">Indexers queue incoming data. Parsing backlog grows but data is not dropped. Search latency may increase (indexers busy with ingestion). Horizontal scaling: add indexers. Forwarder load balancing distributes the spike.</span></div>
+    <div class="failure-row"><span class="scenario">Search "of death" (unbounded query)</span><span class="mitigation">Search time limits: default 10 minute timeout. Resource quotas per user/role. Expensive queries (no time range, no filters) are flagged. Search scheduler has concurrency limits — won't allow one user's queries to starve others.</span></div>
+    <div class="failure-row"><span class="scenario">S3 outage (SmartStore)</span><span class="mitigation">Hot/warm data on local SSD is unaffected. Searches over cached buckets work normally. Searches over uncached cold data fail until S3 recovers. New data continues to ingest to local hot buckets — uploaded to S3 when available.</span></div>
+
+    <div class="sub">Scalability</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>How It Scales</th><th>Bottleneck</th></tr></thead>
+      <tbody>
+        <tr><td>Ingest throughput</td><td>Add indexers. Linear scaling: 40 indexers → 10 TB/day. 80 → 20 TB/day.</td><td>Forwarder connection limits, network bandwidth to indexer tier.</td></tr>
+        <tr><td>Search concurrency</td><td>Add search heads (SHC). Each member handles ~50-100 concurrent searches.</td><td>Indexer CPU — every search head dispatches to the SAME indexer pool. Too many searches saturate indexers.</td></tr>
+        <tr><td>Storage retention</td><td>SmartStore: add S3 capacity. Elastic, pay-per-GB. No indexer changes needed.</td><td>S3 fetch latency for uncached searches (~30s).</td></tr>
+        <tr><td>Data diversity</td><td>Separate indexes for different data types (security, app, infra). Independent retention policies per index.</td><td>Index proliferation increases search head overhead.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Data Integrity & Compliance</div>
+    <ul class="items">
+      <li><strong>Immutable events:</strong> Once indexed, events cannot be modified or deleted individually. Only entire buckets can be deleted (by retention policy). This is a feature for compliance — audit logs can't be tampered with.</li>
+      <li><strong>Role-based access:</strong> Users see only indexes they have permission to search. Data masking at search time for sensitive fields (PII).</li>
+      <li><strong>Data masking at ingest:</strong> Heavy forwarders can mask fields before data leaves the customer's network. Credit card numbers replaced with <code>XXXX-XXXX-XXXX-1234</code> before reaching indexers.</li>
+      <li><strong>Chain of custody:</strong> Bucket metadata tracks: when ingested, from what source, on which indexer, replicated to which peers. Enables forensic verification of log integrity.</li>
+    </ul>
+
+    <div class="sub">Observability (of the observability platform)</div>
+    <ul class="items">
+      <li><strong>Monitoring Console:</strong> Dedicated search head that monitors the Splunk deployment itself. Tracks: ingestion rate per indexer, search concurrency, queue depths, replication status, license usage.</li>
+      <li><strong>Key alerts:</strong> Ingestion lag > 60s, indexer queue depth > 100K events, search concurrency at limit, replication factor violation (under-replicated buckets), license approaching limit.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> As a SIEM (Security Information and Event Management) platform, Splunk ingests the most sensitive data in an organization: authentication logs, firewall logs, endpoint detection events, and potentially PII. Access control is role-based: an analyst can search their assigned indexes but not the HR payroll index. Search-time field extraction means raw data is stored once and access policies are applied at query time — no need to create separate copies for different teams. All data is encrypted at rest (AES-256). In multi-tenant deployments (Splunk Cloud), customer data is isolated by index with tenant-specific encryption keys. The audit log tracks every search query — who searched for what, when — which is critical for insider threat investigations (you need to know if someone is inappropriately searching for coworker data). Forwarder-to-indexer communication uses TLS with mutual certificate authentication. For compliance: Splunk supports FIPS 140-2 mode for government deployments and has FedRAMP authorization.</div>
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: the architecture is a three-tier distributed system — Collection (forwarders), Indexing (indexers), and Search (search heads) — designed around one fundamental data structure: the time-bucketed inverted index. Ingestion is append-only into hot buckets with zero write amplification, achieving 10 TB/day sustained. Search parallelizes across indexers in a map-reduce pattern: each indexer scans its local buckets (using Bloom filters and tsidx inverted indexes to skip irrelevant data), computes partial aggregations, and returns small result sets to the search head for final merge. Time-partitioning is the single biggest optimization — every query has a time range, and buckets outside that range are never opened. SmartStore decouples compute from storage by using S3 for persistence and local SSD as a hot cache, enabling petabyte-scale retention without petabyte-scale compute. Schema-on-read means data is indexed without a predefined schema — fields are extracted at query time, trading search CPU for ingest flexibility."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Federated Search (across clusters)</td><td>Search head dispatches to indexers in multiple independent clusters. Requires cross-cluster auth, result merge across WAN.</td></tr>
+        <tr><td>Metrics Store (beyond logs)</td><td>Dedicated time-series store for numeric metrics (CPU, memory, latency). Different storage format than text logs — columnar, compressed, downsampled. Much more efficient for numeric aggregations.</td></tr>
+        <tr><td>SIEM Correlation Engine</td><td>Complex event processing: correlate events across multiple indexes and time windows. "If failed login on index=auth AND file access on index=fileserver within 5 minutes, alert." Requires streaming correlation, not just batch search.</td></tr>
+        <tr><td>AI/ML Anomaly Detection</td><td>Train models on historical patterns. Score incoming events in real-time. Requires feature extraction at ingest time (departure from pure schema-on-read).</td></tr>
+        <tr><td>Edge Processor</td><td>Filter, transform, and route data at the collection tier before it reaches indexers. Reduces ingest volume (and license cost) by dropping noise at the source. Requires a processing engine on/near forwarders.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This system is defined by ONE architectural choice that cascades through everything: schema-on-read with time-bucketed inverted indexes. This choice means: (1) Any data can be ingested without upfront schema design. (2) Any question can be asked at search time, even questions that weren't anticipated at ingest time. (3) Storage is organized by time, making time-bounded queries dramatically faster. (4) The tradeoff is search-time CPU for field extraction — accepted because most log queries are time-bounded and filtered, hitting only a fraction of the data. Every other design decision — the three-tier pipeline, the bucket lifecycle, SmartStore, map-reduce search — follows from this foundational choice.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why does Splunk use its own storage format instead of a standard database?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Because log data has a unique access pattern that databases aren't optimized for. Log events are (1) write-once, never updated, (2) always queried by time range, (3) need full-text search across arbitrary fields, (4) arrive at extremely high throughput (100K+ events/second per indexer). A traditional database would need: a time-partitioned table (for range queries), a full-text index (for search), and high write throughput — and it would struggle with all three simultaneously. Splunk's format is purpose-built: each &quot;bucket&quot; is a time-bounded directory containing the raw compressed data plus a TSIDX (time-series index) file that's essentially a bloom filter + sorted term dictionary. Searches first narrow by time range (skip entire buckets), then by term (bloom filter eliminates non-matching buckets), then scan only the matching segments. This means a search for &quot;error&quot; in the last 1 hour might read 0.1% of the data on disk. A general-purpose database would likely need to scan more because it can't exploit the time-partitioned bloom filter architecture.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does MapReduce-style distributed search work across indexers?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The Search Head is the coordinator, indexers are the workers. When a user runs `search index=web status=500 | stats count by host`, the Search Head: (1) parses the SPL (Search Processing Language), (2) splits it into a &quot;map&quot; phase (filtering + partial aggregation) that runs on each indexer, and (3) a &quot;reduce&quot; phase (final aggregation) that runs on the Search Head. The map phase is parallelized: each indexer searches its local buckets for `status=500` events and computes partial counts by host. The Search Head collects these partial results and merges them. For simple stats (count, sum), the merge is trivial. For complex operations (dedup, sort, transaction), the Search Head may need to process more data. The key optimization: &quot;search-time field extraction&quot; means the filter `status=500` can be applied at the indexer without the Search Head seeing raw events — only matching events are sent back. This reduces network transfer dramatically. For very large result sets, the Search Head can become a bottleneck, which is why Splunk offers Search Head Clustering for horizontal scaling of the reduce phase.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Zillow — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Zillow</h1><span>Real Estate Data Platform · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-zestimate">Zestimate (Home Valuation ML)</a>
+  <a href="#dd-ingest">Property Data Ingestion</a>
+  <a href="#dd-search">Geo-Spatial Search</a>
+  <a href="#dd-leads">Agent Lead Marketplace</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a real estate data platform like Zillow. The critical thing to understand: Zillow is NOT primarily a listings marketplace. It's a DATA COMPANY that knows about EVERY home in America — not just the ~2M currently for sale, but all ~110M residential properties. It knows their address, square footage, bedrooms, tax history, sale history, and most importantly, their estimated value (the Zestimate). This comprehensive property database is what draws 240M+ monthly visitors, which Zillow monetizes by selling leads to real estate agents (Premier Agent program). The fundamental challenge: ingest property data from hundreds of heterogeneous sources (MLS feeds, county records, user edits), resolve it into a single canonical record per property, score all 110M properties with an ML valuation model, and serve geo-spatial search over this massive dataset in real time."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ Two linked outcomes: (1) Audience size — unique monthly visitors, driven by Zestimate accuracy (homeowners checking their value) and listing completeness (buyers searching). (2) Lead conversion — "Contact Agent" clicks that result in a home sale. These form the FLYWHEEL: more accurate data → more visitors → more leads → more agent revenue → fund more data. This tells us: Zestimate accuracy ISN'T a vanity metric — it directly drives the business model.</em></li>
+      <li><strong>What does Zillow actually know about?</strong> <em>→ Every residential property in the US (~110M). For each: physical attributes (beds, baths, sqft, lot size, year built), tax assessment history, sale transaction history, current listing status (for sale, for rent, off-market), photos, and the Zestimate.</em></li>
+      <li><strong>Data sources?</strong> <em>→ ~800+ MLS feeds (active listings), county assessor/recorder offices (tax records, deeds), user-submitted updates ("I remodeled my kitchen"), agent-submitted data, satellite/aerial imagery.</em></li>
+      <li><strong>Revenue model?</strong> <em>→ Primarily Premier Agent: agents pay for leads (buyer inquiries) in specific zip codes. Secondary: rental advertising, mortgage marketplace, display ads. NOT transaction commissions.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~240M monthly visits, ~110M property records, ~2M active for-sale listings, ~1M rental listings, ~5M home sales/year in the US.</em></li>
+      <li><strong>What's the Zestimate?</strong> <em>→ ML-predicted market value for every home. Neural network model. Median error: ~6.9% for off-market homes, ~2% for on-market. Updated daily for all 110M homes.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Property database (110M homes)</td><td>Zillow Offers (iBuying — now discontinued)</td></tr>
+        <tr><td>Multi-source data ingestion & dedup</td><td>Mortgage origination / Zillow Home Loans</td></tr>
+        <tr><td>Zestimate ML pipeline</td><td>Rental application processing</td></tr>
+        <tr><td>Geo-spatial search & map UI</td><td>3D home tour hosting</td></tr>
+        <tr><td>Listing display & detail pages</td><td>Construction marketplace</td></tr>
+        <tr><td>Agent lead marketplace (Premier Agent)</td><td>International markets</td></tr>
+        <tr><td>Saved searches & alerts</td><td>ShowingTime scheduling internals</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (Map Search):</strong> User drags map to a neighborhood → system queries all properties visible in the bounding box → shows pins for for-sale listings with prices, overlays Zestimates for off-market homes. Filters: price range, beds, baths, sqft, home type. Must update in &lt;500ms as the map pans.</li>
+      <li><strong>UC2 (Property Detail):</strong> User clicks a property → full page: 30+ photos, Zestimate with history chart, tax history, sale history, school ratings, nearby comps, estimated mortgage payment, neighborhood stats, and "Contact Agent" button.</li>
+      <li><strong>UC3 (Zestimate Computation):</strong> Every night, the ML pipeline scores all 110M homes with updated data (new sales, new listings, tax assessments) → each home gets a fresh Zestimate and confidence interval.</li>
+      <li><strong>UC4 (Agent Lead):</strong> User clicks "Contact Agent" on a $500K listing in Austin → system routes the lead to the Premier Agent who bought that zip code → agent receives lead instantly (email + app notification) → lead tracked through CRM.</li>
+      <li><strong>UC5 (Saved Search Alert):</strong> User saves "3-bed homes in Brooklyn under $800K" → when a new listing matches, send push notification + email within minutes of listing appearing.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Comprehensive coverage:</strong> Zillow's value proposition depends on having data for EVERY home, not just those for sale. A missing property = a homeowner who can't check their Zestimate = lost traffic.</li>
+      <li><strong>Data freshness:</strong> New MLS listings should appear on Zillow within 15 minutes of being posted. Zestimates updated daily. Tax/sale records: within days of recording.</li>
+      <li><strong>Geo-spatial performance:</strong> Map interactions must feel instantaneous. Bounding box query across 110M properties → return results in &lt;200ms. This requires specialized geo-indexing.</li>
+      <li><strong>Zestimate accuracy:</strong> Median error of ~2% for on-market, ~7% for off-market. Model must handle geographic variation (NYC condo vs. rural Montana ranch) and temporal trends (hot/cold markets).</li>
+      <li><strong>SEO performance:</strong> Property detail pages are a MAJOR traffic source (Google searches for addresses). Pages must be server-rendered, fast-loading, and structured-data rich. ~110M unique URLs.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: EVERY HOME vs. JUST LISTINGS. Most real estate platforms only track active listings (~2M). Zillow tracks ALL 110M homes — including the 108M that are NOT for sale. This 50× larger dataset is what makes the Zestimate possible, what draws homeowners (not just buyers), and what makes Zillow the starting point for any real estate journey. But ingesting, deduplicating, and maintaining accurate data for 110M properties from hundreds of heterogeneous sources is the hardest data engineering problem in real estate.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Total Properties</div><div class="value">~110M</div><div class="detail">Every residential property in the US. ~2M for sale, ~1M for rent, ~107M off-market.</div></div>
+      <div class="est-card"><div class="label">Monthly Visits</div><div class="value">~240M</div><div class="detail">~8M/day. Average session: 10 minutes, ~15 page views. Strong weekend and evening peaks.</div></div>
+      <div class="est-card"><div class="label">Search Queries / Sec</div><div class="value">~3K (peak ~10K)</div><div class="detail">Each map pan/zoom = a new geo-spatial query. Users interact frequently while browsing.</div></div>
+      <div class="est-card"><div class="label">Data Sources</div><div class="value">800+ MLS feeds</div><div class="detail">Plus ~3,000 county recorder offices, tax assessors, user edits, agent submissions.</div></div>
+      <div class="est-card"><div class="label">Listing Updates / Day</div><div class="value">~500K</div><div class="detail">New listings, price changes, status changes (pending, sold), photo updates across all MLS feeds.</div></div>
+      <div class="est-card"><div class="label">Zestimate Computation</div><div class="value">110M daily</div><div class="detail">Every home re-scored nightly. ~1,300 homes/sec sustained over 24 hours.</div></div>
+      <div class="est-card"><div class="label">Property Record Size</div><div class="value">~5-10 KB each</div><div class="detail">Attributes + history. Total: ~1 TB structured data. Plus ~50 TB photos (avg 20 photos × 500KB).</div></div>
+      <div class="est-card"><div class="label">Premier Agent Revenue</div><div class="value">~$1.5B/year</div><div class="detail">Agents pay per lead in their target zip codes. ~80% of Zillow's revenue.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1 — The entity resolution problem:</strong> The same property appears in multiple data sources with different identifiers, formats, and even conflicting data. MLS says "3 bed / 2 bath." County records say "4 bed / 2 bath" (one bedroom was added in a remodel). User says "3 bed / 3 bath" (they finished the basement). Which is correct? Entity resolution — matching, merging, and resolving these conflicting records into one canonical property — is the core data engineering challenge.</div>
+
+    <div class="callout decision"><strong>Key insight #2 — Two very different query patterns:</strong> (1) MAP SEARCH: bounding-box geo query returning MANY properties with minimal data (pin + price). Latency-critical (&lt;200ms). Read-heavy. (2) DETAIL PAGE: single-property lookup returning EVERYTHING (photos, history, comps, Zestimate chart). Throughput-critical (handle 100K concurrent detail pages). These two patterns demand different storage/indexing strategies.</div>
+
+    <div class="callout decision"><strong>Key insight #3 — The Zestimate is a batch ML pipeline, not a real-time model:</strong> Scoring 110M homes daily is a ~24-hour sustained computation, not a millisecond inference. It reads from the property database, joins with recent sales (comps), and outputs a new Zestimate per home. This is a data-parallel batch job (Spark), not an online serving system. The Zestimate is PRE-COMPUTED and stored, not computed on request.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"I'll organize Zillow's architecture around its three layers: DATA INGESTION (getting property data in from hundreds of sources), the PROPERTY GRAPH (the canonical database of every home), and SERVING (search, detail pages, Zestimates, and leads). The Zestimate ML pipeline sits alongside as a massive batch job that reads from and writes back to the property graph."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Spatial queries: "homes in this map viewport"</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL + PostGIS (GiST spatial index)</td><td>ST_MakeEnvelope + GiST index = O(log n) spatial lookup. Returns 500-5K properties in &lt;50ms even with 150M total properties.</td><td>—</td></tr>
+      <tr><td>Complex faceted search: price + beds + baths + location</td><td style="color:var(--accent-cyan);font-weight:500">Elasticsearch for search (PostGIS for spatial-only)</td><td>ES handles combined geo + attribute filters natively. PostGIS struggles at &gt;100 concurrent faceted queries/sec.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Zestimate for 150M properties (weekly refresh)</td><td style="color:var(--accent-cyan);font-weight:500">Batch ML pipeline on Spark (not real-time)</td><td>Recomputing 150M valuations is a distributed computing problem. Real-time per-request inference would cost 1000x more and not improve accuracy.</td><td>—</td></tr>
+      <tr><td>MLS listings must appear near-real-time</td><td style="color:var(--accent-cyan);font-weight:500">Kafka/Kinesis → Elasticsearch index update</td><td>Listing changes stream through Kafka, consumed by ES indexer. New listing searchable within 5 minutes. Batch import would mean hours of staleness.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Property images at millions of photos</td><td style="color:var(--accent-cyan);font-weight:500">S3 + CDN (not database BLOBs)</td><td>Average listing has 20 photos. 1.5M active listings × 20 = 30M images. S3 + CDN handles this with zero DB overhead.</td><td>—</td></tr>
+      <tr><td>Data from dozens of MLS boards with different schemas</td><td style="color:var(--accent-cyan);font-weight:500">Entity resolution pipeline (deduplicate + normalize)</td><td>Same property appears in multiple MLS feeds with different formats. Address normalization + fuzzy matching to create single canonical record.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 556" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_1635" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_1635h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="390" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <text x="365" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">images</text>
+    <line x1="390" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="447" y1="194" x2="158" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="447" y1="194" x2="274" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="447" y1="194" x2="622" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="158" y1="294" x2="276" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="622" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="506" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <line x1="390" y1="394" x2="390" y2="454" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_1635)" opacity=".6"/>
+    <text x="398" y="424" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">index</text>
+    <line x1="274" y1="294" x2="276" y2="454" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_1635)" opacity=".6"/>
+    <line x1="274" y1="294" x2="504" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" stroke-dasharray="4 3" opacity=".5"/>
+    <line x1="390" y1="294" x2="276" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1635)" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">📱 Home Buyer / Sell…</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">Web · App</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌍 CDN</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">property images</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · route</text>
+    <rect class="svg-node" x="107" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="158" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🗺️ Geo Search</text>
+    <text x="158" y="284" fill="#6e7681" font-size="8" text-anchor="middle">spatial query</text>
+    <rect class="svg-node" x="223" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="274" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🏠 Property Detail</text>
+    <text x="274" y="284" fill="#6e7681" font-size="8" text-anchor="middle">listings · history</text>
+    <rect class="svg-node" x="339" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💰 Zestimate</text>
+    <text x="390" y="284" fill="#6e7681" font-size="8" text-anchor="middle">ML valuation</text>
+    <rect class="svg-node" x="455" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="506" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📋 Listing Ingestion</text>
+    <text x="506" y="284" fill="#6e7681" font-size="8" text-anchor="middle">MLS feed</text>
+    <rect class="svg-node" x="571" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="622" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔍 Search / Filter</text>
+    <text x="622" y="284" fill="#6e7681" font-size="8" text-anchor="middle">Elasticsearch</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="371" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka / Kinesis</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">listing updates · events</text>
+    <rect class="svg-node" x="226" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="276" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL + Post…</text>
+    <text x="276" y="484" fill="#6e7681" font-size="8" text-anchor="middle">properties · spatial</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="390" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔎 Elasticsearch</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">property search index</text>
+    <rect class="svg-node" x="454" y="454" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="504" y="471" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📦 S3</text>
+    <text x="504" y="484" fill="#6e7681" font-size="8" text-anchor="middle">images · documents</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>📥 Data Ingestion Pipeline <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">INGEST</span></h4>
+        <ul>
+          <li>800+ MLS feeds (RETS/RESO Web API)</li>
+          <li>County public records (tax, deeds, permits)</li>
+          <li>User/agent edits (home facts)</li>
+          <li>Entity resolution & deduplication</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🏠 Property Graph <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">CORE</span></h4>
+        <ul>
+          <li>Canonical record for every US home (110M)</li>
+          <li>Physical attributes, tax history, sale history</li>
+          <li>Current listing status, photos, agent</li>
+          <li>Pre-computed Zestimate + confidence interval</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🧠 Zestimate Pipeline <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">ML BATCH</span></h4>
+        <ul>
+          <li>Neural network trained on sale transactions</li>
+          <li>Features: physical, geographic tiling, temporal</li>
+          <li>Daily batch scoring: 110M homes</li>
+          <li>Outputs: Zestimate, confidence range, rent Zestimate</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🗺️ Geo Search Service <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">SEARCH</span></h4>
+        <ul>
+          <li>Bounding-box & polygon queries</li>
+          <li>Geo-spatial index (R-tree / geohash)</li>
+          <li>Filters: price, beds, baths, type, status</li>
+          <li>Returns pin data for map rendering</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📄 Property Detail Service <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">DETAIL</span></h4>
+        <ul>
+          <li>Full property page: all attributes + history</li>
+          <li>Comparable sales (comps) computation</li>
+          <li>School ratings, neighborhood stats</li>
+          <li>SEO-optimized server-rendered pages</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>👤 Premier Agent Service <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">REVENUE</span></h4>
+        <ul>
+          <li>Lead routing: buyer inquiry → matched agent</li>
+          <li>Agent inventory: which zips does each agent own?</li>
+          <li>Lead delivery: email, SMS, CRM push</li>
+          <li>Performance tracking: response time, conversion</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔔 Alert Engine <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">NOTIFY</span></h4>
+        <ul>
+          <li>Saved searches → new listing alerts</li>
+          <li>Price change notifications</li>
+          <li>Zestimate change alerts for homeowners</li>
+          <li>Must fire within 15 min of listing change</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📸 Media Service <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">CDN</span></h4>
+        <ul>
+          <li>~2B+ property photos</li>
+          <li>Multiple resolutions (thumbnail, detail, gallery)</li>
+          <li>CDN-served, aggressively cached</li>
+          <li>Satellite/aerial imagery layer</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Map Search ("Homes for sale in Austin, TX")</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 452" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1905" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">loads map centered on Austin, TX. Visible are</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1905)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">→</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1905)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Input: bounding_box=(lat_min, lng_min, lat_max, lng_max)</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">filters: {status: "for_sale", beds: ≥3, price: ≤$600K}</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 1: GEO INDEX QUERY (&lt;50ms)</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Query R-tree / geohash index for all properties in bounding box</text>
+    <rect class="svg-node" x="113" y="272" width="334" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Geo Search Service</text>
+    <line x1="280" y1="316" x2="280" y2="386" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1905)"/>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">On map pan/zoom: new bounding box → new query. Debounced (250ms).</text>
+    <text x="296" y="348" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Total round-trip: &lt;300ms perceived latency.</text>
+    <rect class="svg-node" x="128" y="388" width="304" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="406" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Frontend</text>
+    <text x="280" y="422" fill="#6e7681" font-size="9" text-anchor="middle">renders pins on map. User clicks a pin → fetc</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Property Detail Page</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Property Detail Page</span>
+  <svg viewBox="0 0 560 252" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9856" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">clicks "123 Main St, Austin, TX" (property_id</text>
+    <line x1="280" y1="84" x2="280" y2="186" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9856)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">PARALLEL FANOUT (all in &lt;200ms):</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">A) Property Graph: attributes, tax history, sale history</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">B) Listing Service: if for-sale → price, agent, open houses, MLS </text>
+    <text x="296" y="148" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">C) Zestimate Store: current value, history chart data, confidence</text>
+    <rect class="svg-node" x="106" y="188" width="349" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="216" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Property Detail Service</text>
+  </svg>
+</div>
+
+    <div class="callout say">"Deep dives: (1) The Zestimate ML pipeline — how to value 110M homes daily. (2) Data ingestion — merging 800+ MLS feeds and county records into one canonical property. (3) Geo-spatial search — indexing 110M properties for sub-200ms bounding-box queries. (4) The Premier Agent lead marketplace — how Zillow's primary revenue engine works."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-zestimate">
+    <div class="sub">Deep Dive 1: Zestimate — Home Valuation ML Pipeline (~10 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Predict the market value of every home in America — including the 98% that are NOT currently for sale and have no asking price. The model must handle enormous geographic variation (a $200K home in Iowa vs. a $5M condo in Manhattan), temporal trends (housing booms and busts), and data quality issues (incomplete/incorrect property attributes). Median error target: ~7% for off-market, ~2% for on-market homes.</div>
+
+    <div class="schema"><span class="comment">── Zestimate: Neural Network Architecture ──</span>
+
+<span class="pk">Input Features (per property):</span>
+
+  <span class="fk">Physical attributes:</span>
+    beds, baths, sqft, lot_size, year_built, stories, garage_spaces,
+    pool (y/n), property_type (single-family, condo, townhouse, etc.)
+    basement_sqft, roof_type, heating_source, architectural_style
+
+  <span class="fk">Geographic features (multi-resolution tiling):</span>
+    Discretized geographic tiles at multiple scales:
+    - Coarse tile (~county level): captures regional market trends
+    - Medium tile (~zip code level): captures neighborhood character
+    - Fine tile (~block level): captures hyper-local effects
+    Each tile → learned EMBEDDING (the model learns that "tile X" means 
+    "expensive waterfront neighborhood" without being told explicitly)
+    Also: Uber H3 hex cells at resolutions 5, 7, 9
+
+  <span class="fk">Temporal features:</span>
+    - Trend component: numerical feature spanning full training window
+    - Seasonal component: cyclical features (month-of-year, quarter)
+    - Market condition: recent price changes in the tile
+
+  <span class="fk">Comparable sales (comps):</span>
+    - Recent sales of similar homes nearby
+    - Aggregated: median $/sqft in tile, days-on-market in tile
+    - These are the STRONGEST predictive features
+
+  <span class="fk">Tax/assessment data:</span>
+    - Most recent tax assessed value
+    - Assessment year (how stale?)
+
+  <span class="fk">On-market signal (when available):</span>
+    - Listing price (extremely predictive when present — ~2% error)
+    - Days on market (longer = more likely to sell below asking)
+
+<span class="pk">Model Architecture:</span>
+  Deep neural network (the "Neural Zestimate")
+  - Categorical features → learned embeddings (especially geo tiles)
+  - Numerical features → batch normalization → dense layers
+  - Multiple hidden layers with ReLU activation
+  - Output: predicted sale price + confidence interval
+
+<span class="pk">Training Data:</span>
+  ~5M home sales/year in the US. Each sale: known price + property features.
+  Training window: ~5-10 years of historical sales.
+  Label: actual sale price. Features: property attributes at time of sale.
+
+<span class="pk">Scoring (daily batch):</span>
+  1. Load trained model
+  2. Read all 110M property records + latest comp data
+  3. Score each property → Zestimate + confidence range
+  4. Write results to Zestimate Store
+  5. Compare to previous day's Zestimate → flag large changes for review
+  6. Update Zillow Home Value Index (ZHVI) aggregates
+  
+  Infrastructure: Apache Spark on AWS EMR
+  Throughput: ~110M homes / ~20 hours = ~1,500 homes/sec
+  Cost: ~$10-20K/day in compute (GPU/CPU cluster)</span>
+
+    <div class="callout decision"><strong>Why neural network over gradient-boosted trees (XGBoost)?</strong> The previous Zestimate versions used ensemble methods (gradient-boosted trees). The Neural Zestimate switched to deep learning for three reasons: (1) GEOGRAPHIC EMBEDDINGS — the model needs to learn what "location X" means for pricing, and deep learning can learn rich embeddings for high-cardinality categorical features (millions of geographic tiles) far better than tree methods. (2) TEMPORAL DECOMPOSITION — the neural network can learn trend + seasonality components jointly with property features, allowing it to generalize across time. (3) COMPOSABILITY — additional models (time-to-sell prediction, rent estimation) can be layered on top of shared embeddings, sharing learned representations. Tradeoff: less interpretable than trees. Mitigated by computing feature importance and providing the Zestimate's confidence range to users.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Zestimate Accuracy by Segment</strong></p>
+    <table>
+      <thead><tr><th>Segment</th><th>Median Error</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>On-market (listing price available)</td><td>~2%</td><td>Listing price is an extremely strong signal. Model mostly predicts "close to asking."</td></tr>
+        <tr><td>Off-market, recent sale (&lt;2 yr)</td><td>~5%</td><td>Recent sale price + market trend. Good data quality.</td></tr>
+        <tr><td>Off-market, no recent sale</td><td>~7-10%</td><td>Must rely on comps, physical attributes, tax assessment. More uncertainty.</td></tr>
+        <tr><td>Rural / unique properties</td><td>~15%+</td><td>Few comps, unique features (100-acre ranch). Model struggles with sparse data.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-ingest">
+    <div class="sub">Deep Dive 2: Property Data Ingestion & Entity Resolution (~7 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> The same property appears in many data sources with DIFFERENT identifiers, DIFFERENT attribute values, and NO common key. County says "123 Main Street" with parcel_id=APN-12345. MLS says "123 Main St, Unit #" with mls_id=TX-98765. User says "123 Main st." — different address format, no ID at all. We must determine that these all refer to the SAME physical property, merge their data (preferring the most authoritative source for each attribute), and produce ONE canonical record.</div>
+
+    <div class="schema"><span class="comment">── Data Ingestion Pipeline ──</span>
+
+<span class="pk">Source Adapters (similar to Expedia's supplier adapters):</span>
+  ┌─────────────┐  ┌────────────┐  ┌──────────────┐  ┌──────────┐
+  │ MLS Feed #1  │  │ County Tax  │  │ Deed Records │  │ User Edit│
+  │ (RETS/RESO)  │  │ (CSV/FTP)   │  │ (XML/PDF)    │  │ (API)    │
+  └──────┬───────┘  └──────┬──────┘  └──────┬───────┘  └────┬─────┘
+         │                 │                 │                │
+         ▼                 ▼                 ▼                ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │  <span class="table-name">Normalization Layer</span>                                       │
+  │  - Standardize address format (USPS standards)               │
+  │  - Parse: "123 N Main St Apt 2B" → structured components     │
+  │  - Normalize units: acres→sqft, fields→canonical schema       │
+  │  - Validate: reject obviously bad data (0 beds, $0 price)    │
+  └──────────────────────────┬───────────────────────────────────┘
+                             │
+                             ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │  <span class="table-name">Entity Resolution Engine</span>                                   │
+  │                                                              │
+  │  INPUT: normalized record with address + attributes           │
+  │                                                              │
+  │  Step 1: ADDRESS MATCHING                                     │
+  │    Standardize → geocode → match to existing property by:     │
+  │    (a) Exact address match (90% of cases)                     │
+  │    (b) Fuzzy match + geocode proximity (&lt;50m, same parcel)   │
+  │    (c) Parcel ID (APN) cross-reference                        │
+  │                                                              │
+  │  Step 2: CONFLICT RESOLUTION (when sources disagree)          │
+  │    Source priority hierarchy:                                  │
+  │    1. User/agent (most recent, but verify)                    │
+  │    2. MLS feed (from listing agent, current)                  │
+  │    3. County records (authoritative but often stale)          │
+  │    4. Tax assessment (official but updated annually)          │
+  │                                                              │
+  │    Rule example: beds/baths → prefer MLS > county             │
+  │    Rule example: lot_size → prefer county (surveyed)          │
+  │    Rule example: year_built → prefer county (from permits)    │
+  │                                                              │
+  │  Step 3: MERGE → update canonical property record              │
+  │    Publish event: "property_updated" → Kafka                   │
+  └──────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+                    <span class="fk">Property Graph</span> (canonical record)
+                             │
+                  ┌──────────┼──────────┐
+                  ▼          ▼          ▼
+            Geo Index    Search Index  Zestimate Pipeline</span>
+
+    <div class="callout decision"><strong>Why is entity resolution so hard?</strong> Consider: "123 Main St" and "123 Main Street" — obviously the same. But what about "123 N Main St" vs "123 Main St N"? What about a condo building where the county has one record for the building but the MLS has individual listings per unit? What about a lot that was subdivided — the county still has the old single parcel, but MLS has two new addresses? What about a teardown and rebuild — same address, completely different house? Each of these cases requires specific handling. ML-based matching catches most cases, but a human review queue handles ambiguous matches (~1% of records). Getting entity resolution wrong means: duplicate listings, wrong Zestimate (applied to the wrong property), or missing properties entirely.</div>
+
+    <ul class="items">
+      <li><strong>Address geocoding:</strong> Every address → (latitude, longitude). Used for both entity resolution and geo-search. Geocoder must handle non-standard addresses, new construction (not yet in Google/USPS), and rural addresses ("County Road 42, 3rd mailbox on left").</li>
+      <li><strong>MLS data freshness:</strong> Zillow receives listing updates via RETS/RESO feeds. Most MLS feeds push updates every 15 minutes. Some smaller MLSs only update hourly. The ingestion pipeline must handle: new listings, price changes, status changes (active → pending → sold), photo additions, and listing withdrawals.</li>
+      <li><strong>Streaming architecture:</strong> Zillow moved from batch SQL Server processing to streaming (Kinesis Firehose → S3 Data Lake → Spark). Every property change is an event in a stream. Downstream consumers (search index, Zestimate, alerts) subscribe to relevant events.</li>
+    </ul>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-search">
+    <div class="sub">Deep Dive 3: Geo-Spatial Search (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> When a user pans a map, the frontend sends a bounding box (SW corner lat/lng, NE corner lat/lng). The backend must return all matching properties within that box, filtered by price/beds/baths/status, in &lt;200ms. The dataset is 110M properties. A city like Los Angeles contains ~1.5M properties. The index must support both coarse queries (entire state) and fine queries (a single block).</div>
+
+    <div class="schema"><span class="comment">── Geo-Spatial Indexing Strategy ──</span>
+
+<span class="pk">Option A: Geohash-based sharding (chosen)</span>
+  
+  Geohash encodes (lat, lng) into a string: "9q8yyk" (6 chars = ~1.2km × 0.6km)
+  Properties stored in partitions keyed by geohash prefix.
+  
+  Bounding box query:
+    1. Compute all geohash cells that overlap the bounding box
+    2. Query each cell's partition for matching properties
+    3. Merge results, filter by precise lat/lng (cells are rectangular approximations)
+  
+  Advantages:
+    - Natural spatial locality (nearby properties share geohash prefix)
+    - Easy to shard: each geohash prefix = a partition
+    - Prefix-based range queries on a B-tree index
+  
+  Disadvantage:
+    - Geohash cells have edge effects (neighboring cells may have different prefixes)
+    - Must query multiple cells for boundary-crossing bounding boxes
+
+<span class="pk">Option B: R-tree (alternative)</span>
+  Minimum bounding rectangle tree. Excellent for range queries.
+  Used by PostGIS. Less natural for distributed sharding.
+
+<span class="pk">Option C: Elasticsearch with geo_point (pragmatic choice)</span>
+  Index each property as a document with a geo_point field.
+  Built-in geo_bounding_box query.
+  Handles filtering (price, beds) and geo simultaneously.
+  Scales horizontally via sharding.
+  Most practical for Zillow's use case.
+
+<span class="pk">Implementation (Elasticsearch):</span>
+
+  Index: <span class="fk">properties</span>
+  Mapping:
+    property_id:     keyword
+    location:        geo_point    <span class="comment">// {lat: 30.267, lon: -97.743}</span>
+    listing_status:  keyword      <span class="comment">// for_sale, for_rent, off_market, sold</span>
+    price:           integer
+    beds:            integer
+    baths:           float
+    sqft:            integer
+    property_type:   keyword      <span class="comment">// single_family, condo, townhouse</span>
+    zestimate:       integer
+    thumbnail_url:   keyword
+
+  Query:
+    {
+      "query": {
+        "bool": {
+          "filter": [
+            {"geo_bounding_box": {"location": {"top_left": ..., "bottom_right": ...}}},
+            {"term": {"listing_status": "for_sale"}},
+            {"range": {"price": {"lte": 600000}}},
+            {"range": {"beds": {"gte": 3}}}
+          ]
+        }
+      },
+      "size": 500,
+      "_source": ["property_id", "location", "price", "beds", "baths", "thumbnail_url"]
+    }
+
+  Response time: &lt;100ms for typical metro-area bounding boxes.
+  Shard count: ~20-50 shards, distributed by geohash prefix.</span>
+
+    <div class="callout decision"><strong>Why Elasticsearch over PostGIS?</strong> PostGIS (PostgreSQL with spatial extensions) is excellent for small-to-medium datasets. But at 110M properties with 10K queries/sec, PostGIS struggles because: (1) single-node PostgreSQL can't handle this read throughput, (2) read replicas help but don't scale horizontally, (3) complex multi-filter geo queries are expensive. Elasticsearch naturally shards across nodes, handles compound queries (geo + numeric filters + text search) in one pass, and scales horizontally by adding nodes. Tradeoff: Elasticsearch is eventually consistent (writes visible after ~1 second). Acceptable for search — we're not doing financial transactions.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-leads">
+    <div class="sub">Deep Dive 4: Agent Lead Marketplace (Premier Agent) (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Premier Agent generates ~80% of Zillow's $1.5B+ revenue. Agents pay to "own" leads in specific zip codes. When a buyer clicks "Contact Agent" on a listing, the lead must be routed to the correct agent in &lt;5 seconds. The marketplace must be fair (agents get leads proportional to spend), fast (agents who respond first win), and measurable (track every lead from click to closed sale).</div>
+
+    <div class="schema"><span class="comment">── Premier Agent Lead Flow ──</span>
+
+<span class="pk">How Agents Buy Leads:</span>
+  Agent registers for Premier Agent in target zip codes.
+  Pricing: cost-per-impression model (share-of-voice in a zip code).
+  Higher spend → agent's photo appears on more listings in that zip.
+  Multiple agents can buy into the same zip code.
+  "Share of voice" = agent's spend / total agent spend in that zip.
+
+<span class="pk">Lead Generation (user clicks "Contact Agent"):</span>
+
+  <span class="fk">Step 1:</span> User views listing at 123 Main St (zip 78704, Austin)
+  <span class="fk">Step 2:</span> "Contact Agent" widget shows Premier Agent(s) for zip 78704
+           Agent selection: round-robin weighted by share-of-voice
+           Also may show the listing agent (if they participate)
+  <span class="fk">Step 3:</span> User fills in: name, phone, email, "I'd like to see this home"
+  <span class="fk">Step 4:</span> Lead routed to selected agent via:
+           - Push notification (Zillow Premier Agent app)
+           - Email
+           - CRM integration (Salesforce, Follow Up Boss, etc.)
+           - SMS alert
+  <span class="fk">Step 5:</span> Agent contacts buyer (target: within 5 minutes)
+
+<span class="pk">Lead Quality & Attribution:</span>
+  Track lead lifecycle:
+    GENERATED → DELIVERED → VIEWED → CONTACTED → SHOWING → OFFER → CLOSED
+  
+  Agent response time tracked (industry: agents who respond in &lt;5 min
+  are 10× more likely to convert than those who respond in 30 min).
+  
+  Connection rate, showing rate, and close rate computed per agent.
+  Low-performing agents lose priority in lead routing.
+  
+  Attribution: if buyer who clicked "Contact Agent" eventually buys
+  a home (tracked via public records sale data), attribute the sale
+  to the Premier Agent program → compute ROI per agent.
+
+<span class="pk">Revenue Optimization:</span>
+  Dynamic pricing: zip codes with higher home values and more traffic
+  cost more per impression. 78704 (Austin downtown) costs more than
+  a rural zip code.
+  
+  Yield management: if a zip has unsold lead inventory, lower the price.
+  If demand exceeds supply, auction-style pricing among agents.</span>
+
+    <div class="callout decision"><strong>Why share-of-voice over cost-per-lead?</strong> Cost-per-lead seems fairer (agent pays only for leads received), but creates a problem: agents game the system by collecting leads without responding, hurting user experience. Share-of-voice (agent pays for visibility) aligns incentives: the agent is motivated to respond quickly because they've already paid. It also makes revenue more predictable for Zillow (monthly spend vs. variable CPL). Tradeoff: agents bear more risk (they pay even if leads don't convert). Mitigated by: Zillow provides performance dashboards, and agents can adjust spend monthly. Note: Zillow has been evolving this model — considering connection-based pricing where agents pay only for leads they actually connect with.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Property records</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL + PostGIS</td>
+        <td>Address, lat/lng, attributes, tax records. PostGIS for spatial queries. ~150M properties in the US.</td>
+      </tr>
+      <tr>
+        <td>Listing data (active)</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL + Elasticsearch</td>
+        <td>MLS feed data: price, photos, status, agent. ES for search/filter. Updated near-real-time from MLS.</td>
+      </tr>
+      <tr>
+        <td>Zestimate model inputs</td>
+        <td style="color:var(--accent-cyan)">S3 + feature store</td>
+        <td>ML features: tax assessments, comparable sales, neighborhood stats. Refreshed weekly per property.</td>
+      </tr>
+      <tr>
+        <td>Property images</td>
+        <td style="color:var(--accent-cyan)">S3 + CDN</td>
+        <td>MLS photos + satellite/street view. CDN-first serving. ~20 images per listing.</td>
+      </tr>
+      <tr>
+        <td>Search index</td>
+        <td style="color:var(--accent-cyan)">Elasticsearch</td>
+        <td>Geo-spatial + faceted search. Filters: price, beds, baths, sqft, year built. Updated via Kafka on listing change.</td>
+      </tr>
+      <tr>
+        <td>User saved searches</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Saved search criteria + notification preferences. Matched against new listings for email alerts.</td>
+      </tr>
+      <tr>
+        <td>Event stream</td>
+        <td style="color:var(--accent-cyan)">Kafka / Kinesis</td>
+        <td>listing.created, listing.updated, price.changed. Consumed by search index, Zestimate pipeline, alerts.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">MLS feed goes down (no new listings from a region)</span><span class="mitigation">Detect: monitor listing update rate per MLS. If Dallas MLS goes silent for 30+ min → alert. Impact: new listings in Dallas won't appear. Existing listings remain visible (search index not cleared). Mitigation: show banner "Listings may not reflect latest changes in this area." Auto-recover when feed resumes. Backfill missed updates.</span></div>
+    <div class="failure-row"><span class="scenario">Zestimate pipeline fails mid-run</span><span class="mitigation">Zestimates are computed daily but don't EXPIRE — yesterday's Zestimate is still valid (home values don't change overnight). Pipeline is idempotent: restart from checkpoint. If pipeline can't complete by morning: serve previous day's Zestimates. Users won't notice a 1-day-old valuation. Alert ML team.</span></div>
+    <div class="failure-row"><span class="scenario">Entity resolution creates duplicate property</span><span class="mitigation">Same home appears twice in search results with different Zestimates. Detected by: (a) user reports "duplicate listing," (b) automated scan for properties within 10m with similar attributes. Resolution: merge records, picking best data from each. Redirect old property_id URLs to canonical. These are caught in days, not real-time.</span></div>
+    <div class="failure-row"><span class="scenario">Elasticsearch cluster degraded (slow search)</span><span class="mitigation">Search latency spikes from 100ms to 2 seconds. Mitigation: (1) reduce results per query (show 100 pins instead of 500), (2) increase clustering aggressiveness (fewer individual pins), (3) serve from read replicas, (4) add nodes. Search is fully horizontally scalable. Meanwhile, property detail pages (served from different store) are unaffected.</span></div>
+    <div class="failure-row"><span class="scenario">Agent lead delivery fails (email/SMS down)</span><span class="mitigation">Lead is the primary revenue event — must not be lost. Queue-based delivery: lead persisted to durable queue (SQS) BEFORE attempting delivery. If email fails → retry. If SMS fails → fallback to email. If all fail → queue for manual follow-up. Agent CRM integration has its own retry. Lead marked "undelivered" triggers operations alert.</span></div>
+    <div class="failure-row"><span class="scenario">Zestimate is wildly wrong for a prominent property</span><span class="mitigation">Public embarrassment risk (news articles: "Zillow says my home is worth $50K — it's worth $500K"). Caused by: missing data (model doesn't know about recent renovation), misidentified property (entity resolution error), or model limitation (unique property with no comps). Mitigation: confidence interval displayed alongside Zestimate. Homeowner can update home facts. Support escalation path for high-visibility errors.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Zillow's traffic is extremely location-dependent and seasonal. Austin, TX during a housing boom might generate 100x the traffic of a small town. The geo-search path uses PostGIS spatial indexes with bounding-box pre-filtering: a map viewport query first finds all properties within the visible rectangle (fast B-tree on lat/lng), then applies filters (price, beds, baths) on the smaller result set. Elasticsearch handles the more complex faceted searches. The scaling challenge unique to Zillow: they must have data on EVERY US property (~150M), not just active listings (~1.5M). This means the property database is 100x larger than the listing database. Zestimate computation is the heavy workload: re-estimating 150M property values weekly requires a distributed ML pipeline (Spark) that runs offline and writes results back to the property store. The website traffic scales with the real estate market — during low-rate periods, traffic can surge 3x, which is handled by auto-scaling the stateless search/API tier.</div>
+
+    <div class="sub">SEO — The Silent Revenue Engine</div>
+    <ul class="items">
+      <li><strong>110M unique URLs:</strong> Every property has a permanent detail page URL. Google indexes these pages. When someone Googles "123 Main St Austin TX," Zillow's page ranks #1 → free traffic → lead opportunity.</li>
+      <li><strong>Server-side rendering (SSR):</strong> Property pages must be fully rendered HTML for Googlebot (not client-side React that Googlebot might not execute). SSR adds server cost but is critical for SEO.</li>
+      <li><strong>Structured data (Schema.org):</strong> Property pages emit JSON-LD structured data: address, price, beds, baths, photos. Google uses this for rich search results (price, photo in the SERP).</li>
+      <li><strong>Page speed:</strong> Core Web Vitals directly affect Google ranking. LCP (Largest Contentful Paint) target: &lt;2.5 seconds. Photos (the heaviest element) served from CDN with lazy loading and responsive srcset.</li>
+      <li><strong>Content freshness signal:</strong> Active listings update frequently (price changes, status) → Google re-crawls often. Off-market pages update less → crawl budget managed carefully to prioritize active listings.</li>
+    </ul>
+
+    <div class="sub">Saved Search Alerts</div>
+    <ul class="items">
+      <li><strong>Volume:</strong> Tens of millions of saved searches. Each defined by: geo boundary + filters (price, beds, status).</li>
+      <li><strong>Matching:</strong> When a new listing appears (or price changes), evaluate against all saved searches that overlap the listing's location and match its attributes. This is an INVERTED problem: instead of "find listings matching a search," it's "find searches matching a listing."</li>
+      <li><strong>Implementation:</strong> Publish listing_change events to Kafka → saved-search matcher service consumes events → evaluates each against a spatial index of saved searches → generates notifications. Target: alert within 15 minutes of listing change.</li>
+      <li><strong>Deduplication:</strong> Don't alert the same user for the same listing twice (if price changes after initial alert). Dedup key: (user_id, property_id, alert_type).</li>
+    </ul>
+
+    <div class="sub">Data Licensing & Compliance</div>
+    <ul class="items">
+      <li><strong>MLS data rules:</strong> Each of the 800+ MLSs has its own rules about how data can be displayed. Some require Zillow to show the listing broker's name. Some restrict showing sold-price data. Some require data to be removed within 24 hours of expiration. Compliance is enforced per-MLS.</li>
+      <li><strong>Fair Housing Act:</strong> Search results cannot discriminate based on race, religion, national origin, family status, etc. Zillow must NOT allow targeting ads by protected characteristics. Personalization models must be audited for bias.</li>
+      <li><strong>CCPA/privacy:</strong> User search behavior and lead submissions contain personal data. Users can request deletion. Agent CRM integration must respect user opt-out preferences.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Property data involves multiple privacy concerns: homeowner names and addresses are public record (accessible via county assessor databases), but Zillow aggregates this with estimated values and recent sale prices, which some homeowners consider sensitive. CCPA compliance: users can request deletion of their data, including claimed home profiles. MLS data has contractual restrictions — some MLS boards require that listings be removed within 24 hours of going off-market (DMCA-like enforcement). Agent contact information is subject to TCPA regulations. API security: partner APIs (for real estate agents and brokerages) use OAuth 2.0 with scope restrictions — an agent can only access their own listings and leads, not competitors'. Rate limiting prevents scraping: residential IP detection and CAPTCHA for suspicious access patterns. Zestimate values are a legal sensitivity: Zillow includes disclaimers that Zestimates are estimates, not appraisals, to avoid liability claims from homeowners who feel their property is undervalued.</div>
+<!-- P6 -->
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> SLOs: map search p95 &lt;500ms, property detail page p95 &lt;300ms, Zestimate freshness &lt;7 days (recomputed weekly), MLS listing ingestion &lt;15 minutes (new listing appears on Zillow). Search relevance measured by click-through rate on top-3 results — a ranking change that drops CTR is rolled back. MLS feed health monitored per-board: if a feed stops updating, alert fires within 30 minutes (stale listings damage user trust). Zestimate pipeline has per-metro accuracy tracking — if a metro's median error rate exceeds 5%, the model is flagged for retraining. Geographic hotspot detection: if a specific city generates 10x normal traffic (viral listing, market event), CDN and API capacity is pre-scaled for that region.</div>
+
+
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: Zillow is a DATA PLATFORM, not a listings marketplace. Its moat is the comprehensive PROPERTY GRAPH — a canonical record for every one of 110M US homes, assembled by ingesting data from 800+ MLS feeds and thousands of county offices through an entity resolution pipeline that matches, merges, and resolves conflicting records into one truth per property. On top of this graph sits the ZESTIMATE — a neural network trained on millions of historical sales, using geographic tile embeddings at multiple resolutions and temporal decomposition to predict every home's market value daily. This batch-computed valuation is what draws 240M monthly visitors (homeowners checking their value + buyers comparison shopping), which Zillow monetizes through PREMIER AGENT — a lead marketplace where agents pay for share-of-voice in target zip codes and receive buyer inquiries routed within seconds. GEO-SPATIAL SEARCH uses Elasticsearch with geohash-based sharding to serve sub-200ms bounding-box queries over the full 110M properties, with zoom-dependent clustering to keep the map readable. SEO is the silent engine: 110M server-rendered property URLs capture organic Google traffic for every address search in America."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>AI Home Shopping Assistant</td><td>Conversational interface: "Find me a 3-bed near good schools in Austin under $500K with a pool." Requires: natural language → structured query translation, multi-turn refinement, integration with search service, and recommendation model that understands taste (not just filters).</td></tr>
+        <tr><td>Touring & Offers (full transaction)</td><td>Move beyond leads into facilitating the actual transaction: schedule tours (ShowingTime integration), submit offers digitally, manage escrow/closing. Creates a transaction platform, not just a media company. Requires: real-time availability for tours, offer management workflow, digital signature integration.</td></tr>
+        <tr><td>Renovation Value Estimator</td><td>"If I add a bathroom, how much would my home value increase?" Requires: training a model on before/after renovation data (permit records + sale prices), understanding renovation costs by market, and presenting ROI estimates per improvement type.</td></tr>
+        <tr><td>Climate Risk Layer</td><td>Show flood, fire, heat, and storm risk per property. Increasingly important for buyers and insurers. Requires: integrating FEMA flood maps, wildfire risk models, climate projection data. Serve as a layer on the property detail page and search filters ("exclude flood zone").</td></tr>
+        <tr><td>Real-Time Zestimate (streaming)</td><td>Today the Zestimate is batch-computed daily. A streaming version would update within minutes of a nearby sale closing. Requires: streaming pipeline (Kafka + Flink) that detects new sale events, identifies affected properties (same neighborhood), and incrementally updates their Zestimates. Much harder than batch but enables "your home value just changed" push notifications.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> Zillow's genius is a FLYWHEEL that starts with data, not transactions. Step 1: Build the most comprehensive property database (110M homes, not just 2M listings). Step 2: Compute a value for EVERY home (the Zestimate) — this draws homeowners who aren't even buying or selling, just curious. Step 3: This massive audience (240M visits/month) makes Zillow the place agents MUST be to find buyers. Step 4: Agent spend funds more data collection and engineering. The Zestimate is the flywheel's engine — it's why a homeowner visits Zillow on a random Tuesday ("what's my home worth today?"), which makes Zillow the #1 traffic source for real estate, which makes Premier Agent worth $1.5B/year. Architecturally, everything serves the property graph: ingestion enriches it, the Zestimate leverages it, search queries it, and leads monetize it.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does PostGIS handle &quot;show me all homes for sale in this map viewport&quot; efficiently?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">When a user pans the map to a viewport (say, Austin downtown), the frontend sends the bounding box coordinates: (SW_lat, SW_lng, NE_lat, NE_lng). PostGIS uses a GiST (Generalized Search Tree) spatial index to find all properties within that rectangle in O(log n) time. The query is: `WHERE location &amp;&amp; ST_MakeEnvelope(sw_lng, sw_lat, ne_lng, ne_lat, 4326)`. The &amp;&amp; operator uses the spatial index — it doesn't scan all 150M properties. For a typical viewport showing a neighborhood, this returns 500-5000 properties in &lt;50ms. The frontend then clusters nearby pins to avoid rendering thousands of markers. As the user zooms in, the cluster expands. The tricky part is combining spatial with attribute filters: &quot;homes in this viewport under $500K with 3+ bedrooms.&quot; PostGIS handles the spatial part, but for complex faceted queries, we route to Elasticsearch, which maintains a geo-point index alongside the attribute indices. The choice between PostGIS and ES depends on query complexity.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How accurate is the Zestimate, and what's the ML pipeline?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The Zestimate has a median error rate of ~2-3% for on-market homes and ~7% for off-market homes. The ML pipeline runs weekly: (1) feature engineering: for each of 150M properties, compute features from public records (tax assessment, lot size, year built, recent renovations), comparable sales (similar homes sold within 1 mile in the last 6 months), neighborhood stats (school ratings, crime rates, walkability), and macro factors (interest rates, local employment). (2) Model training: gradient-boosted trees (XGBoost) trained on the last 12 months of actual sale prices vs. features. Separate models per metro area because real estate is hyperlocal. (3) Inference: apply the model to all 150M properties and write results to the property store. This runs on a Spark cluster — feature computation is the bottleneck (joining across 20+ data sources per property). The accuracy limitation is fundamentally about data: interior condition (renovated kitchen vs. original) isn't in public records. This is why on-market homes (with listing photos and descriptions that imply condition) have better estimates.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

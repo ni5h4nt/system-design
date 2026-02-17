@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Bit.ly — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.api-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;margin:10px 0;overflow:hidden}.api-method{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;font-family:var(--font-mono);font-size:12px;width:100%;border-bottom:1px solid var(--border)}.api-method .verb{padding:2px 8px;border-radius:4px;font-weight:600;font-size:10px;text-transform:uppercase}.api-method .verb.post{background:rgba(63,185,80,.15);color:var(--accent-green)}.api-method .verb.get{background:rgba(88,166,255,.15);color:var(--accent-blue)}.api-method .verb.del{background:rgba(248,81,73,.15);color:var(--accent-red)}.api-method .path{color:var(--text)}.api-method .desc{margin-left:auto;color:var(--text-dim);font-size:11px;font-family:var(--font-body)}.api-body{padding:10px 14px;font-size:12px;color:var(--text-dim);line-height:1.55}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:200px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}@media print{nav{display:none}main{margin-left:0;max-width:100%}.phase.collapsed .phase-body{display:block}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Bit.ly</h1><span>Worked Example · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-shortening">Short Code Generation</a>
+  <a href="#dd-redirect">Redirect Hot Path</a>
+  <a href="#dd-analytics">Click Analytics</a>
+  <a href="#dd-data">Data Model & Storage</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a URL shortening service. Users submit a long URL, get back a short URL. When anyone clicks the short URL, they're redirected to the original. We also want click analytics. Let me scope."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What outcome are we optimizing for?</strong> <em>→ Link click-through rate and analytics accuracy. A URL shortener's value isn't the redirect — it's the DATA about who clicked, when, from where. Secondary: redirect latency (every millisecond matters — the redirect is in the critical path of user intent). This shapes architecture: the redirect path must be the fastest thing in the system (&lt;10ms), while analytics can be eventually consistent (batch-processed seconds later).</em></li>
+      <li><strong>Read:write ratio?</strong> <em>→ Massively read-heavy. A link is created once but clicked thousands/millions of times. ~100:1 to 1000:1 ratio. Optimize entirely for the redirect hot path.</em></li>
+      <li><strong>Link lifetime?</strong> <em>→ Most clicks happen within 48 hours of creation (social media spike). But links must work forever — a broken short link destroys trust.</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Shorten a URL → short code</td><td>User accounts / auth (assume API key)</td></tr>
+        <tr><td>Redirect short URL → original</td><td>Link-in-bio pages</td></tr>
+        <tr><td>Custom aliases (vanity URLs)</td><td>QR code generation</td></tr>
+        <tr><td>Click analytics (count, geo, device)</td><td>A/B testing / link routing</td></tr>
+        <tr><td>Link expiration (optional TTL)</td><td>Branded domains</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Redirect latency &lt;10ms</strong> — this is the single most critical path. Every extra ms affects millions of users.</li>
+      <li><strong>Read:write ratio ~100:1</strong> — links are created once, clicked millions of times. Massively read-heavy.</li>
+      <li><strong>High availability</strong> — if the redirect service is down, every short link on the internet is broken.</li>
+      <li><strong>Short codes must be unique</strong> — no collisions. But eventual consistency on analytics is fine.</li>
+      <li><strong>Links are effectively immutable</strong> — once created, the mapping never changes (unless deleted). This is extremely cache-friendly.</li>
+    </ul>
+    <div class="callout tip">The immutability insight is the key architectural advantage. Since a short code → URL mapping never changes, we can cache it aggressively with infinite TTL. Cache invalidation — the hardest problem in CS — is mostly eliminated.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">New URLs / Day</div><div class="value">~100M</div><div class="detail">~1.2K writes/sec avg, ~5K peak</div></div>
+      <div class="est-card"><div class="label">Redirects / Day</div><div class="value">~10B</div><div class="detail">~115K reads/sec avg, ~500K peak</div></div>
+      <div class="est-card"><div class="label">Read:Write Ratio</div><div class="value">100:1</div><div class="detail">Massively read-heavy. Optimize for reads.</div></div>
+      <div class="est-card"><div class="label">Total URLs (5 years)</div><div class="value">~180B</div><div class="detail">100M/day × 365 × 5. Need 7-char codes (62⁷ = 3.5T capacity).</div></div>
+      <div class="est-card"><div class="label">Storage</div><div class="value">~18 TB</div><div class="detail">180B URLs × ~100 bytes/record (code + URL + metadata)</div></div>
+      <div class="est-card"><div class="label">Cache (hot set)</div><div class="value">~50 GB</div><div class="detail">Top 20% of URLs handle 80% of traffic. 36B × 100 bytes.</div></div>
+    </div>
+    <div class="callout decision"><strong>Key insight #1:</strong> 7-character base62 codes give us 3.5 trillion unique URLs — enough for 5+ years. No need for longer codes.</div>
+    <div class="callout decision"><strong>Key insight #2:</strong> 500K redirects/sec at peak from cache. The hot set is only ~50GB — fits easily in a Redis cluster. The DB is a cold fallback, not the hot path.</div>
+    <div class="callout decision"><strong>Key insight #3:</strong> Analytics writes are 10B/day — this is a write-heavy stream that must NOT slow down the redirect path. Async processing via Kafka.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_1985" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_1985h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="333" y1="94" x2="390" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" opacity=".5"/>
+    <line x1="447" y1="94" x2="390" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" opacity=".5"/>
+    <line x1="390" y1="194" x2="274" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" opacity=".5"/>
+    <line x1="390" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_1985)" opacity=".6"/>
+    <line x1="390" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_1985)" opacity=".6"/>
+    <text x="398" y="374" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">click event</text>
+    <line x1="390" y1="454" x2="506" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" opacity=".5"/>
+    <line x1="274" y1="294" x2="333" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" opacity=".5"/>
+    <line x1="390" y1="294" x2="333" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" stroke-dasharray="4 3" opacity=".5"/>
+    <text x="365" y="422" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">miss</text>
+    <line x1="506" y1="294" x2="447" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_1985)" opacity=".5"/>
+    <rect class="svg-node" x="283" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="333" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👤 Link Creator</text>
+    <text x="333" y="84" fill="#6e7681" font-size="8" text-anchor="middle">API · dashboard</text>
+    <rect class="svg-node" x="397" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="447" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">🖱️ Link Clicker</text>
+    <text x="447" y="84" fill="#6e7681" font-size="8" text-anchor="middle">browser redirect</text>
+    <rect class="svg-node" x="340" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="390" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway</text>
+    <text x="390" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · rate limit</text>
+    <rect class="svg-node" x="223" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="274" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">✂️ Shortening</text>
+    <text x="274" y="284" fill="#6e7681" font-size="8" text-anchor="middle">Base62 encode</text>
+    <rect class="svg-node" x="339" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="390" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔀 Redirect</text>
+    <text x="390" y="284" fill="#6e7681" font-size="8" text-anchor="middle">301/302 · hot path</text>
+    <rect class="svg-node" x="455" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="506" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Analytics</text>
+    <text x="506" y="284" fill="#6e7681" font-size="8" text-anchor="middle">click tracking</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="390" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">hot URL cache</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="471" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">click events</text>
+    <rect class="svg-node" x="283" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="333" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL</text>
+    <text x="333" y="584" fill="#6e7681" font-size="8" text-anchor="middle">URL mappings · users</text>
+    <rect class="svg-node" x="397" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="447" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📊 ClickHouse</text>
+    <text x="447" y="584" fill="#6e7681" font-size="8" text-anchor="middle">click analytics</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🔗 Shortening Service <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">WRITE</span></h4>
+        <ul><li>Generate unique short code</li><li>Store mapping in DB + cache</li></ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔀 Redirect Service <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">HOT PATH</span></h4>
+        <ul><li>Resolve short code → URL</li><li>301/302 redirect, &lt;10ms</li><li>Read from cache (Redis), DB fallback</li></ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 Analytics Service <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">ASYNC</span></h4>
+        <ul><li>Consume click events from Kafka</li><li>Aggregate: clicks, geo, device, referrer</li><li>Store in time-series / OLAP store</li></ul>
+      </div>
+      <div class="comp-card">
+        <h4>🆔 ID Generator <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">INFRA</span></h4>
+        <ul><li>Pre-generate unique IDs</li><li>Base62-encode to short code</li><li>No collision, no coordination needed</li></ul>
+      </div>
+    </div>
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Redirect latency &lt;10ms (the product IS the redirect)</td><td style="color:var(--accent-cyan);font-weight:500">Redis cache-first for URL lookups</td><td>95% cache hit rate. Power law: 1% of URLs get 90% of clicks. Cache miss → PostgreSQL fallback. Redis GET is &lt;1ms.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>URL mappings must be durable</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL for URL store (not just Redis)</td><td>Redis is volatile. URL mappings are permanent records — a broken link damages customer trust. PostgreSQL provides durability + ACID.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>100:1 read-to-write ratio</td><td style="color:var(--accent-cyan);font-weight:500">Separate read path (Redis) from write path (PostgreSQL)</td><td>Writes go to PostgreSQL, then populate Redis. Reads never touch PostgreSQL unless cache miss. Each path scales independently.</td><td>—</td></tr>
+      <tr><td>Click analytics at billions of events</td><td style="color:var(--accent-cyan);font-weight:500">Kafka → ClickHouse (not PostgreSQL)</td><td>Append-only event stream. ClickHouse columnar scan for "clicks by country by hour" is 100x faster than PostgreSQL for aggregations.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Short codes must be globally unique</td><td style="color:var(--accent-cyan);font-weight:500">Pre-allocated ID ranges per server (Snowflake-style)</td><td>No centralized counter bottleneck. Each server has its own range. Base62 encoding produces short strings. Coordination only on range allocation.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+
+    <div class="sub">Flow 1: Create Short URL</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 336" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a6006" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a6006)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a6006)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. get next unique ID from ID Generator</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. base62 encode → 7-char code</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. write (code → URL) to DB</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. populate Redis cache</text>
+    <rect class="svg-node" x="113" y="272" width="334" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Shortening Service</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Redirect (the hot path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Redirect (the hot path)</span>
+  <svg viewBox="0 0 560 252" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a5553" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="130" y="40" width="301" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Browser</text>
+    <line x1="280" y1="84" x2="280" y2="186" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5553)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. lookup "abc1234" in Redis → HIT (99%+)</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">miss → lookup in DB → populate cache</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. return HTTP 301 Location: {original_url}</text>
+    <text x="296" y="148" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. async: publish click event to Kafka</text>
+    <rect class="svg-node" x="116" y="188" width="328" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="216" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Redirect Service</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The redirect path is the hottest path — 500K/sec at peak. I want to deep-dive into how we generate unique codes without collisions, then the caching strategy for redirects."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div id="dd-shortening">
+    <div class="sub">Deep Dive 1: Short Code Generation (~10 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Generate 100M unique, short, URL-safe codes per day with no collisions and no coordination bottleneck between application servers.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6"><strong style="color:var(--text)">Options Compared</strong></p>
+    <table>
+      <thead><tr><th>Approach</th><th>How It Works</th><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody>
+        <tr><td>Hash (MD5/SHA)</td><td>Hash the long URL, take first 7 chars</td><td>Deterministic, same URL → same code</td><td>Collisions guaranteed at scale. Need collision resolution loop → DB contention.</td></tr>
+        <tr><td>Random</td><td>Generate random 7-char base62 string</td><td>Simple</td><td>Must check for collision in DB. At 180B URLs, collision probability becomes non-trivial.</td></tr>
+        <tr><td>Counter (auto-increment)</td><td>Central counter, base62-encode</td><td>Zero collisions, sequential</td><td>Single point of failure. Sequential codes are predictable (security concern).</td></tr>
+        <tr><td>Range-based (Snowflake-like)</td><td>Each server gets a pre-allocated range of IDs. Base62-encode.</td><td>Zero collisions, no coordination at write time, horizontally scalable</td><td>Slightly more complex setup. Unused IDs if server dies mid-range.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Choice: Range-based ID generation.</strong> A coordination service (ZooKeeper or simple DB table) allocates ranges of 1M IDs to each application server. The server increments locally within its range — no DB round-trip per code. When the range is exhausted, it requests a new one. Zero collisions by construction. The coordinator is only hit every 1M requests, so it's not a bottleneck. Base62-encode the integer to get the short code. Tradeoff: wasted IDs if a server crashes mid-range (~0.1% waste, acceptable). Rejected: hashing — collision resolution adds latency and DB contention at our scale.</div>
+
+    <div class="schema"><span class="comment">── Range Allocation ──</span>
+<span class="table-name">id_ranges</span>
+  <span class="pk">server_id</span>      <span class="type">VARCHAR</span>
+  range_start     <span class="type">BIGINT</span>
+  range_end       <span class="type">BIGINT</span>
+  allocated_at    <span class="type">TIMESTAMP</span>
+
+<span class="comment">── When server needs new range ──</span>
+BEGIN;
+  SELECT next_available FROM global_counter FOR UPDATE;
+  UPDATE global_counter SET next_available = next_available + 1000000;
+  INSERT INTO id_ranges (server_id, range_start, range_end) ...;
+COMMIT;
+
+<span class="comment">── On server: local counter, no DB call ──</span>
+local_id = atomic_increment(current_range_counter)
+short_code = base62_encode(local_id)  <span class="comment">// e.g., 12345678 → "dnh3K"</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6"><strong style="color:var(--text)">Custom Aliases (Vanity URLs)</strong></p>
+    <ul class="items">
+      <li>User provides desired code (e.g., <code>bit.ly/my-brand</code>). Check uniqueness in DB. If taken → error. If free → insert.</li>
+      <li>Custom aliases use a separate namespace — they don't consume from the ID range. Stored in the same table with a <code>is_custom</code> flag.</li>
+      <li>Validation: alphanumeric + hyphens, 3–30 chars, no reserved words.</li>
+    </ul>
+    </div>
+
+    <div id="dd-redirect">
+    <div class="sub">Deep Dive 2: Redirect Hot Path (~8 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Serve 500K redirects/sec at peak with &lt;10ms latency. This is the path that must NEVER go down.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6"><strong style="color:var(--text)">Caching Strategy</strong></p>
+    <ul class="items">
+      <li><strong>L1: Application-local cache</strong> — in-process LRU cache (1GB per server). ~1ms. Holds the hottest 10M entries per node. Hit rate: ~70%.</li>
+      <li><strong>L2: Redis Cluster</strong> — distributed cache. ~3ms. Holds all recently-accessed entries (~50GB). Hit rate: ~99%+ after L1 miss.</li>
+      <li><strong>L3: Database</strong> — DynamoDB or sharded Postgres. ~10-20ms. Cold fallback. Should handle &lt;1% of traffic.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why two cache levels?</strong> Application-local cache avoids network round-trip entirely — critical for &lt;10ms target at 500K/sec. Redis handles the tail (L1 miss on one server doesn't mean miss everywhere). Since mappings are immutable, cache invalidation is never needed (except for deleted links, which we handle with a small bloom filter or TTL). Tradeoff: L1 uses ~1GB RAM per server and can serve stale data for deleted links until TTL expires. Acceptable because deletions are rare (&lt;0.01% of lookups).</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6"><strong style="color:var(--text)">301 vs 302 Redirect</strong></p>
+    <ul class="items">
+      <li><strong>301 (Permanent):</strong> Browser caches the redirect. Subsequent clicks never hit our servers. Great for performance, bad for analytics — we can't count clicks.</li>
+      <li><strong>302 (Temporary):</strong> Browser hits us every time. We can count every click. Slightly worse performance for the end user.</li>
+      <li><strong>Decision:</strong> Default to 302 to enable analytics. Offer 301 as an option for users who don't need analytics and want maximum performance.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why DynamoDB for the URL store?</strong> Access pattern is pure key-value: get URL by short code. DynamoDB handles this at any scale with single-digit ms reads, automatic sharding, and zero ops. At 18TB and 180B records, DynamoDB's partition-key model is perfect. Tradeoff: no complex queries (but we don't need any for the redirect path). Rejected: Cassandra (similar fit but more ops overhead), Postgres (sharding required at this scale).</div>
+    </div>
+
+    <div id="dd-analytics">
+    <div class="sub">Deep Dive 3: Click Analytics Pipeline (~7 min)</div>
+    <div class="callout goal"><strong>The core challenge:</strong> Capture 10B click events/day without slowing the redirect path. Aggregate into real-time dashboards (clicks per link, geo breakdown, device breakdown, time series).</div>
+
+    <ul class="items">
+      <li><strong>Capture:</strong> On every redirect, publish a lightweight event to Kafka: <code>{short_code, timestamp, ip, user_agent, referrer}</code>. This is fire-and-forget — doesn't block the 301/302 response.</li>
+      <li><strong>Stream processing:</strong> Kafka → Flink/Spark Streaming → aggregate by link_id, time window (1min, 1hr, 1day), geo (IP → country), device (user-agent parsing).</li>
+      <li><strong>Storage:</strong> Pre-aggregated counters in Redis (real-time) + raw events to ClickHouse/Druid (historical analytics).</li>
+      <li><strong>Query API:</strong> <code>GET /analytics/{code}?range=7d</code> → reads from pre-aggregated data. Response in &lt;200ms.</li>
+    </ul>
+
+    <div class="schema"><span class="comment">── Kafka Event ──</span>
+topic: click_events
+key: short_code (ensures ordering per link)
+value: {
+  short_code, original_url, timestamp,
+  ip, country, city,  <span class="comment">// geo resolved at ingestion</span>
+  device_type, browser, os,  <span class="comment">// parsed from user-agent</span>
+  referrer
+}
+
+<span class="comment">── Pre-aggregated Counters (Redis) ──</span>
+<span class="table-name">HASH</span> key: <span class="pk">stats:{short_code}:daily:{date}</span>
+  total_clicks: <span class="type">INT</span>
+  US: <span class="type">INT</span>, UK: <span class="type">INT</span>, ... <span class="comment">// top countries</span>
+  mobile: <span class="type">INT</span>, desktop: <span class="type">INT</span>
+
+<span class="comment">── ClickHouse (historical, columnar) ──</span>
+<span class="table-name">clicks</span>
+  short_code, timestamp, country, city,
+  device_type, browser, os, referrer
+  <span class="comment">// Partitioned by date, ordered by short_code</span>
+  <span class="comment">// Columnar compression: ~10 bytes/event after compression</span></div>
+
+    <div class="callout decision"><strong>Why ClickHouse for historical analytics?</strong> 10B events/day = ~100GB/day compressed. ClickHouse is purpose-built for high-ingestion columnar analytics — handles billions of rows with sub-second aggregation queries. Tradeoff: not great for point lookups (use Redis for that), but perfect for "show me clicks over time for link X with geo breakdown." Rejected: Elasticsearch (more expensive at this volume), Postgres (can't handle the ingestion rate).</div>
+    </div>
+
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Data Model & Storage Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Access Pattern</th><th>Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>URL Mappings</td><td>DynamoDB</td><td>Key-value by short_code. 500K reads/sec (from cache).</td><td>Strong on write, eventual read (cache)</td></tr>
+        <tr><td>Hot URL Cache</td><td>Redis Cluster + local LRU</td><td>Two-tier: local (~1ms) + Redis (~3ms). 99%+ hit rate.</td><td>Eventual (immutable data = no staleness)</td></tr>
+        <tr><td>Real-Time Stats</td><td>Redis (counters)</td><td>Increment on click. Read for dashboard.</td><td>Eventual (seconds)</td></tr>
+        <tr><td>Historical Analytics</td><td>ClickHouse</td><td>Columnar scan. Aggregate queries over time ranges.</td><td>Eventual (Kafka lag, seconds)</td></tr>
+        <tr><td>Click Events</td><td>Kafka</td><td>115K events/sec avg. Partitioned by short_code.</td><td>Ordered per partition</td></tr>
+        <tr><td>ID Ranges</td><td>PostgreSQL (small)</td><td>Allocated per server. Accessed every ~1M requests.</td><td>Strong (transactional)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>URL mappings</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>short_code → long_url. Sharded by short_code hash. The core lookup table — must be fast and durable.</td>
+      </tr>
+      <tr>
+        <td>Hot URL cache</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>90% of redirects hit &lt;1% of URLs. LRU cache with TTL. Cache miss → read-through to PostgreSQL.</td>
+      </tr>
+      <tr>
+        <td>Click events</td>
+        <td style="color:var(--accent-cyan)">Kafka → ClickHouse</td>
+        <td>Every redirect generates a click event. Kafka for durability. ClickHouse for analytics queries.</td>
+      </tr>
+      <tr>
+        <td>User accounts &amp; API keys</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Relational data. API key → user mapping. Rate limit counters per key.</td>
+      </tr>
+      <tr>
+        <td>Link metadata</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Custom aliases, tags, expiration dates, QR codes. Lower traffic than redirect path.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Redis cluster node down</span><span class="mitigation">L1 local cache still serves ~70% of traffic. Redis cluster auto-failover. DB handles the rest. Redirect latency increases from ~5ms to ~15ms temporarily.</span></div>
+    <div class="failure-row"><span class="scenario">DynamoDB throttling</span><span class="mitigation">DAX (DynamoDB Accelerator) as an intermediate cache. Auto-scaling on DynamoDB table. Cache covers 99%+ — DB throttling only affects cache misses.</span></div>
+    <div class="failure-row"><span class="scenario">ID range coordinator down</span><span class="mitigation">Each server has a buffer of ~500K unused IDs. Coordinator being down means no NEW range allocation, but existing servers continue creating links for hours. Fix before buffer exhausted.</span></div>
+    <div class="failure-row"><span class="scenario">Kafka down (analytics)</span><span class="mitigation">Redirects still work — analytics events are dropped. Buffer in application memory briefly, log to disk as fallback. Analytics is degraded, not the core redirect path.</span></div>
+    <div class="failure-row"><span class="scenario">Abuse (spam links, phishing)</span><span class="mitigation">URL scanning on creation (Google Safe Browsing API). Rate limiting per API key. Interstitial warning page for flagged links. Bulk takedown API for abuse team.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> The redirect path is the critical scaling dimension: 100:1 read-to-write ratio, with redirects requiring &lt;10ms latency. The Redis cache is the first line of defense — popular links (which follow a power law distribution) are served entirely from cache. Cache hit rate is typically &gt;95%. For the remaining 5% (cache misses), PostgreSQL reads are fast because the lookup is a simple primary key query on a sharded table. Sharding is by short_code hash, distributing evenly across shards. Write path (link creation) is much less demanding and writes to a single shard. For analytics, the click stream is inherently append-only and scales horizontally in Kafka (partitioned by short_code) and ClickHouse (partitioned by date). The global deployment uses GeoDNS to route users to the nearest redirect endpoint — a user in Tokyo hits the Tokyo PoP, not a US server. Each PoP maintains its own Redis cache, pre-warmed with globally popular URLs.</div>
+
+    <div class="sub">Security</div>
+    <ul class="items">
+      <li><strong>Link preview:</strong> Add <code>+</code> suffix to any short URL to see destination without redirecting (e.g., <code>bit.ly/abc1234+</code>).</li>
+      <li><strong>Malware/phishing scanning:</strong> Check destination URL against Safe Browsing API at creation time. Periodic re-scan for existing links.</li>
+      <li><strong>Rate limiting:</strong> 100 URLs/min per API key for creation. No rate limit on redirects (public).</li>
+      <li><strong>Enumeration protection:</strong> Short codes are base62-encoded integers, but ranges are non-sequential per server. Not easily enumerable. Custom aliases are user-chosen → not predictable.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> Core SLOs: redirect latency p99 &lt;50ms (the product IS the redirect), redirect availability 99.99% (broken links damage customer trust), click analytics freshness &lt;60 seconds (enterprise customers track campaigns in real-time). Monitored per PoP: if Tokyo redirect latency degrades, traffic can be rerouted to Osaka. The Redis cache hit rate is a leading indicator — if it drops below 90%, it signals either a cache sizing issue or a traffic pattern change. Link creation has a separate SLO: p99 &lt;500ms, which is more relaxed since creation is not time-critical. Alerting: (1) redirect error rate &gt;0.1% → P1, (2) cache hit rate &lt;85% → P2, (3) analytics pipeline lag &gt;5 minutes → P3. Error budget is tracked weekly — each team owns their SLO and can &quot;spend&quot; error budget on risky deploys.</div>
+
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: this system exploits one key property — URL mappings are immutable. This makes it the most cache-friendly system you can design. The architecture is a two-tier cache (local LRU + Redis) in front of DynamoDB, with range-based ID generation for zero-collision code creation. Analytics is fully decoupled via Kafka → ClickHouse, so the redirect hot path stays under 10ms. The entire redirect path is stateless and horizontally scalable — just add more servers behind the load balancer."</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Link-in-bio pages</td><td>New entity type (page → list of links). Different read pattern (render page vs. redirect).</td></tr>
+        <tr><td>A/B testing (split URLs)</td><td>Redirect service needs routing rules per link. Short code maps to multiple destinations with traffic weights.</td></tr>
+        <tr><td>Geo-targeted redirects</td><td>IP → country lookup at redirect time. Route to different URLs per geo. Slight latency increase.</td></tr>
+        <tr><td>Deep link support (mobile)</td><td>User-agent detection at redirect. Route to app store or app deep link vs. web URL.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Closing framing:</strong> This design is defined by immutability. URL mappings never change, which eliminates cache invalidation and allows infinite-TTL caching. The entire system is designed around this property: two-tier caching for reads, range-based IDs for writes, and async analytics to avoid polluting the redirect hot path.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you generate globally unique short codes without a centralized counter?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">We use a combination of techniques depending on the link type. For auto-generated codes: each API server has a pre-allocated range of IDs from a central sequence (similar to Twitter Snowflake). Server A gets IDs 1-1M, Server B gets 1M-2M. Within its range, each server increments locally — no coordination needed. The ID is Base62-encoded to produce a short string. For custom aliases (vanity URLs like bit.ly/my-brand), we do a uniqueness check against PostgreSQL. This requires a distributed lock or a unique constraint on the short_code column — we use the DB constraint because custom aliases are rare (maybe 1% of link creations). The pre-allocated range approach means we can create links at high throughput without a centralized bottleneck, and the ranges are large enough that a server running out and needing a new range is infrequent.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What's your cache invalidation strategy when a link is edited or deleted?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">We use a write-through cache pattern: when a link is updated in PostgreSQL (URL changed, link disabled, expiration set), the same API call also updates or invalidates the Redis cache entry. For link deletion/disabling, we set a &quot;tombstone&quot; in Redis: the key still exists but maps to a 404/410 response. This prevents the deleted link from falling through to PostgreSQL (which would also return nothing, but with higher latency). The tombstone has a 24-hour TTL — after that, requests for the deleted code hit PostgreSQL (which returns nothing) and are not cached (negative caching with short TTL to handle re-creation). For global cache consistency across PoPs: updates are published to a Kafka topic, and each PoP's cache subscriber invalidates locally. This means there's a brief window (typically &lt;2 seconds) where a link edit in one region is stale in another. For the redirect use case, this is acceptable — a 2-second window of serving the old URL is harmless.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

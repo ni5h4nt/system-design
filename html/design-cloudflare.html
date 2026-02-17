@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Cloudflare — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Cloudflare</h1><span>CDN / Edge / Security · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-anycast">Anycast & Request Routing</a>
+  <a href="#dd-cache">Caching & Tiered Cache</a>
+  <a href="#dd-security">WAF & DDoS Mitigation</a>
+  <a href="#dd-edge">Edge Compute (Workers)</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a global reverse-proxy platform like Cloudflare. When a user visits a customer's website, the request hits our edge network first — the nearest data center resolves DNS, terminates TLS, applies security rules (WAF, DDoS protection, bot management), serves cached content if possible, and only forwards to the origin server on a cache miss. This is an INFRASTRUCTURE system that sits between every user and every origin — a transparent proxy for the entire web."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ For CDN: cache hit ratio (% of requests served from edge without hitting origin). For security: attack mitigation rate (% of malicious requests blocked). For both: latency reduction vs. direct-to-origin. This tells us the system's value is KEEPING TRAFFIC AT THE EDGE — every request that reaches the origin is a partial failure. Architecture must minimize origin touches.</em></li>
+      <li><strong>Core product?</strong> CDN only, or also DNS, security, and edge compute? <em>→ Full stack: DNS + CDN + WAF + DDoS + edge compute (Workers). All run on the same edge infrastructure.</em></li>
+      <li><strong>Deployment model?</strong> <em>→ Every service runs on every server in every data center. NOT specialized clusters per function.</em></li>
+      <li><strong>How do customers onboard?</strong> <em>→ Change DNS nameservers to Cloudflare. We become the authoritative DNS AND the reverse proxy. All traffic flows through us.</em></li>
+      <li><strong>Scale?</strong> <em>→ 330+ data centers globally, ~50M HTTP requests/sec, ~25M DNS queries/sec, protecting ~25M customer domains.</em></li>
+      <li><strong>DDoS scale?</strong> <em>→ Must absorb multi-Tbps attacks without impacting other customers.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>DNS resolution (authoritative)</td><td>Domain registrar</td></tr>
+        <tr><td>Anycast request routing</td><td>Email routing internals</td></tr>
+        <tr><td>TLS termination at edge</td><td>Certificate authority operations</td></tr>
+        <tr><td>CDN caching (+ tiered cache)</td><td>Object storage (R2) internals</td></tr>
+        <tr><td>WAF / DDoS protection</td><td>Zero Trust / SASE product</td></tr>
+        <tr><td>Edge compute (Workers)</td><td>Billing / customer dashboard</td></tr>
+        <tr><td>Origin connection (Tunnels)</td><td>Stream video product</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1:</strong> User in Tokyo requests <code>example.com/image.png</code> → DNS resolves to nearest DC via anycast → edge cache HIT → served in &lt;50ms. Origin never touched.</li>
+      <li><strong>UC2:</strong> Cache MISS → edge forwards to origin (or tiered cache parent) → response cached at edge → served to user. Subsequent requests from that region served from cache.</li>
+      <li><strong>UC3:</strong> DDoS attack sends 5 Tbps of traffic at a customer → anycast distributes across 330 DCs → each DC absorbs its share → attack mitigated at the edge, origin unaffected.</li>
+      <li><strong>UC4:</strong> Customer deploys a Cloudflare Worker → user request executes custom JavaScript at the edge DC closest to the user → sub-millisecond cold start, no origin needed.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Latency:</strong> &lt;50ms for cached content (edge → user). Within 50ms of ~95% of the world's Internet-connected population.</li>
+      <li><strong>Availability:</strong> If one DC goes down, anycast automatically routes traffic to the next nearest DC. Zero customer-visible downtime.</li>
+      <li><strong>Multi-tenancy:</strong> Millions of customers share the same infrastructure. One customer's DDoS attack must not impact another customer's performance.</li>
+      <li><strong>Homogeneous edge:</strong> Every service runs on every server. No specialized "cache servers" vs "WAF servers." This is a fundamental architectural principle.</li>
+      <li><strong>Configuration propagation:</strong> When a customer changes a WAF rule, it must propagate to all 330 DCs within seconds.</li>
+    </ul>
+
+    <div class="callout tip">The defining insight of this system: it's NOT a traditional application. It's a NETWORK-LAYER PROXY that sits in the data path of the entire Internet. The architecture is dominated by BGP anycast routing, edge-local processing (no centralized anything on the hot path), and the challenge of distributing configuration globally in near-real-time.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Data Centers</div><div class="value">330+</div><div class="detail">Located at IXPs globally. Each DC: hundreds to thousands of servers.</div></div>
+      <div class="est-card"><div class="label">HTTP Requests / Sec</div><div class="value">~50M</div><div class="detail">~4.3T requests/day. Per-DC avg: ~150K req/sec. Large DCs: millions/sec.</div></div>
+      <div class="est-card"><div class="label">DNS Queries / Sec</div><div class="value">~25M</div><div class="detail">Authoritative DNS for ~25M domains. Must respond &lt;10ms.</div></div>
+      <div class="est-card"><div class="label">Bandwidth</div><div class="value">~200+ Tbps capacity</div><div class="detail">Network capacity to absorb largest DDoS attacks. Normal traffic: ~50 Tbps.</div></div>
+      <div class="est-card"><div class="label">Customer Domains</div><div class="value">~25M</div><div class="detail">Each with unique config: cache rules, WAF rules, DNS records, Workers.</div></div>
+      <div class="est-card"><div class="label">Config Data Per Domain</div><div class="value">~10-50 KB</div><div class="detail">25M × 50KB = ~1.25 TB of config. Must be replicated to every DC.</div></div>
+      <div class="est-card"><div class="label">Cache Storage Per DC</div><div class="value">~50-500 TB</div><div class="detail">SSD-backed. Varies by DC size. Hot content cached locally.</div></div>
+      <div class="est-card"><div class="label">TLS Handshakes / Sec</div><div class="value">~10M</div><div class="detail">Every HTTPS request needs TLS. Session resumption critical for performance.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> 50M HTTP req/sec is impossible to serve from ANY centralized system. Every request MUST be handled entirely at the edge DC. The hot path (DNS → TLS → WAF → Cache → response) touches ZERO centralized infrastructure. This is the defining architectural constraint.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> 1.25 TB of customer config must exist at ALL 330 DCs. Config propagation is a distributed systems problem: changes must reach every DC in seconds, but the system must be eventually consistent (a few-second delay is acceptable).</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> DDoS attacks are absorbed by the network topology itself. Anycast means attack traffic is automatically distributed across all 330 DCs. Each DC only sees 1/330th of the attack. This is defense BY ARCHITECTURE, not by firewall rules.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The key architectural principle is: every service runs on every server. There are no specialized roles. A single request flows through a pipeline of services — DNS, TLS, WAF, cache, Workers — all on the same machine. Let me walk through the full request lifecycle."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Survive any single DC failure</td><td style="color:var(--accent-cyan);font-weight:500">BGP Anycast across 330+ DCs</td><td>Dead DC stops announcing BGP route → traffic auto-routes to next nearest DC. No DNS change, no failover script.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Edge compute with multi-tenant isolation</td><td style="color:var(--accent-cyan);font-weight:500">V8 isolates (not containers)</td><td>5ms cold start, &lt;1MB memory. Containers: 500ms start, 50MB. At 10K tenants/server, containers are 100x more expensive.</td><td>—</td></tr>
+      <tr><td>DDoS mitigation at Tbps scale</td><td style="color:var(--accent-cyan);font-weight:500">Distributed across all DCs (not centralized scrubbing)</td><td>1Tbps attack / 330 DCs = 3Gbps per DC — manageable. Centralized scrubbing creates a bottleneck and single point of failure.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Config changes to 330 DCs in &lt;5 seconds</td><td style="color:var(--accent-cyan);font-weight:500">Custom KV distribution (not database replication)</td><td>Purpose-built push system over persistent TCP. Database consensus across 330 nodes would take minutes, not seconds.</td><td style="color:var(--accent-orange);font-weight:600">AP (eventual, &lt;5s)</td></tr>
+      <tr><td>Cache must serve during origin failure</td><td style="color:var(--accent-cyan);font-weight:500">Serve stale on origin error</td><td>Better to show a 5-minute-old page than an error page. Cache-Control: stale-while-revalidate pattern.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Every request inspected for attacks</td><td style="color:var(--accent-cyan);font-weight:500">WAF in hot path (compiled Lua/Rust rules)</td><td>Rule evaluation must add &lt;1ms latency. Interpreted regex would add 10-50ms. Compiled rules are pre-optimized at deploy time.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Edge Data Center Architecture (per DC)</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 456" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_8886" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_8886h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE DATA CENTER (330+ DCs)</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CONFIGURATION PLANE</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(247,120,186,.02)" stroke="rgba(247,120,186,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#f778ba" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EXTERNAL</text>
+    <line x1="390" y1="94" x2="105" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <line x1="105" y1="154" x2="219" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <line x1="105" y1="154" x2="333" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <line x1="333" y1="154" x2="447" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <line x1="447" y1="154" x2="561" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <line x1="447" y1="154" x2="675" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <line x1="561" y1="194" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" stroke-dasharray="4 3" opacity=".5"/>
+    <text x="479" y="272" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">miss</text>
+    <line x1="456" y1="254" x2="324" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_8886)" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="78" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👤 End User</text>
+    <rect class="svg-node" x="55" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="105" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 BGP Anycast</text>
+    <text x="105" y="184" fill="#6e7681" font-size="8" text-anchor="middle">nearest DC routing</text>
+    <rect class="svg-node" x="169" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="219" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">📡 DNS Resolver</text>
+    <text x="219" y="184" fill="#6e7681" font-size="8" text-anchor="middle">authoritative + recursive</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🔒 TLS Termination</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">cert management</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🛡️ WAF / DDoS</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">rule engine</text>
+    <rect class="svg-node" x="511" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="561" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">📦 Cache Engine</text>
+    <text x="561" y="184" fill="#6e7681" font-size="8" text-anchor="middle">tiered cache</text>
+    <rect class="svg-node" x="625" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="675" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">⚡ Workers</text>
+    <text x="675" y="184" fill="#6e7681" font-size="8" text-anchor="middle">V8 isolates</text>
+    <rect class="svg-node" x="265" y="254" width="118" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="324" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">⚙️ Config Store</text>
+    <text x="324" y="284" fill="#6e7681" font-size="8" text-anchor="middle">KV replication</text>
+    <rect class="svg-node" x="397" y="254" width="118" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="456" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔗 Central API</text>
+    <text x="456" y="284" fill="#6e7681" font-size="8" text-anchor="middle">customer dashboard</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="390" y="371" fill="#f778ba" font-size="10" font-weight="600" text-anchor="middle">🏠 Origin Server</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">customer infrastructure</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🌐 BGP Anycast Router <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">NETWORK</span></h4>
+        <ul>
+          <li>Announces same IP from all 330 DCs</li>
+          <li>BGP routing sends traffic to nearest DC</li>
+          <li>Layer 3/4 DDoS mitigation (hardware)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📡 DNS Resolver <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">EDGE</span></h4>
+        <ul>
+          <li>Authoritative DNS for customer domains</li>
+          <li>Returns anycast IP for customer's site</li>
+          <li>DNSSEC signing, GeoDNS</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔒 TLS Termination <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">EDGE</span></h4>
+        <ul>
+          <li>Terminate TLS at edge (not origin)</li>
+          <li>Session resumption, 0-RTT</li>
+          <li>Automatic certificate management (Let's Encrypt)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🛡️ WAF / Security Pipeline <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">EDGE</span></h4>
+        <ul>
+          <li>Managed rulesets + custom rules</li>
+          <li>Rate limiting, bot management</li>
+          <li>Layer 7 DDoS detection</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📦 Cache Engine <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">EDGE</span></h4>
+        <ul>
+          <li>SSD-backed content cache</li>
+          <li>Cache rules per customer domain</li>
+          <li>Tiered cache (edge → regional → origin)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚡ Workers Runtime <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">EDGE</span></h4>
+        <ul>
+          <li>V8 isolates (not containers)</li>
+          <li>Execute customer JS at the edge</li>
+          <li>Sub-ms cold start, per-request isolation</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔗 Origin Connector <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">EDGE</span></h4>
+        <ul>
+          <li>HTTP/2 connection pooling to origins</li>
+          <li>Cloudflare Tunnel (encrypted tunnels)</li>
+          <li>Argo Smart Routing (fastest path)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚙️ Config Store (local) <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">EDGE</span></h4>
+        <ul>
+          <li>Local replica of all customer configs</li>
+          <li>Updated via global config propagation</li>
+          <li>In-memory + SSD. Hot-path lookups &lt;1ms.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Full Request Lifecycle (cache HIT)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 436" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9664" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="121" y="40" width="319" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User in Tokyo</text>
+    <line x1="280" y1="84" x2="280" y2="138" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9664)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. DNS: look up example.com → return anycast IP 104.16.x.x</text>
+    <rect class="svg-node" x="113" y="140" width="334" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="168" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Nearest DC (Tokyo)</text>
+    <line x1="280" y1="184" x2="280" y2="222" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9664)"/>
+    <rect class="svg-node" x="134" y="224" width="292" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="252" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <line x1="280" y1="268" x2="280" y2="370" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9664)"/>
+    <text x="296" y="284" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. TLS: terminate TLS (session resumption → 0-RTT)</text>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. Config lookup: load example.com&#x27;s rules from local config stor</text>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. WAF: evaluate request against managed + custom rules → PASS</text>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">5. Rate limiter: check per-IP / per-path counters → PASS</text>
+    <rect class="svg-node" x="121" y="372" width="319" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="400" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Same Tokyo DC</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Cache MISS with Tiered Cache</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Cache MISS with Tiered Cache</span>
+  <svg viewBox="0 0 560 616" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a241" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <line x1="280" y1="84" x2="280" y2="186" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a241)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Steps 2-6 same as above → PASS all security</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">7. Cache lookup → MISS</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Without tiered cache: go directly to origin</text>
+    <text x="296" y="148" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">With tiered cache:</text>
+    <rect class="svg-node" x="118" y="188" width="325" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="216" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Edge DC (Tokyo)</text>
+    <line x1="280" y1="232" x2="280" y2="302" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a241)"/>
+    <text x="296" y="248" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Cache lookup in regional hub → HIT? Return to edge DC.</text>
+    <text x="296" y="264" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">MISS? →</text>
+    <rect class="svg-node" x="100" y="304" width="361" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="332" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Regional Tier (e.g., Osaka)</text>
+    <line x1="280" y1="348" x2="280" y2="418" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a241)"/>
+    <text x="296" y="364" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Cache lookup in upper-tier DC → HIT? Return up the chain.</text>
+    <text x="296" y="380" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">MISS? → Forward to origin server</text>
+    <rect class="svg-node" x="98" y="420" width="364" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="448" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Upper Tier (e.g., Singapore)</text>
+    <line x1="280" y1="464" x2="280" y2="550" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a241)"/>
+    <text x="296" y="480" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Response flows back: origin → upper tier (cache) → regional (cach</text>
+    <text x="296" y="496" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">All three tiers now have the content cached.</text>
+    <text x="296" y="512" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Benefit: origin only hit ONCE for all 330 DCs, not once per DC.</text>
+    <rect class="svg-node" x="121" y="552" width="319" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="570" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Origin Server</text>
+    <text x="280" y="586" fill="#6e7681" font-size="9" text-anchor="middle">customer&#x27;s infrastructure</text>
+  </svg>
+</div>
+
+    <div class="sub">Control Plane (NOT on the hot path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Control Plane (NOT on the hot path)</span>
+  <svg viewBox="0 0 560 620" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1521" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="113" y="40" width="334" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Customer Dashboard</text>
+    <line x1="280" y1="84" x2="280" y2="154" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Validate rule, persist to central config DB</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Push config delta to global distribution system</text>
+    <rect class="svg-node" x="121" y="156" width="319" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="184" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API (Central)</text>
+    <line x1="280" y1="200" x2="280" y2="238" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <rect class="svg-node" x="83" y="240" width="394" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="268" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Config Distribution (Quicksilver-like)</text>
+    <line x1="280" y1="284" x2="280" y2="322" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <rect class="svg-node" x="134" y="324" width="292" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="352" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">DC 1</text>
+    <line x1="280" y1="368" x2="280" y2="422" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="384" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">...</text>
+    <rect class="svg-node" x="134" y="424" width="292" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="452" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">DC 2</text>
+    <line x1="280" y1="468" x2="280" y2="554" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="484" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Each DC updates its local config store</text>
+    <text x="296" y="500" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Next request to this domain uses the new rule</text>
+    <text x="296" y="516" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Propagation target: &lt;5 seconds to all 330 DCs globally.</text>
+    <rect class="svg-node" x="131" y="556" width="298" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="584" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">DC 330</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The most architecturally interesting pieces: (1) How anycast + BGP gives us automatic failover and DDoS absorption. (2) How tiered caching dramatically reduces origin load. (3) How the WAF pipeline processes 50M req/sec with per-customer rules. (4) How Workers runs arbitrary customer code at the edge safely."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-anycast">
+    <div class="sub">Deep Dive 1: Anycast & Request Routing (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Route every request to the nearest data center with zero client-side configuration. Handle DC failures transparently. Distribute DDoS attack traffic evenly.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">How Anycast Works</strong></p>
+    <ul class="items">
+      <li><strong>Same IP, everywhere:</strong> Every Cloudflare DC announces the SAME IP prefix (e.g., 104.16.0.0/12) via BGP to all upstream ISPs. When a user sends a packet to 104.16.x.x, BGP routing naturally delivers it to the topologically nearest DC.</li>
+      <li><strong>No client configuration:</strong> The user's ISP's routing table picks the best path. No DNS tricks, no client-side logic. Works at the IP layer.</li>
+      <li><strong>Automatic failover:</strong> If a DC goes offline, it stops announcing its BGP routes. Within seconds (~30-90s for BGP convergence), all traffic is re-routed to the next nearest DC. No customer impact beyond brief increased latency.</li>
+      <li><strong>DDoS by architecture:</strong> A 5 Tbps attack aimed at one IP gets distributed across all DCs announcing that IP. Each DC absorbs ~15 Gbps (5Tbps / 330 DCs) — well within capacity. No single DC is overwhelmed.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why anycast over GeoDNS?</strong> GeoDNS (returning different IPs per region) works but has major flaws: (1) DNS TTLs mean failover takes minutes, not seconds. (2) Client DNS resolvers may not be near the client (e.g., Google 8.8.8.8). (3) DNS-based routing can't split TCP connections mid-flow. Anycast operates at the IP layer — failover is handled by BGP, not DNS TTLs. Tradeoff: anycast can cause "flapping" (traffic bouncing between DCs during BGP changes) and doesn't handle TCP connection migration gracefully. Mitigated with Anycast TCP stabilization techniques (ECMP hashing, flow pinning).</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Onboarding: How a Customer Joins</strong></p>
+    <div class="schema"><span class="comment">── Customer Onboarding Flow ──</span>
+
+1. Customer adds <span class="pk">example.com</span> to Cloudflare
+2. Cloudflare scans existing DNS records, imports them
+3. Customer changes their domain's nameservers to:
+     <span class="pk">ns1.cloudflare.com</span>  /  <span class="pk">ns2.cloudflare.com</span>
+4. Now ALL DNS queries for example.com are resolved by Cloudflare
+5. Cloudflare returns its own anycast IPs as A/AAAA records
+6. ALL HTTP traffic to example.com flows through Cloudflare
+7. Cloudflare proxies to the customer's origin server
+
+<span class="comment">Result: Cloudflare is now the reverse proxy for all of example.com's traffic.</span>
+<span class="comment">Customer's origin IP is hidden from the public Internet.</span></div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-cache">
+    <div class="sub">Deep Dive 2: Caching & Tiered Cache (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Cache content at 330 DCs to serve 50M req/sec, while respecting per-customer cache rules (TTL, cache keys, purge) and minimizing origin load. A popular website shouldn't need its origin hit 330 times for the same asset.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Cache Architecture</strong></p>
+
+    <table>
+      <thead><tr><th>Layer</th><th>Location</th><th>Purpose</th><th>Cache Hit Rate</th></tr></thead>
+      <tbody>
+        <tr><td>L1: Hot (RAM)</td><td>Each server</td><td>Most frequently accessed objects. Latency: &lt;1ms.</td><td>~40-60%</td></tr>
+        <tr><td>L2: Warm (SSD)</td><td>Each server</td><td>Larger working set. Latency: ~1-5ms.</td><td>+20-30%</td></tr>
+        <tr><td>L3: Tiered Cache</td><td>Regional hub DC</td><td>Shared cache for a region's edge DCs. Avoid hitting origin.</td><td>+10-15%</td></tr>
+        <tr><td>L4: Cache Reserve</td><td>R2 (object store)</td><td>Persistent cache. Survives eviction. Eliminates origin egress.</td><td>+5%</td></tr>
+        <tr><td>MISS</td><td>Origin server</td><td>Only reached on full cache miss through all tiers.</td><td>~5-10% of requests</td></tr>
+      </tbody>
+    </table>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Tiered Cache Topologies</strong></p>
+    <ul class="items">
+      <li><strong>Standard (flat):</strong> Each DC acts as a direct reverse proxy. Cache miss → origin. Simple but origin gets hammered (up to 330 concurrent requests for the same asset).</li>
+      <li><strong>Smart Tiered Cache:</strong> Cloudflare automatically selects regional "parent" DCs based on latency. Cache miss at edge → check parent → check upper tier → origin. Origin hit only ONCE, then content fans out through the hierarchy.</li>
+      <li><strong>Custom topology:</strong> Enterprise customers can define their own tier structure (e.g., "always check Singapore before hitting my origin in US-East").</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why tiered cache, not just longer TTLs?</strong> Long TTLs reduce origin hits but make purging slow and stale content more visible. Tiered cache gives the same origin-protection benefit while keeping TTLs short at the edge. A 5-second edge TTL with tiered cache is better than a 1-hour edge TTL without it: you get freshness AND origin protection. Tradeoff: tiered cache adds one network hop (edge → parent DC), adding ~10-50ms latency on the FIRST miss. Subsequent requests are served from parent cache at edge speeds.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Cache Purge</strong></p>
+    <ul class="items">
+      <li><strong>Single URL purge:</strong> Customer sends API call → purge propagated to all 330 DCs via config distribution → each DC evicts that URL from local cache. Takes &lt;5 seconds globally.</li>
+      <li><strong>Purge by tag/prefix:</strong> Customer tags cached objects (e.g., <code>Cache-Tag: product-123</code>). Purge by tag evicts all objects with that tag across all DCs.</li>
+      <li><strong>Purge everything:</strong> Nuclear option. Evicts ALL cached content for a domain. Origin hit rate spikes to 100% temporarily — must handle the thundering herd.</li>
+      <li><strong>Thundering herd mitigation (coalescing):</strong> When a popular object is purged and 1,000 concurrent requests arrive, only ONE request goes to origin. The rest wait for the first response, which is then served to all waiting requests. Critical for preventing origin overload after purge.</li>
+    </ul>
+
+    <div class="callout tip"><strong>Cache key:</strong> By default: scheme + host + path + query string. Customers can customize: include/exclude query params, include headers (e.g., <code>Accept-Language</code> for localized content), include cookies. Custom cache keys enable powerful caching strategies (e.g., cache different versions for mobile vs. desktop).</div>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-security">
+    <div class="sub">Deep Dive 3: WAF & DDoS Mitigation (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Evaluate every HTTP request against security rules at 50M req/sec. Detect and mitigate DDoS attacks at both the network layer (L3/4) and application layer (L7). Multi-tenant: one customer's attack must not impact another.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Security Pipeline (per request)</strong></p>
+    <div class="schema"><span class="comment">── Security evaluation order (per request, &lt;1ms total) ──</span>
+
+1. <span class="pk">IP reputation check</span>    → known bad IP? block immediately.
+2. <span class="pk">L7 DDoS fingerprint</span>    → matches known attack pattern? challenge/block.
+3. <span class="pk">Rate limiting</span>           → exceeds per-IP/per-path threshold? 429.
+4. <span class="pk">Bot management</span>         → classify: verified bot / likely bot / human.
+                              JS challenge, CAPTCHA, or allow.
+5. <span class="pk">Managed WAF rules</span>      → OWASP top 10: SQLi, XSS, SSRF, etc.
+                              ~200 rules evaluated via compiled ruleset.
+6. <span class="pk">Custom WAF rules</span>       → customer's rules (Wireshark-like expression language).
+7. <span class="pk">Transform rules</span>        → URL rewrites, header modifications.
+
+<span class="comment">All steps run in-process, in-memory. No network calls.</span>
+<span class="comment">Managed rules are pre-compiled into an optimized matching engine</span>
+<span class="comment">(not evaluated rule-by-rule — that would be too slow at 50M req/sec).</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">DDoS Mitigation Architecture</strong></p>
+    <table>
+      <thead><tr><th>Layer</th><th>Attack Type</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>L3/4 (Network)</td><td>SYN floods, UDP floods, amplification</td><td>Hardware-level filtering at edge routers (XDP/eBPF on Linux kernel). Drops packets BEFORE they reach application layer. Anycast distributes volume.</td></tr>
+        <tr><td>L7 (Application)</td><td>HTTP floods, slowloris, credential stuffing</td><td>Behavioral analysis: requests/sec per IP, request patterns, JS challenges. Machine learning on traffic patterns across all customers (collective intelligence).</td></tr>
+        <tr><td>DNS</td><td>DNS amplification, query floods</td><td>Anycast DNS infrastructure. Rate limiting per source IP. Response rate limiting (RRL).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why collective intelligence (cross-customer signals)?</strong> If an IP is attacking one customer, it's likely malicious for others too. Every request to every customer updates a global threat model. An IP flagged as attacking site A is pre-emptively rate-limited on site B. This is a massive advantage of multi-tenancy: 25M domains contribute to a shared defense. Tradeoff: false positives (an IP blocked for one site might be legitimate for another). Mitigated with per-customer override rules and graduated responses (challenge before block).</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-edge">
+    <div class="sub">Deep Dive 4: Edge Compute — Workers (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Execute arbitrary customer JavaScript at the edge with sub-millisecond cold starts, per-request isolation between customers, and no shared state contamination. At 50M req/sec, we can't afford container-based isolation.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">V8 Isolate Architecture</strong></p>
+    <ul class="items">
+      <li><strong>NOT containers:</strong> Containers have ~50-500ms cold start. Unacceptable for edge latency targets. Instead, use V8 isolates — the same technology that creates separate contexts in Chrome tabs.</li>
+      <li><strong>Per-request isolation:</strong> Each Worker invocation runs in its own V8 isolate. Memory is not shared between customers. An isolate for Customer A cannot access Customer B's data.</li>
+      <li><strong>Cold start: &lt;5ms.</strong> V8 isolates spin up 100x faster than containers. Many are pre-warmed (kept alive between requests to the same Worker).</li>
+      <li><strong>Resource limits:</strong> CPU time: 50ms per request (free tier), 30s (paid). Memory: 128MB per isolate. No filesystem access. Network: only outbound fetch().</li>
+      <li><strong>Execution model:</strong> Worker intercepts request BEFORE cache lookup. Can rewrite request, generate response, or pass through to cache/origin. This makes Workers a programmable proxy layer.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why V8 isolates over containers or VMs?</strong> At 50M req/sec across millions of Workers, we need microsecond-level isolation switching. Containers need full OS-level isolation (cgroups, namespaces) → heavy. VMs even heavier. V8 isolates share a single process but have strong memory isolation within V8's sandbox. Tradeoff: limited to JavaScript/WASM (no arbitrary binaries), constrained resource limits (no filesystem, limited CPU). For most edge use cases (request routing, header modification, A/B testing, auth), this is sufficient.</div>
+
+    <div class="schema"><span class="comment">── Where Workers Fit in the Request Pipeline ──</span>
+
+Request arrives → TLS → Config lookup → <span class="pk">Worker executes</span> → WAF → Cache → Origin
+                                         <span class="arrow">│</span>
+                  Worker can:
+                  • <span class="fk">return response</span> (skip cache + origin entirely)
+                  • <span class="fk">modify request</span> (rewrite URL, add headers) → continue pipeline
+                  • <span class="fk">fetch()</span> sub-requests (to origin, other APIs, or other Workers)
+                  • <span class="fk">read/write KV</span> (global key-value store, eventually consistent)
+                  • <span class="fk">read/write Durable Objects</span> (strongly consistent, single-writer)</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Cached content</td>
+        <td style="color:var(--accent-cyan)">Local SSD (per DC)</td>
+        <td>LRU cache of HTTP responses. Key = URL + Vary headers. Tiered: hot (memory) → warm (SSD). Eviction under memory pressure.</td>
+      </tr>
+      <tr>
+        <td>Configuration</td>
+        <td style="color:var(--accent-cyan)">KV Store (replicated)</td>
+        <td>Customer rules, DNS zones, WAF policies. Replicated to all 330+ DCs within seconds via Quicksilver-like system.</td>
+      </tr>
+      <tr>
+        <td>Workers KV</td>
+        <td style="color:var(--accent-cyan)">Distributed KV</td>
+        <td>Key-value store accessible from Workers. Eventually consistent globally. Used by customers for edge state.</td>
+      </tr>
+      <tr>
+        <td>DNS zones</td>
+        <td style="color:var(--accent-cyan)">In-memory per DC</td>
+        <td>Authoritative DNS records loaded at startup and updated via config push. Must be in memory for sub-ms response.</td>
+      </tr>
+      <tr>
+        <td>Analytics &amp; logs</td>
+        <td style="color:var(--accent-cyan)">ClickHouse (central)</td>
+        <td>Request logs aggregated centrally. Not on hot path — shipped async. Powers the customer analytics dashboard.</td>
+      </tr>
+      <tr>
+        <td>TLS certificates</td>
+        <td style="color:var(--accent-cyan)">Local disk per DC</td>
+        <td>Customer SSL certs cached locally. Fetched from central store on first request and cached. Auto-renewed.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Entire DC goes offline</span><span class="mitigation">DC stops announcing BGP routes. Within 30-90 seconds, all traffic re-routes to next nearest DC via BGP convergence. Users experience brief latency increase, not outage. Cache is cold at the new DC — origin load spikes temporarily.</span></div>
+    <div class="failure-row"><span class="scenario">Origin server goes down</span><span class="mitigation">"Always Online" mode: serve stale cached content with a warning header. For uncached paths, return a custom error page. Cloudflare Tunnel health checks detect origin failure within seconds.</span></div>
+    <div class="failure-row"><span class="scenario">Config propagation failure</span><span class="mitigation">DC continues serving with its LAST KNOWN config. Eventually consistent — customer's new rule might take longer to apply at this DC. Alert on propagation delay. Doesn't break serving.</span></div>
+    <div class="failure-row"><span class="scenario">Cache poisoning attempt</span><span class="mitigation">Cache keys are normalized (lowercase, sorted query params). Host header validation prevents cross-domain poisoning. Vary header support ensures correct content per variant. Cache-Tag purging enables surgical cleanup if poisoning detected.</span></div>
+    <div class="failure-row"><span class="scenario">5 Tbps DDoS attack</span><span class="mitigation">Anycast distributes: 5Tbps / 330 DCs = ~15 Gbps per DC. L3/4 mitigation (XDP/eBPF) drops flood packets at kernel level. L7 fingerprinting blocks application-layer floods. Cross-customer threat intelligence blocks known-bad IPs proactively.</span></div>
+    <div class="failure-row"><span class="scenario">Worker script has a bug (infinite loop)</span><span class="mitigation">CPU time limit enforced (50ms/request). V8 terminates isolate on timeout. Request falls back to default behavior (pass to cache/origin). Customer notified via dashboard.</span></div>
+    <div class="failure-row"><span class="scenario">Thundering herd after purge</span><span class="mitigation">Request coalescing: first miss triggers origin fetch, all concurrent requests for the same key wait for that single response. Stale-while-revalidate: serve stale content while fetching fresh in background.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Cloudflare's scaling model is fundamentally different from traditional backends: instead of scaling up a centralized service, they replicate the ENTIRE stack to 330+ data centers worldwide. Every DC runs the full pipeline (DNS, TLS, WAF, cache, Workers). This means: (1) capacity scales with the number of DCs, not the size of individual DCs, (2) no single point of failure — each DC is autonomous, (3) latency is determined by geographic proximity, not server capacity. Within a DC, the scaling unit is the server — each server runs all services (no microservice decomposition at the edge). This &quot;shared nothing per DC&quot; architecture means adding capacity is as simple as deploying more servers in a DC or opening a new DC. The tiered cache hierarchy (edge → regional → upper-tier → origin) reduces origin load exponentially: a popular asset might be fetched from origin once and served from cache millions of times. The real scaling bottleneck is configuration distribution: pushing a customer's rule change to 330+ DCs within seconds requires a purpose-built replication system (Quicksilver), not a traditional database.</div>
+
+    <div class="sub">Configuration Propagation</div>
+    <ul class="items">
+      <li><strong>System:</strong> A global KV distribution system (similar to Cloudflare's internal "Quicksilver") pushes config changes to all 330 DCs.</li>
+      <li><strong>Mechanism:</strong> Central API writes config delta → publishes to distribution layer → each DC subscribes and applies locally. NOT a database replicated globally — it's a purpose-built eventually-consistent config store.</li>
+      <li><strong>Target:</strong> &lt;5 seconds from API call to config live at every DC worldwide.</li>
+      <li><strong>Volume:</strong> 25M domains × average 1 change/day = ~300 config changes/second globally. Small payloads (deltas, not full configs).</li>
+      <li><strong>Consistency:</strong> Eventually consistent. Brief window where some DCs have old rules, others have new. Acceptable for WAF rules (a few seconds of old rules is fine). NOT acceptable for certificate rotation (must be atomic — separate mechanism).</li>
+    </ul>
+
+    <div class="sub">Multi-Tenancy & Isolation</div>
+    <ul class="items">
+      <li><strong>Shared-nothing per request:</strong> Every request is processed independently. No shared state between customers on the hot path. Customer A's DDoS attack doesn't consume resources for Customer B because DDoS is mitigated at L3/4 before reaching the application layer.</li>
+      <li><strong>Fair resource allocation:</strong> Per-customer rate limits on API calls. Per-domain CPU budget for Workers. Per-domain cache eviction based on hit rate (cold content evicted before hot content regardless of customer).</li>
+      <li><strong>Blast radius:</strong> A misconfigured WAF rule for Customer A only affects Customer A's traffic. Other customers' traffic flows through a completely independent rule evaluation (different config lookup).</li>
+    </ul>
+
+    <div class="sub">Observability</div>
+    <ul class="items">
+      <li><strong>Per-customer analytics:</strong> Request count, bandwidth, cache hit ratio, threat events, Worker CPU time — all available via dashboard and GraphQL API.</li>
+      <li><strong>Per-DC health:</strong> Request throughput, error rate, cache hit ratio, DDoS mitigation events, BGP route stability.</li>
+      <li><strong>Global:</strong> Config propagation latency, inter-DC connectivity, origin reachability per customer.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Security IS Cloudflare's product, so it's deeply architectural. DDoS mitigation operates at three layers: (1) L3/L4: BGP Anycast distributes volumetric attacks across all DCs — a 1Tbps attack hitting 330 DCs is ~3Gbps per DC, manageable; (2) L4: SYN flood protection via SYN cookies — the server doesn't allocate state until the TCP handshake completes; (3) L7: the WAF inspects HTTP requests against OWASP rules + custom rules. The WAF runs in the hot path so it must be fast — rule evaluation uses a compiled Lua/Rust engine, not interpreted regex. Bot management uses JavaScript challenges and behavioral analysis. For customer isolation in a multi-tenant environment: each request is processed in an isolated context, Workers run in V8 isolates (not containers) with strict memory limits and CPU time limits. A misbehaving Worker in one customer's zone cannot affect another customer. TLS private keys are stored in a Keyless SSL architecture for enterprise customers — the key never leaves the customer's HSM.</div>
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: the architecture is defined by ONE principle — every service runs on every server at every edge DC. There is no centralized hot path. Anycast BGP routing automatically sends users to the nearest DC and provides failover and DDoS absorption by network topology alone. Each request flows through a pipeline — DNS → TLS → WAF → cache → Workers → origin — all on the same machine with &lt;1ms of security evaluation overhead. Tiered caching creates a hierarchy (edge → regional → upper tier → origin) that protects origin servers from being hit 330 times for the same asset. Configuration is distributed globally via an eventually-consistent propagation system that delivers customer changes to all 330 DCs in &lt;5 seconds. Edge compute uses V8 isolates for sub-millisecond cold starts and per-request isolation at 50M req/sec — 100× faster than containers."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Durable Objects (strongly consistent edge state)</td><td>Single-writer per object, colocated with the user. Enables real-time collaboration, game state, counters at the edge. Fundamentally different from KV (eventually consistent).</td></tr>
+        <tr><td>AI inference at the edge</td><td>Run ML models in Workers. Requires GPU resources at edge DCs. Scheduling challenge: which DCs have GPU capacity?</td></tr>
+        <tr><td>Zero Trust / SASE</td><td>Corporate traffic routed through Cloudflare (not just web traffic). Identity-based access policies. Extends from "protect websites" to "protect corporate networks."</td></tr>
+        <tr><td>R2 (S3-compatible object storage)</td><td>Leverages edge network for delivery but needs centralized (or regionally replicated) storage for persistence. Different consistency model from cache.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This system is fundamentally different from every other design in this series. It's not an application — it's the NETWORK ITSELF. The architecture is defined by BGP anycast, not by databases. Failure tolerance comes from network topology, not from replicated state machines. Scale comes from edge locality, not from horizontal scaling of centralized services. The defining tension is: ZERO centralized anything on the hot path, while still delivering consistent configuration and security policies across 330 independent data centers worldwide.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does Anycast handle a data center going offline?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Anycast is a BGP routing protocol where multiple DCs announce the same IP address. Routers on the internet choose the &quot;nearest&quot; DC based on BGP path length. If a DC goes offline, it stops announcing the BGP route — within 30-90 seconds, all internet routers converge and traffic automatically flows to the next nearest DC. There's no DNS change, no failover script, no manual intervention. The elegance is that this works at the network layer, below any application logic. The 30-90 second convergence time is the main limitation — during this window, some users might experience timeouts as their packets route to the dead DC. To mitigate this, Cloudflare does health-checking within DCs: if a server is unhealthy, the DC's internal load balancer removes it before it affects BGP. The DC only withdraws its BGP route if the ENTIRE DC is unreachable (power failure, network cut). For individual server failures, the impact is absorbed internally.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you push a configuration change to 330 data centers in under 5 seconds?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is the Quicksilver problem. Traditional approaches fail: database replication is too slow (consensus across 330 nodes), and CDN cache invalidation is eventually consistent with unknown latency. Cloudflare built a purpose-built KV distribution system. The architecture: (1) a customer makes a change via the API (central), (2) the change is written to a central store and assigned a monotonic sequence number, (3) every DC maintains a persistent connection to the central distribution layer, (4) changes are pushed to all DCs in parallel (not serially), (5) each DC applies changes in sequence-number order, ensuring consistency. The system is optimized for small, frequent writes (rule changes, DNS updates) rather than bulk data. It uses a custom binary protocol over persistent TCP connections. The 5-second target is p95 — most changes propagate in &lt;2 seconds. DCs that are temporarily unreachable queue changes and catch up on reconnection. This is eventually consistent by design — two DCs might briefly disagree on a config, which is acceptable because the window is &lt;5 seconds.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why V8 isolates instead of containers for Workers?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Startup time and density. A container (even a lightweight one) takes 50-500ms to cold start and uses 10-50MB of memory. A V8 isolate starts in &lt;5ms and uses &lt;1MB. On an edge server handling 10,000 requests/second across 100 different customer Workers, containers would need 100 containers consuming 1-5GB of memory. V8 isolates for the same workload use &lt;100MB. The tradeoff: V8 isolates only support JavaScript/WASM (no arbitrary binaries), and they have strict limits (128MB memory, 50ms CPU per request for free tier). But for the edge computing use case — lightweight request transformation, A/B routing, header manipulation, simple API responses — these limits are rarely hit. Security isolation comes from V8's sandbox: each isolate has its own heap and cannot access another isolate's memory. This is the same isolation model Chrome uses between tabs. It's not as strong as container/VM isolation (no kernel separation), but it's sufficient for the threat model (customer code manipulating HTTP requests, not running untrusted binaries).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

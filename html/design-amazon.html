@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Amazon — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b22;
+    --surface-raised: #1c2129;
+    --border: #2d333b;
+    --border-light: #373e47;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #d29922;
+    --accent-red: #f85149;
+    --accent-purple: #bc8cff;
+    --accent-cyan: #39d2c0;
+    --accent-yellow: #e3b341;
+    --phase1: #58a6ff;
+    --phase2: #d29922;
+    --phase3: #3fb950;
+    --phase4: #f85149;
+    --phase5: #bc8cff;
+    --phase6: #39d2c0;
+    --nav-width: 270px;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Fraunces', Georgia, serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:24px}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+  nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}
+  nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}
+  nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:0.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}
+  nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all 0.15s;border-left:2px solid transparent}
+  nav a:hover{color:var(--text);background:var(--surface-raised)}
+  nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,0.06)}
+  .nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background 0.15s}
+  .phase-header:hover{background:var(--surface-raised)}
+  .phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}
+  .phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}
+  .phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}
+  .phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform 0.25s ease;flex-shrink:0}
+  .phase.collapsed .phase-chevron{transform:rotate(-90deg)}
+  .phase.collapsed .phase-body{display:none}
+  .phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}
+  .callout.goal{background:rgba(88,166,255,0.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}
+  .callout.goal strong{color:var(--accent-blue)}
+  .callout.say{background:rgba(63,185,80,0.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}
+  .callout.say::before{content:'🗣️ '}
+  .callout.tip{background:rgba(210,153,34,0.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}
+  .callout.tip::before{content:'💡 '}
+  .callout.decision{background:rgba(248,81,73,0.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}
+  .callout.decision::before{content:'⚖️ '}
+  .callout code{background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+  .items{list-style:none;margin:10px 0}
+  .items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}
+  .items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}
+  .items li strong{color:var(--text);font-weight:600}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}
+  thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}
+  tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+  .est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}
+  .est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:4px}
+  .est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}
+  .est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}
+  .schema .table-name{color:var(--accent-cyan);font-weight:600}
+  .schema .pk{color:var(--accent-yellow)}
+  .schema .fk{color:var(--accent-purple)}
+  .schema .type{color:var(--text-dim)}
+  .schema .comment{color:var(--text-dim);font-style:italic}
+
+  .api-block{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;margin:10px 0;overflow:hidden}
+  .api-method{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;font-family:var(--font-mono);font-size:12px;width:100%;border-bottom:1px solid var(--border)}
+  .api-method .verb{padding:2px 8px;border-radius:4px;font-weight:600;font-size:10px;text-transform:uppercase}
+  .api-method .verb.post{background:rgba(63,185,80,0.15);color:var(--accent-green)}
+  .api-method .verb.get{background:rgba(88,166,255,0.15);color:var(--accent-blue)}
+  .api-method .verb.put{background:rgba(210,153,34,0.15);color:var(--accent-orange)}
+  .api-method .verb.del{background:rgba(248,81,73,0.15);color:var(--accent-red)}
+  .api-method .path{color:var(--text)}
+  .api-method .desc{margin-left:auto;color:var(--text-dim);font-size:11px;font-family:var(--font-body)}
+  .api-body{padding:10px 14px;font-size:12px;color:var(--text-dim);line-height:1.55}
+
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}
+  .flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}
+  .flow-diagram .arrow{color:var(--text-dim)}
+  .flow-diagram .label{color:var(--accent-orange);font-size:10px}
+
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+  .comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}
+  .comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}
+  .comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}
+  .comp-card ul li::before{content:'• ';color:var(--text-dim)}
+
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}
+  .failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:210px;flex-shrink:0}
+  .failure-row .mitigation{color:var(--text-muted)}
+
+  .divider{text-align:center;margin:48px 0 32px;position:relative}
+  .divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+  .divider span{position:relative;background:var(--bg);padding:0 16px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim)}
+
+  .inv-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+  .inv-box{padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}
+  .inv-box h4{font-size:13px;font-weight:700;margin-bottom:8px}
+  .inv-box.pessimistic h4{color:var(--accent-red)}
+  .inv-box.optimistic h4{color:var(--accent-green)}
+  .inv-box ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.6}
+  .inv-box ul li{margin:3px 0}
+  .inv-box .verdict{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11.5px;font-weight:600}
+  .inv-box.pessimistic .verdict{color:var(--accent-red)}
+  .inv-box.optimistic .verdict{color:var(--accent-green)}
+
+  .state-machine{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:11px;line-height:1.8;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:left}
+  .state-machine .highlight{color:var(--accent-cyan);font-weight:600}
+  .state-machine .arrow{color:var(--text-dim)}
+  .state-machine .label{color:var(--accent-orange);font-size:10px}
+
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid,.inv-compare{grid-template-columns:1fr}}
+  @media print{nav{display:none}main{margin-left:0;max-width:100%}.phase.collapsed .phase-body{display:block}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Amazon</h1>
+    <span>Worked Example · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-inventory">Inventory & Checkout</a>
+  <a href="#dd-order">Order Pipeline</a>
+  <a href="#dd-catalog">Product Catalog & Search</a>
+  <a href="#dd-data">Data Model & Storage</a>
+
+  <div class="nav-section-label">Reference</div>
+  <a href="#apis">API Design</a>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#evolution">Evolution</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span>
+    <span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Let me restate — we're designing an e-commerce platform like Amazon. Users browse a product catalog, search for items, add them to a cart, and check out. The system needs to manage inventory across warehouses, process orders, and handle fulfillment. Let me scope this down."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ Purchase conversion rate (session → order) and customer lifetime value. Secondary: delivery speed (same-day/next-day), selection breadth. This shapes architecture: the browse path must be FAST (every 100ms of latency costs ~1% sales), the buy path must be CORRECT (no overselling), and the delivery promise must be HONEST (showing "delivery by Tuesday" when it's actually Thursday destroys trust).</em></li>
+      <li><strong>Marketplace or first-party only?</strong> Do we support third-party sellers, or just our own inventory? <em>→ Both. Marketplace model with our own warehousing (FBA-like) is most interesting.</em></li>
+      <li><strong>Core flow?</strong> Browse → search → product detail → cart → checkout → order tracking? <em>→ Yes, this is the primary flow.</em></li>
+      <li><strong>Inventory model?</strong> Single warehouse or distributed? <em>→ Multi-warehouse. Inventory is distributed across regions.</em></li>
+      <li><strong>Payment?</strong> <em>→ Acknowledge integration with payment provider, don't deep-dive the payment gateway itself.</em></li>
+      <li><strong>Recommendations?</strong> <em>→ Mention as a component, not a deep dive.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~300M active customers, ~500M products in catalog, ~5M orders/day normal, ~50M on peak days (Prime Day, Black Friday).</em></li>
+      <li><strong>Flash sales / peak events?</strong> <em>→ Yes, must handle 10× traffic spikes. This is a critical constraint.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Product catalog & detail pages</td><td>Seller portal / seller onboarding</td></tr>
+        <tr><td>Product search</td><td>Recommendation engine internals</td></tr>
+        <tr><td>Shopping cart</td><td>Returns & refunds</td></tr>
+        <tr><td>Checkout & inventory reservation</td><td>Delivery logistics / last-mile</td></tr>
+        <tr><td>Order processing pipeline</td><td>Reviews & ratings</td></tr>
+        <tr><td>Inventory management (multi-warehouse)</td><td>Prime membership system</td></tr>
+        <tr><td>Order tracking</td><td>Advertising platform</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases (ranked)</div>
+    <ul class="items">
+      <li><strong>UC1:</strong> User browses/searches products → views product detail page with price, availability, and delivery estimate</li>
+      <li><strong>UC2:</strong> User adds item to cart → cart persists across sessions</li>
+      <li><strong>UC3:</strong> User checks out → inventory reserved → payment processed → order created</li>
+      <li><strong>UC4:</strong> Order is fulfilled → user tracks status (placed → packed → shipped → delivered)</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Inventory accuracy is paramount</strong> — we must NEVER sell more than we have (overselling). This means strong consistency on the inventory decrement path.</li>
+      <li><strong>Product catalog reads are eventually consistent</strong> — a product page showing a price that's 30 seconds stale is fine. Availability &gt; freshness for browsing.</li>
+      <li><strong>Checkout must be ACID</strong> — inventory reservation + order creation is a transaction that must not partially fail.</li>
+      <li><strong>10× spike tolerance</strong> — must handle Black Friday / Prime Day without degradation. This means the system can't be designed for average load only.</li>
+      <li><strong>Cart is durable</strong> — users expect their cart to survive app restarts and multi-device access.</li>
+      <li><strong>Catalog is read-heavy</strong> — 100:1 read:write ratio on product pages. Most users browse, few buy.</li>
+      <li><strong>Global</strong> — multi-region serving for low latency. Inventory is regional (warehouse-specific).</li>
+    </ul>
+
+    <div class="callout tip">The defining tension of this system: product browsing wants availability and speed (eventually consistent, heavily cached), but checkout wants correctness (strongly consistent, transactional). The architecture must cleanly separate these two worlds.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span>
+    <span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Let me run the numbers. I want to separate normal load from peak load since the 10× spike is a first-class design constraint."</div>
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">Product Page Views / Day</div>
+        <div class="value">~5B</div>
+        <div class="detail">300M users × ~17 pages/day. ~58K/sec avg, <strong>~500K/sec peak.</strong></div>
+      </div>
+      <div class="est-card">
+        <div class="label">Search Queries / Day</div>
+        <div class="value">~1B</div>
+        <div class="detail">~12K/sec avg, ~100K/sec peak.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Cart Updates / Day</div>
+        <div class="value">~200M</div>
+        <div class="detail">~2.3K/sec avg, ~20K/sec peak. Add/remove/update quantity.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Orders / Day</div>
+        <div class="value">5M norm / 50M peak</div>
+        <div class="detail">~58/sec avg, ~580/sec peak. Each order avg 3 items → ~1.7K inventory ops/sec peak.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Product Catalog Size</div>
+        <div class="value">500M products</div>
+        <div class="detail">~2KB per product record → ~1TB of structured data. Images: ~50TB total.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Inventory Records</div>
+        <div class="value">~2B rows</div>
+        <div class="detail">500M products × avg 4 warehouse locations. ~200GB structured data.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Read:Write Ratio (catalog)</div>
+        <div class="value">~100:1</div>
+        <div class="detail">5B page views vs. ~50M catalog updates/day.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Conversion Rate</div>
+        <div class="value">~2-3%</div>
+        <div class="detail">Of users who browse, few buy. System must optimize for the 97% browsing AND the 3% buying.</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> 500K product page views/sec at peak. The catalog MUST be served from cache/CDN. Hitting the database for every product page is impossible.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> Inventory operations are relatively low volume (~1.7K/sec peak) BUT require strong consistency. This is a correctness problem, not a throughput problem. We can use a traditional relational DB with row-level locking.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> The 10× spike between normal and peak means we need elastic compute and aggressive caching. Designing for peak = overprovisioned 90% of the time. Designing for average = crashing on Black Friday. Solution: auto-scaling + queue-based order processing to absorb spikes.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span>
+    <span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"I'll draw the major services and walk through three flows: browsing a product page, the checkout critical path, and order fulfillment."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Never oversell inventory (financial integrity)</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL with compare-and-swap</td><td>UPDATE ... WHERE count &gt; 0 is atomic. Eventual consistency would allow overselling during flash sales.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Cart: spiky traffic, simple key-value</td><td style="color:var(--accent-cyan);font-weight:500">DynamoDB (not PostgreSQL)</td><td>Single-key lookups, TTL expiration, auto-scaling. No relational joins needed. PostgreSQL would need manual scaling for Black Friday spikes.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Product search with facets + filters</td><td style="color:var(--accent-cyan);font-weight:500">Elasticsearch (not PostgreSQL full-text)</td><td>Faceted aggregations (brand, price range, ratings) are native in ES. PostgreSQL full-text search can't do facets efficiently.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Order state requires ACID</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL for orders (sharded by customer_id)</td><td>95% of queries are "my orders" — single-shard. Order→payment→shipment requires foreign keys + transactions.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Fulfillment is async (doesn't block checkout)</td><td style="color:var(--accent-cyan);font-weight:500">Kafka / SQS for order events</td><td>Checkout completes in &lt;3s. Warehouse processing takes hours. Queue decouples critical path from async pipeline.</td><td>—</td></tr>
+      <tr><td>Product images at CDN scale</td><td style="color:var(--accent-cyan);font-weight:500">S3 + CDN with content-addressable URLs</td><td>URL includes content hash → zero cache invalidation needed. New image = new URL. Old URLs expire naturally.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_7408" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_7408h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="390" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <text x="365" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">static</text>
+    <line x1="390" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="447" y1="194" x2="82" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="447" y1="194" x2="205" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="447" y1="194" x2="328" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="447" y1="194" x2="574" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="574" y1="254" x2="451" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="574" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="390" y1="454" x2="697" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="328" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="82" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="205" y1="294" x2="447" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="574" y1="294" x2="219" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" opacity=".5"/>
+    <line x1="328" y1="294" x2="333" y2="554" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_7408)" opacity=".6"/>
+    <line x1="82" y1="294" x2="561" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_7408)" stroke-dasharray="4 3" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">📱 Client Apps</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">Web · iOS · Android</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌍 CDN</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">product images · static</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · rate limit · route</text>
+    <rect class="svg-node" x="28" y="254" width="109" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="82" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📦 Catalog</text>
+    <text x="82" y="284" fill="#6e7681" font-size="8" text-anchor="middle">products · browse</text>
+    <rect class="svg-node" x="151" y="254" width="109" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="205" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔍 Search</text>
+    <text x="205" y="284" fill="#6e7681" font-size="8" text-anchor="middle">Elasticsearch</text>
+    <rect class="svg-node" x="274" y="254" width="109" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="328" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🛒 Cart</text>
+    <text x="328" y="284" fill="#6e7681" font-size="8" text-anchor="middle">stateful sessions</text>
+    <rect class="svg-node" x="397" y="254" width="109" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="451" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Inventory</text>
+    <text x="451" y="284" fill="#6e7681" font-size="8" text-anchor="middle">stock count</text>
+    <rect class="svg-node" x="520" y="254" width="109" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="574" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💳 Order/Checkout</text>
+    <text x="574" y="284" fill="#6e7681" font-size="8" text-anchor="middle">critical path</text>
+    <rect class="svg-node" x="643" y="254" width="109" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="697" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📬 Fulfillment</text>
+    <text x="697" y="284" fill="#6e7681" font-size="8" text-anchor="middle">async pipeline</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="390" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">cart · sessions · catalog</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="471" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka / SQS</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">order events · fulfillment</text>
+    <rect class="svg-node" x="169" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="219" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL</text>
+    <text x="219" y="584" fill="#6e7681" font-size="8" text-anchor="middle">orders · users</text>
+    <rect class="svg-node" x="283" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="333" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">⚡ DynamoDB</text>
+    <text x="333" y="584" fill="#6e7681" font-size="8" text-anchor="middle">cart · inventory</text>
+    <rect class="svg-node" x="397" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="447" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔎 Elasticsearch</text>
+    <text x="447" y="584" fill="#6e7681" font-size="8" text-anchor="middle">product search</text>
+    <rect class="svg-node" x="511" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="561" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📦 S3</text>
+    <text x="561" y="584" fill="#6e7681" font-size="8" text-anchor="middle">images · assets</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>📱 Client Apps <span class="tag" style="background:rgba(88,166,255,0.15);color:var(--accent-blue)">CLIENT</span></h4>
+        <ul>
+          <li>Web, iOS, Android</li>
+          <li>REST API for CRUD, CDN for static assets</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🌐 API Gateway + CDN <span class="tag" style="background:rgba(210,153,34,0.15);color:var(--accent-orange)">EDGE</span></h4>
+        <ul>
+          <li>AuthN, rate limiting, routing</li>
+          <li>CDN caches product pages, images</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📦 Product Catalog Service <span class="tag" style="background:rgba(63,185,80,0.15);color:var(--accent-green)">READ PATH</span></h4>
+        <ul>
+          <li>Product details, pricing, images</li>
+          <li>Heavily cached (Redis + CDN)</li>
+          <li>Seller updates via async pipeline</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔍 Search Service <span class="tag" style="background:rgba(188,140,255,0.15);color:var(--accent-purple)">READ PATH</span></h4>
+        <ul>
+          <li>Full-text search + faceted filtering</li>
+          <li>Elasticsearch cluster</li>
+          <li>Autocomplete, spell correction</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🛒 Cart Service <span class="tag" style="background:rgba(57,210,192,0.15);color:var(--accent-cyan)">STATEFUL</span></h4>
+        <ul>
+          <li>Add/remove/update cart items</li>
+          <li>Persists across sessions & devices</li>
+          <li>DynamoDB or Redis + DB backing</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 Inventory Service <span class="tag" style="background:rgba(248,81,73,0.15);color:var(--accent-red)">CRITICAL</span></h4>
+        <ul>
+          <li>Real-time stock counts per warehouse</li>
+          <li>Reserve / release / decrement</li>
+          <li>Strong consistency — the hardest piece</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>💳 Checkout / Order Service <span class="tag" style="background:rgba(227,179,65,0.15);color:var(--accent-yellow)">CRITICAL</span></h4>
+        <ul>
+          <li>Orchestrates: inventory → payment → order creation</li>
+          <li>ACID transaction across steps</li>
+          <li>Idempotent (retry-safe)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📬 Order Fulfillment Service <span class="tag" style="background:rgba(210,153,34,0.15);color:var(--accent-orange)">ASYNC</span></h4>
+        <ul>
+          <li>Picks warehouse, generates shipping</li>
+          <li>State machine: placed → packed → shipped → delivered</li>
+          <li>Integrates with shipping carriers</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Product Browsing (the fast path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 452" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1521" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="84" x2="280" y2="154" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">cache HIT → return immediately (~5ms)</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">cache MISS ↓</text>
+    <rect class="svg-node" x="136" y="156" width="289" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="184" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">CDN</text>
+    <line x1="280" y1="200" x2="280" y2="238" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <rect class="svg-node" x="124" y="240" width="313" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="268" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <line x1="280" y1="284" x2="280" y2="386" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. check Redis cache</text>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. miss → read from Products DB</text>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. enrich with availability (Inventory cache)</text>
+    <text x="296" y="348" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. populate cache, return</text>
+    <rect class="svg-node" x="118" y="388" width="325" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="416" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Catalog Service</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Checkout (the critical path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Checkout (the critical path)</span>
+  <svg viewBox="0 0 560 836" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a5425" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <line x1="280" y1="168" x2="280" y2="254" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Fetch cart items from Cart Service</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Validate prices (re-fetch from Catalog)</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. SELECT best warehouse per item (nearest with stock)</text>
+    <rect class="svg-node" x="121" y="256" width="319" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="284" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Order Service</text>
+    <line x1="280" y1="300" x2="280" y2="370" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">success → continue</text>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">failure → return "out of stock" for that item</text>
+    <rect class="svg-node" x="115" y="372" width="331" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="390" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Inventory Service</text>
+    <text x="280" y="406" fill="#6e7681" font-size="9" text-anchor="middle">──</text>
+    <line x1="280" y1="416" x2="280" y2="486" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <text x="296" y="432" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">success → create order record (status: PLACED)</text>
+    <text x="296" y="448" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">failure → RELEASE inventory reservation</text>
+    <rect class="svg-node" x="118" y="488" width="325" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="506" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Payment Service</text>
+    <text x="280" y="522" fill="#6e7681" font-size="9" text-anchor="middle">── charge payment method</text>
+    <line x1="280" y1="532" x2="280" y2="570" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <rect class="svg-node" x="133" y="572" width="295" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="590" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Kafka</text>
+    <text x="280" y="606" fill="#6e7681" font-size="9" text-anchor="middle">── publish</text>
+    <line x1="280" y1="616" x2="280" y2="654" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <rect class="svg-node" x="124" y="656" width="313" height="44" rx="7" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="280" y="684" fill="#e3b341" font-size="12" font-weight="600" text-anchor="middle">Fulfillment</text>
+    <line x1="280" y1="700" x2="280" y2="770" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5425)"/>
+    <text x="296" y="716" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">(async)</text>
+    <text x="296" y="732" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">(email confirm)</text>
+    <rect class="svg-node" x="122" y="772" width="316" height="44" rx="7" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="280" y="800" fill="#f778ba" font-size="12" font-weight="600" text-anchor="middle">Notification</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 3: Order Fulfillment (async pipeline)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 3: Order Fulfillment (async pipeline)</span>
+  <svg viewBox="0 0 560 104" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a8896" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="112" y="40" width="337" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Fulfillment Service</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The most architecturally interesting challenge is the inventory reservation at checkout — how do we prevent overselling without creating a bottleneck? That's what I'd like to deep-dive first. Second, the order pipeline is a good saga / state machine discussion."</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span>
+    <span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- ── DD1: Inventory ── -->
+    <div id="dd-inventory">
+    <div class="sub">Deep Dive 1: Inventory Management & Checkout (~12 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Never oversell. When 1,000 users simultaneously try to buy the last 5 units of a hot item on Black Friday, exactly 5 succeed and 995 get "out of stock." This is a concurrency control problem at the database level.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Inventory Model: Reserve → Confirm → Release</strong></p>
+    <ul class="items">
+      <li><strong>Available stock</strong> = total_stock − reserved_stock − sold_stock</li>
+      <li><strong>Reserve:</strong> At checkout, atomically decrement available_count. Item is "held" for this order.</li>
+      <li><strong>Confirm:</strong> On successful payment, convert reservation to sale (decrement reserved, increment sold).</li>
+      <li><strong>Release:</strong> On failed payment, timeout, or cancellation, release the reservation (increment available back).</li>
+      <li><strong>TTL on reservations:</strong> If payment isn't confirmed within 10 minutes, reservation auto-expires. Background job sweeps expired reservations.</li>
+    </ul>
+
+    <div class="schema"><span class="comment">── Inventory DB (PostgreSQL, sharded by product_id) ──</span>
+<span class="table-name">inventory</span>
+  <span class="pk">product_id</span>      <span class="type">UUID</span>
+  <span class="pk">warehouse_id</span>    <span class="type">UUID</span>
+  total_stock      <span class="type">INT</span>          <span class="comment">// total units in this warehouse</span>
+  reserved_stock   <span class="type">INT</span>          <span class="comment">// currently held by in-flight checkouts</span>
+  sold_stock       <span class="type">INT</span>          <span class="comment">// confirmed sold</span>
+  <span class="comment">-- available = total_stock - reserved_stock - sold_stock</span>
+  <span class="comment">PRIMARY KEY (product_id, warehouse_id)</span>
+  updated_at       <span class="type">TIMESTAMP</span>
+
+<span class="table-name">reservations</span>
+  <span class="pk">id</span>              <span class="type">UUID PK</span>
+  <span class="fk">order_id</span>        <span class="type">UUID</span>
+  <span class="fk">product_id</span>      <span class="type">UUID</span>
+  <span class="fk">warehouse_id</span>    <span class="type">UUID</span>
+  quantity         <span class="type">INT</span>
+  status           <span class="type">ENUM (reserved, confirmed, released, expired)</span>
+  expires_at       <span class="type">TIMESTAMP</span>    <span class="comment">// 10 min from creation</span>
+  created_at       <span class="type">TIMESTAMP</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">The Critical SQL: Atomic Reservation</strong></p>
+
+    <div class="schema"><span class="comment">── Atomic inventory reservation (no overselling) ──</span>
+
+UPDATE inventory
+SET reserved_stock = reserved_stock + <span class="pk">:quantity</span>
+WHERE product_id = <span class="pk">:product_id</span>
+  AND warehouse_id = <span class="pk">:warehouse_id</span>
+  AND (total_stock - reserved_stock - sold_stock) >= <span class="pk">:quantity</span>;
+
+<span class="comment">-- If affected_rows = 0 → insufficient stock → return "out of stock"</span>
+<span class="comment">-- If affected_rows = 1 → reservation succeeded</span>
+<span class="comment">-- The WHERE clause + UPDATE is atomic (row-level lock in Postgres)</span>
+<span class="comment">-- No explicit SELECT FOR UPDATE needed — the conditional UPDATE is sufficient</span></div>
+
+    <div class="inv-compare">
+      <div class="inv-box pessimistic">
+        <h4>Pessimistic Locking (SELECT FOR UPDATE)</h4>
+        <ul>
+          <li>Lock the row → read → check → update → release lock</li>
+          <li>✅ Simple to reason about</li>
+          <li>❌ Locks held during payment processing → deadlocks under load</li>
+          <li>❌ Hot items create lock contention (1000 threads waiting for same row)</li>
+        </ul>
+        <div class="verdict">❌ Don't lock during payment — only during reservation</div>
+      </div>
+      <div class="inv-box optimistic">
+        <h4>Conditional UPDATE (our approach)</h4>
+        <ul>
+          <li>Single atomic UPDATE with WHERE guard → no explicit lock held</li>
+          <li>✅ Lock duration is microseconds (just the UPDATE)</li>
+          <li>✅ No deadlocks — single statement</li>
+          <li>✅ Hot items handled fine — Postgres serializes row-level UPDATEs</li>
+          <li>⚠️ Under extreme contention (>1000 concurrent), consider Redis-based counter as a pre-filter</li>
+        </ul>
+        <div class="verdict">✅ Default approach — fast, correct, simple</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Why not Redis for inventory counts?</strong> Redis is faster, but inventory is a CORRECTNESS problem. If Redis crashes before persisting, we lose reservation state and risk overselling. A SQL conditional UPDATE gives us ACID + durability + simple recovery. At ~1.7K inventory ops/sec peak, Postgres handles this easily. Tradeoff: higher latency per operation (~5ms vs. Redis ~1ms), but correctness outweighs speed here. Redis IS used as a pre-filter ("approximate availability" check) to reject clearly-out-of-stock requests before hitting the DB.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Hot Item Strategy (Lightning Deals / Last Unit)</strong></p>
+    <ul class="items">
+      <li><strong>Problem:</strong> 10,000 users try to buy 100 units simultaneously → 10,000 DB transactions hitting the same row.</li>
+      <li><strong>Pre-filter with Redis:</strong> Maintain an approximate counter in Redis. Requests check Redis first — if counter says 0, reject immediately without hitting DB. Only let through ~2× the remaining stock.</li>
+      <li><strong>Queue-based checkout for flash sales:</strong> For specific sale events, route checkout requests through an SQS queue. Process sequentially at DB level. Users get "your order is being processed" response and poll for status.</li>
+      <li><strong>Warehouse spreading:</strong> Split hot item inventory across multiple warehouse rows. Reserve from any warehouse with stock. Reduces per-row contention.</li>
+    </ul>
+
+    <div class="callout tip"><strong>The two-level architecture:</strong> Approximate availability (Redis, eventually consistent, for product page display) + exact reservation (Postgres, strongly consistent, for checkout). Users see "In Stock" on the page (cached, might be slightly wrong), but actual reservation at checkout is always accurate.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Checkout Orchestration (Saga Pattern)</strong></p>
+    <ul class="items">
+      <li><strong>Step 1: Reserve inventory</strong> → on failure: return error, stop.</li>
+      <li><strong>Step 2: Charge payment</strong> → on failure: RELEASE inventory reservation, return error.</li>
+      <li><strong>Step 3: Create order record</strong> → on failure: REFUND payment, RELEASE inventory, return error.</li>
+      <li><strong>Step 4: Publish <code>order.placed</code> event</strong> → on failure: order exists but fulfillment retries from event.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Orchestration vs. Choreography saga?</strong> Orchestration — the Order Service is the central coordinator that calls each step and handles compensating actions. With choreography (each service reacts to events), the failure recovery becomes distributed and much harder to debug. At this complexity level, a single orchestrator with clear compensating transactions is simpler. Tradeoff: the Order Service is a single point of coordination (but not a single point of failure — it's stateless and horizontally scaled, with the order state in the DB).</div>
+
+    <div class="callout decision"><strong>Idempotency:</strong> Every checkout request gets a client-generated <code>idempotency_key</code>. Order Service checks if this key already has an order → returns existing order. This prevents double-charges on retries (network timeout, user double-clicks). Critical for payment safety.</div>
+    </div>
+
+    <!-- ── DD2: Order Pipeline ── -->
+    <div id="dd-order">
+    <div class="sub">Deep Dive 2: Order Processing Pipeline (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Process 5M orders/day (50M peak) through a multi-step fulfillment pipeline with reliable state tracking. Each order may span multiple warehouses and shipping carriers.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Order State Machine</strong></p>
+
+    <div class="state-machine"><span class="highlight">PLACED</span> <span class="arrow">──warehouse assigned──▶</span> <span class="highlight">PROCESSING</span> <span class="arrow">──items picked──▶</span> <span class="highlight">PACKED</span>
+   <span class="arrow">│</span>                                                        <span class="arrow">│</span>
+   <span class="arrow">│</span> payment failed (late)                          carrier picked up
+   <span class="arrow">▼</span>                                                        <span class="arrow">▼</span>
+<span class="highlight">CANCELLED</span>                                              <span class="highlight">SHIPPED</span> <span class="arrow">──carrier confirms──▶</span> <span class="highlight">DELIVERED</span>
+
+<span class="label">Multi-item orders: if items ship from different warehouses,</span>
+<span class="label">each creates a separate SHIPMENT. Order status = worst-case of its shipments.</span>
+
+<span class="label">CANCELLED can happen from PLACED or PROCESSING (not after PACKED).</span>
+<span class="label">On cancel: release inventory, initiate refund.</span></div>
+
+    <div class="callout decision"><strong>Storage: PostgreSQL for orders.</strong> Same rationale as the Trip Service in the Uber design — orders are our most critical business records, we need ACID, and the write volume (~580/sec peak) is well within Postgres capacity. Sharded by customer_id for efficient "my orders" queries.</div>
+
+    <div class="schema"><span class="comment">── Orders DB (PostgreSQL, sharded by customer_id) ──</span>
+<span class="table-name">orders</span>
+  <span class="pk">id</span>               <span class="type">UUID PK</span>
+  <span class="fk">customer_id</span>      <span class="type">BIGINT (shard key)</span>
+  status            <span class="type">ENUM (placed, processing, packed, shipped, delivered, cancelled)</span>
+  total_amount      <span class="type">DECIMAL</span>
+  currency          <span class="type">CHAR(3)</span>
+  shipping_address  <span class="type">JSONB</span>
+  payment_id        <span class="type">UUID (ref to payment provider txn)</span>
+  idempotency_key   <span class="type">UUID UNIQUE</span>
+  placed_at         <span class="type">TIMESTAMP</span>
+  updated_at        <span class="type">TIMESTAMP</span>
+
+<span class="table-name">order_items</span>
+  <span class="pk">id</span>               <span class="type">UUID PK</span>
+  <span class="fk">order_id</span>         <span class="type">UUID FK → orders</span>
+  <span class="fk">product_id</span>       <span class="type">UUID</span>
+  <span class="fk">warehouse_id</span>     <span class="type">UUID</span>
+  quantity          <span class="type">INT</span>
+  unit_price        <span class="type">DECIMAL (price at time of purchase)</span>
+  <span class="fk">reservation_id</span>   <span class="type">UUID FK → reservations</span>
+
+<span class="table-name">shipments</span>
+  <span class="pk">id</span>               <span class="type">UUID PK</span>
+  <span class="fk">order_id</span>         <span class="type">UUID FK → orders</span>
+  <span class="fk">warehouse_id</span>     <span class="type">UUID</span>
+  carrier           <span class="type">VARCHAR</span>
+  tracking_number   <span class="type">VARCHAR</span>
+  status            <span class="type">ENUM (pending, picked, packed, shipped, delivered)</span>
+  estimated_delivery <span class="type">TIMESTAMP</span>
+  shipped_at        <span class="type">TIMESTAMP</span>
+
+<span class="comment">-- Indexes: (customer_id, placed_at DESC), (status) for fulfillment queries</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Event-Driven Fulfillment</strong></p>
+    <ul class="items">
+      <li><strong>Event flow:</strong> <code>order.placed</code> → Fulfillment Service consumes → assigns warehouse → creates shipments → publishes <code>shipment.created</code> → Warehouse System picks items → <code>shipment.packed</code> → Carrier integration → <code>shipment.shipped</code> → Carrier webhook → <code>shipment.delivered</code>.</li>
+      <li><strong>Each state transition:</strong> Update order/shipment status in DB, publish event to Kafka, Notification Service sends email/push to customer.</li>
+      <li><strong>Warehouse selection:</strong> For each item, pick the warehouse that (a) has stock AND (b) is closest to the shipping address. Goal: minimize shipping cost and delivery time. If one warehouse has all items, prefer a single shipment. If not, split into multiple shipments.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why event-driven instead of synchronous orchestration for fulfillment?</strong> Fulfillment is inherently async — it takes hours to days. Synchronous calls would mean holding connections open or polling. Event-driven lets each stage proceed independently, with Kafka providing durability. If the packing service is temporarily down, events queue up and process when it recovers. Tradeoff: harder to debug end-to-end (need distributed tracing), but the natural async nature of physical fulfillment makes events the right fit.</div>
+
+    <div class="callout tip"><strong>Delivery estimate:</strong> Shown at checkout. Computed by: warehouse selection (distance) + warehouse processing SLA (24h avg) + carrier transit time (carrier API). This is a latency-sensitive calculation done synchronously at checkout but backed by precomputed carrier transit-time tables.</div>
+    </div>
+
+    <!-- ── DD3: Catalog & Search ── -->
+    <div id="dd-catalog">
+    <div class="sub">Deep Dive 3: Product Catalog & Search (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Serve 500M products at 500K reads/sec peak with &lt;100ms latency. Index for full-text search with faceted filtering (category, price range, brand, rating).</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Catalog Architecture</strong></p>
+    <table>
+      <thead><tr><th>Layer</th><th>Tech</th><th>What It Serves</th><th>TTL / Freshness</th></tr></thead>
+      <tbody>
+        <tr><td>CDN</td><td>CloudFront</td><td>Product page HTML, images, static data</td><td>5–15 min TTL</td></tr>
+        <tr><td>Application Cache</td><td>Redis Cluster</td><td>Product objects (structured data for API)</td><td>30s–5 min TTL</td></tr>
+        <tr><td>Primary Store</td><td>PostgreSQL (sharded)</td><td>Source of truth for product data</td><td>Strong</td></tr>
+        <tr><td>Search Index</td><td>Elasticsearch</td><td>Full-text search, faceted filtering, autocomplete</td><td>Near-real-time (seconds lag)</td></tr>
+        <tr><td>Media</td><td>S3 + CDN</td><td>Product images (multiple sizes)</td><td>Immutable (versioned URLs)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why Elasticsearch for search instead of database full-text?</strong> Postgres full-text search works for simple queries but breaks down at our scale: 500M products with faceted filtering (category AND price range AND brand AND rating AND availability) requires an inverted index purpose-built for this. Elasticsearch gives us relevance scoring, fuzzy matching, autocomplete, and horizontal scaling. Tradeoff: it's not our source of truth — it's a derived index. Product updates flow through Kafka to an ES indexing consumer. There's a 1-5 second lag between a seller updating a price and the search index reflecting it.</div>
+
+    <div class="schema"><span class="comment">── Products DB (PostgreSQL, sharded by product_id) ──</span>
+<span class="table-name">products</span>
+  <span class="pk">id</span>               <span class="type">UUID PK</span>
+  <span class="fk">seller_id</span>        <span class="type">BIGINT</span>
+  title             <span class="type">VARCHAR(500)</span>
+  description       <span class="type">TEXT</span>
+  category_id       <span class="type">INT</span>
+  brand             <span class="type">VARCHAR</span>
+  price             <span class="type">DECIMAL</span>
+  currency          <span class="type">CHAR(3)</span>
+  image_urls        <span class="type">TEXT[] (S3 keys)</span>
+  attributes        <span class="type">JSONB (color, size, weight, etc.)</span>
+  avg_rating        <span class="type">DECIMAL (denormalized)</span>
+  review_count      <span class="type">INT (denormalized)</span>
+  status            <span class="type">ENUM (active, inactive, suspended)</span>
+  created_at        <span class="type">TIMESTAMP</span>
+  updated_at        <span class="type">TIMESTAMP</span>
+
+<span class="comment">── Elasticsearch Index ──</span>
+<span class="table-name">products_index</span>
+  All fields from products table, PLUS:
+  availability      <span class="type">BOOLEAN (approximate, updated periodically)</span>
+  search_keywords    <span class="type">TEXT (title + brand + category + attributes, analyzed)</span>
+  <span class="comment">// Mapping: title → text (analyzed) + title.keyword (exact match)</span>
+  <span class="comment">// Facets: category_id, brand, price (range), avg_rating (range)</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Catalog Update Pipeline</strong></p>
+    <ul class="items">
+      <li><strong>Seller updates product</strong> → write to Products DB → publish <code>product.updated</code> to Kafka</li>
+      <li><strong>Consumers:</strong> (1) ES Indexer updates search index, (2) Cache Invalidator deletes Redis + CDN cache entries</li>
+      <li><strong>Price changes</strong> are applied immediately in DB but may take 30s–5 min to propagate through all cache layers. The checkout flow always re-validates price from DB (not cache) to prevent stale-price purchases.</li>
+    </ul>
+
+    <div class="callout tip"><strong>Price integrity:</strong> The price shown on the product page (from cache) is a display price. The price charged at checkout is always fetched fresh from the Products DB. If the price changed between browsing and buying, the checkout shows "price has changed" and asks for confirmation. This protects both the customer and the seller.</div>
+    </div>
+
+    <!-- ── DD4: Storage Summary ── -->
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Data Model & Storage Summary (~5 min)</div>
+
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Access Pattern</th><th>Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Product Catalog</td><td>PostgreSQL (sharded) + Redis + CDN</td><td>500K reads/sec peak (from cache). 50M seller updates/day.</td><td>Strong writes, eventual reads</td></tr>
+        <tr><td>Search Index</td><td>Elasticsearch (cluster)</td><td>100K search queries/sec peak. Faceted filtering + ranking.</td><td>Near-real-time (seconds lag from source)</td></tr>
+        <tr><td>Inventory</td><td>PostgreSQL (sharded by product_id)</td><td>~1.7K reservations/sec peak. Conditional UPDATEs.</td><td>Strong (ACID) — non-negotiable</td></tr>
+        <tr><td>Shopping Cart</td><td>DynamoDB (or Redis + DB)</td><td>~20K updates/sec peak. Key-value by user_id.</td><td>Strong (durable across sessions)</td></tr>
+        <tr><td>Orders</td><td>PostgreSQL (sharded by customer_id)</td><td>~580 writes/sec peak. "My orders" query.</td><td>Strong (ACID)</td></tr>
+        <tr><td>Shipments</td><td>PostgreSQL (same cluster as orders)</td><td>Updated by fulfillment pipeline. Query by order_id.</td><td>Strong</td></tr>
+        <tr><td>User Profiles</td><td>PostgreSQL + Redis cache</td><td>Read-heavy, addresses, payment methods.</td><td>Strong writes, cached reads</td></tr>
+        <tr><td>Product Images</td><td>S3 + CDN</td><td>~50TB total. Immutable (versioned). Served from CDN edge.</td><td>Eventual (CDN propagation)</td></tr>
+        <tr><td>Events</td><td>Kafka</td><td>order.placed, product.updated, shipment.status_changed, etc.</td><td>Ordered per partition</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why DynamoDB for cart instead of Redis?</strong> Cart data must be durable (survive app restarts, persist across devices). Redis with persistence (RDB/AOF) can do this, but DynamoDB gives us built-in durability, auto-scaling (critical for 10× spikes), and single-digit ms reads with zero ops burden. The access pattern is simple key-value (user_id → cart items) which is DynamoDB's sweet spot. Tradeoff: higher per-request cost than Redis, but carts are small (~5KB avg) and the ops simplicity is worth it at scale.</div>
+
+    <div class="callout decision"><strong>Why Postgres for both inventory AND orders?</strong> They're different databases (different shard keys: product_id vs. customer_id), but same technology because both need ACID transactions. The checkout saga coordinates between them. We don't try to do a distributed transaction across them — instead, we use the saga with compensating actions. If the order write fails after inventory reservation, we release the reservation as compensation.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ APIs ═══════════ -->
+<div class="phase" id="apis">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">📡</span>
+    <span class="phase-title">API Design</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Product Catalog</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/products/{product_id}</span><span class="desc">Product detail page</span></div>
+      <div class="api-body">Response: <code>{id, title, description, price, images[], attributes, avg_rating, review_count, availability}</code><br>Heavily cached (CDN + Redis). Availability is approximate.</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/search?q={query}&category=&price_min=&price_max=&brand=&sort=&cursor=&limit=</span></div>
+      <div class="api-body">Backed by Elasticsearch. Response: <code>{products[], facets: {categories[], brands[], price_ranges[]}, total_count, next_cursor}</code></div>
+    </div>
+
+    <div class="sub">Shopping Cart</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/cart</span><span class="desc">Get current user's cart</span></div>
+      <div class="api-body">Response: <code>{items: [{product_id, quantity, unit_price, product_snapshot}], subtotal}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/cart/items</span><span class="desc">Add item to cart</span></div>
+      <div class="api-body">Request: <code>{product_id, quantity}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb put">PUT</span><span class="path">/v1/cart/items/{product_id}</span><span class="desc">Update quantity</span></div>
+      <div class="api-body">Request: <code>{quantity}</code> — set to 0 to remove</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb del">DEL</span><span class="path">/v1/cart</span><span class="desc">Clear entire cart</span></div>
+    </div>
+
+    <div class="sub">Checkout & Orders</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/checkout</span><span class="desc">Process checkout (the critical path)</span></div>
+      <div class="api-body">Request: <code>{shipping_address_id, payment_method_id, idempotency_key}</code><br>Response: <code>{order_id, status: "placed", estimated_delivery, total_charged}</code><br>Headers: <code>Idempotency-Key: {uuid}</code> — prevents double charges on retry.</div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/orders?cursor=&limit=20</span><span class="desc">My orders (paginated)</span></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/orders/{order_id}</span><span class="desc">Order detail with shipment tracking</span></div>
+      <div class="api-body">Response: <code>{order, items[], shipments: [{id, status, tracking_number, carrier, estimated_delivery}]}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/orders/{order_id}/cancel</span><span class="desc">Cancel order (if before PACKED)</span></div>
+      <div class="api-body">Triggers: release inventory reservation, initiate refund.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span>
+    <span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div id="failures" class="sub">Failure Scenarios & Mitigation</div>
+    <div class="failure-row"><span class="scenario">Inventory DB shard down</span><span class="mitigation">Primary-replica failover. During failover (~30s), checkouts for products on that shard queue and retry. Product browsing is unaffected (served from cache). The Redis pre-filter still rejects clearly-out-of-stock requests.</span></div>
+    <div class="failure-row"><span class="scenario">Payment provider timeout</span><span class="mitigation">Inventory is already reserved with 10-min TTL. Retry payment with exponential backoff. If retries exhausted, release reservation and return error to user. They can retry checkout manually.</span></div>
+    <div class="failure-row"><span class="scenario">Double checkout (user clicks twice)</span><span class="mitigation">Idempotency key catches this. Second request returns existing order without creating a duplicate or double-charging.</span></div>
+    <div class="failure-row"><span class="scenario">Reservation expires before payment</span><span class="mitigation">Background sweeper releases expired reservations every 60s. If payment succeeds AFTER reservation expired, the order creation step will attempt to re-reserve — if stock is gone, refund payment and notify user.</span></div>
+    <div class="failure-row"><span class="scenario">Elasticsearch cluster down</span><span class="mitigation">Search is degraded but browsing continues (product pages served from cache/DB). Fallback: route search queries to a simpler DB-backed search (slower, less relevant). Alert on-call.</span></div>
+    <div class="failure-row"><span class="scenario">Kafka consumer lag (fulfillment)</span><span class="mitigation">Orders are placed and recorded in DB. Fulfillment is delayed but not lost. Consumers catch up. Customer sees "processing" slightly longer than usual.</span></div>
+    <div class="failure-row"><span class="scenario">CDN origin overloaded</span><span class="mitigation">Stale-while-revalidate: CDN serves stale content while fetching fresh in background. Origin has circuit breakers. Even a 5-min stale product page is acceptable.</span></div>
+    <div class="failure-row"><span class="scenario">Black Friday 10× spike</span><span class="mitigation">Pre-warm CDN and Redis caches for top 10K products. Auto-scale API and checkout services. Queue-based checkout for flash deals. Degrade non-critical features (recommendations, reviews) to protect the purchase path.</span></div>
+
+    <div class="sub">Scalability Bottlenecks</div>
+    <table>
+      <thead><tr><th>At Scale</th><th>What Breaks</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>10× (50M orders/day)</td><td>Inventory DB row contention on hot products. Single Elasticsearch cluster at query limits. Order DB write throughput.</td><td>Redis pre-filter + queue-based checkout for hot items. ES cluster scale-out (add data nodes). Shard Order DB by customer region.</td></tr>
+        <tr><td>100× (500M orders/day)</td><td>Saga orchestration becomes bottleneck — Order Service coordinating too many steps. Kafka partition throughput. Global inventory coordination.</td><td>Move to choreography saga at this scale. Regional Kafka clusters. Per-region inventory with cross-region rebalancing. CQRS: separate order write model from read model.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Consistency Model Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Model</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>Inventory reservation</td><td>Strong (ACID)</td><td>Overselling is unacceptable. Row-level locks on conditional UPDATE.</td></tr>
+        <tr><td>Order creation</td><td>Strong (ACID)</td><td>Can't lose or duplicate orders. Financial record.</td></tr>
+        <tr><td>Product page display</td><td>Eventual (5 min)</td><td>Slightly stale price/description is invisible to users.</td></tr>
+        <tr><td>Availability on product page</td><td>Eventual (30s)</td><td>Approximate. Real check at checkout. "In Stock" might be wrong briefly.</td></tr>
+        <tr><td>Search results</td><td>Eventual (seconds)</td><td>ES index lags behind source of truth. Acceptable for discovery.</td></tr>
+        <tr><td>Shopping cart</td><td>Strong (durable)</td><td>Users expect cart to persist. DynamoDB gives strong consistency on read-after-write.</td></tr>
+        <tr><td>Order status updates</td><td>Eventual (seconds)</td><td>Event-driven. Slight lag between warehouse scan and user seeing "shipped."</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Observability</div>
+    <ul class="items">
+      <li><strong>Checkout pipeline:</strong> End-to-end latency from "click Buy" to order confirmation. Success rate. Failure breakdown (inventory, payment, system error). Inventory reservation hit rate (% that succeed on first attempt).</li>
+      <li><strong>Business metrics:</strong> Conversion rate (browse-to-buy), cart abandonment rate, average order value, orders/second real-time.</li>
+      <li><strong>Infrastructure:</strong> Inventory DB transaction latency (p99), Redis cache hit ratio (target: >95%), ES query latency, Kafka consumer lag per topic.</li>
+      <li><strong>Alerting:</strong> Checkout error rate >1%, inventory DB p99 >50ms, reservation timeout rate spikes, payment failure rate >5%, Kafka lag >1000 messages.</li>
+    </ul>
+
+    <div class="sub">Security</div>
+    <ul class="items">
+      <li><strong>Price integrity:</strong> Prices are NEVER trusted from the client. Checkout always re-fetches price from DB. Prevents price manipulation attacks.</li>
+      <li><strong>Inventory attacks:</strong> Rate limit cart additions (prevent bots reserving all stock). Reservation TTL ensures held stock is released.</li>
+      <li><strong>Payment security:</strong> PCI compliance — payment details never touch our servers. Tokenized via payment provider (Stripe, Adyen). Only token stored.</li>
+      <li><strong>Bot protection:</strong> CAPTCHA on checkout during flash sales. Device fingerprinting. Purchase quantity limits per customer per product.</li>
+      <li><strong>Data encryption:</strong> All PII encrypted at rest. TLS in transit. Shipping addresses and payment tokens in separate, access-controlled stores.</li>
+    </ul>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span>
+    <span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"To summarize: the architecture is built around a clean separation between the browsing path and the buying path. Browsing is eventually consistent, aggressively cached across CDN and Redis, and designed for 500K reads/sec with minimal backend load. Buying is strongly consistent — inventory reservation uses atomic conditional UPDATEs in PostgreSQL to guarantee no overselling, checkout follows a saga pattern with compensating transactions for each failure mode, and orders are ACID-committed. The bridge between these two worlds is a two-level inventory model: approximate availability for display (Redis, fast, slightly stale) and exact reservation for purchase (Postgres, correct, ACID). For 10× spikes like Black Friday, we use a Redis pre-filter to shed clearly-failed requests before they hit the DB, queue-based checkout for flash sales, and aggressive CDN warming for hot products."</div>
+
+    <div id="evolution" class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Why It Matters</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Recommendation Engine</td><td>Drives ~35% of Amazon's revenue</td><td>Collaborative filtering + content-based. Precomputed per-user recommendations stored in a feature store. Served at product page and cart. Adds read load but no write-path changes.</td></tr>
+        <tr><td>Reviews & Ratings</td><td>Trust signal, conversion driver</td><td>Separate service. Write-light, read-heavy (denormalized avg_rating on product). Moderation pipeline (similar to content moderation).</td></tr>
+        <tr><td>Returns & Refunds</td><td>Post-purchase experience</td><td>Reverse of order pipeline: return requested → item received → refund processed → inventory restocked. Separate state machine.</td></tr>
+        <tr><td>Seller Analytics</td><td>Marketplace health</td><td>CQRS: read model built from order + inventory events via CDC to a data warehouse. Separate from operational path.</td></tr>
+        <tr><td>Multi-Region Active-Active</td><td>Global latency, disaster recovery</td><td>Regional inventory DBs (each region owns its warehouse inventory). Catalog replicated read-only. Orders owned by the region closest to customer. Cross-region conflict resolution for shared resources.</td></tr>
+        <tr><td>Dynamic Pricing</td><td>Competitive positioning, margin optimization</td><td>ML model trained on demand signals, competitor prices, inventory levels. Updates prices asynchronously. Same cache invalidation pipeline.</td></tr>
+        <tr><td>Subscribe & Save</td><td>Recurring revenue</td><td>Scheduler service that creates orders on cadence. Requires handling out-of-stock, price changes, and payment failures gracefully.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This design is defined by ONE fundamental tension: the browsing experience demands speed and availability (cached, eventual, optimistic), while the buying experience demands correctness (transactional, consistent, pessimistic about inventory). The architecture resolves this by cleanly separating the two paths and bridging them with a two-level inventory model. Every technology choice — CDN for catalog, Redis for approximate availability, Postgres for reservations, DynamoDB for cart, Kafka for async fulfillment — follows from which side of this tension it serves.</div>
+
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you prevent overselling during a flash sale when 100K users click &quot;Buy&quot; simultaneously?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is the defining challenge. The inventory decrement MUST be strongly consistent — we use a compare-and-swap operation: `UPDATE inventory SET count = count - 1 WHERE product_id = X AND count &gt; 0`. If count hits 0, subsequent attempts fail atomically. But hitting a single row in PostgreSQL with 100K concurrent writes would be a disaster. So we use a reservation pattern: (1) when the user clicks &quot;Add to Cart,&quot; we don't decrement inventory — we create a soft reservation in Redis with a 10-minute TTL, (2) Redis DECR is atomic and handles 100K+/sec, (3) the final hard decrement in PostgreSQL only happens at checkout, where traffic is naturally lower (only ~10-20% of carts convert). If the Redis reservation expires (user abandoned cart), the count is restored. This means during a flash sale, Redis absorbs the thundering herd, and PostgreSQL sees a manageable write rate. The tradeoff: a user might see &quot;In Stock&quot; but fail at checkout if all reservations are taken — which is better than overselling.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why DynamoDB for the cart instead of PostgreSQL?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Carts are session-scoped, user-specific, and have a simple access pattern: get cart by user_id, add/remove items, expire after 30 days. DynamoDB excels here because: (1) single-key lookups at &lt;5ms regardless of scale, (2) auto-scaling — cart traffic is extremely spiky (Black Friday), and DynamoDB handles this without provisioning, (3) TTL-based expiration built in — abandoned carts auto-delete, (4) no schema — cart items can have variable attributes (gift wrap, custom engraving). PostgreSQL could work, but we'd need to manage connection pools for spiky traffic, handle TTL cleanup ourselves, and the relational model doesn't buy us anything since carts have no joins. The cart is a document, not a relational entity. However, at checkout, we DO copy the final cart into PostgreSQL as an order — because orders have relational integrity (linked to payments, shipments, invoices).</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Walk me through what happens when a payment fails after inventory is decremented.</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is a saga pattern. The checkout flow is: (1) decrement inventory, (2) charge payment, (3) create order. If payment fails after step 1, we need a compensating transaction: re-increment inventory. The Order Service orchestrates this — each step publishes an event to Kafka. If step 2 fails, the Order Service publishes an `inventory.release` event, and the Inventory Service adds the count back. The order moves to PAYMENT_FAILED state. Key design decisions: (1) we decrement inventory BEFORE charging payment — not after — because a payment that succeeds but has no inventory is worse (we'd have to refund), (2) the saga has a timeout — if the payment gateway doesn't respond in 30 seconds, we release inventory and show an error, (3) each step is idempotent — retrying an inventory decrement with the same order_id is a no-op if it already succeeded. The Kafka event log gives us an audit trail and the ability to replay failed sagas.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How would you design the search service to handle &quot;running shoes under $50&quot; with filtering?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is an Elasticsearch problem, not a PostgreSQL problem. Product catalog data is dual-written: PostgreSQL is the source of truth (for orders, inventory), and Elasticsearch is the search index (for discovery). The search query &quot;running shoes under $50&quot; becomes an ES query: `bool: must: [match: &quot;running shoes&quot; on title+description], filter: [range: price &lt; 50, term: category = &quot;shoes&quot;]`. Filters use ES filter context (cached, no scoring), while text matching uses query context (scored by relevance). We add faceted aggregations so the UI can show &quot;Brand: Nike (234), Adidas (189)...&quot; in the sidebar. The index is updated asynchronously — a product price change in PostgreSQL publishes a Kafka event, which the search indexer consumes and updates ES. This means search results can be ~5 seconds stale, which is acceptable. For price-sensitive queries, the product detail page always reads from PostgreSQL (source of truth), so the user sees the accurate price before buying.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What's your CDN invalidation strategy when a product image changes?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">We don't invalidate — we use content-addressable URLs. Every product image URL includes a hash of the content: `cdn.example.com/images/{hash}.jpg`. When a seller uploads a new image, it gets a new hash, and the product record is updated to point to the new URL. The old URL remains valid in CDN cache until it naturally expires (TTL 30 days), but no one references it anymore. This means: (1) zero cache invalidation needed, (2) browsers cache images aggressively (the URL literally changes when content changes), (3) rollback is trivial (revert the product record to the old hash). The one exception is the product listing page HTML, which references the image URL — this has a short CDN TTL (5 minutes) so it picks up image URL changes quickly. The images themselves are immutable and cached forever.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('[id]').forEach(s => { if (document.querySelector(`nav a[href="#${s.id}"]`)) observer.observe(s); });
+</script>
+
+</body>
+</html>

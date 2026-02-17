@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design CrewAI — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+  .comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design CrewAI</h1>
+    <span>Multi-Agent Orchestration · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-core">Core Abstractions</a>
+  <a href="#dd-process">Process Orchestration</a>
+  <a href="#dd-memory">Memory &amp; Learning</a>
+  <a href="#dd-flows">Flows Architecture</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#evolution">Evolution</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"We're designing CrewAI — an open-source Python framework for building multi-agent AI systems. The core insight: instead of one monolithic LLM call, you decompose complex work into specialized agents with defined roles, goals, and backstories, then orchestrate them into Crews that collaborate like human teams. The central architectural tension is autonomy vs. control — agents need freedom to reason and adapt, but production systems need deterministic, observable, debuggable execution."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>Is this a framework or a platform?</strong> <em>→ Both. Open-source framework (pip install crewai) for developers. CrewAI AMP (Agent Management Platform) for enterprise: visual editor, monitoring, deployment. We're designing the core framework architecture — the orchestration engine that powers both.</em></li>
+      <li><strong>How does it relate to LangChain/LangGraph?</strong> <em>→ CrewAI is standalone — built independently from LangChain. LangGraph is graph-based (nodes + edges). CrewAI uses a dual architecture: Crews (autonomous agent teams) + Flows (deterministic event-driven orchestration). CrewAI is 5.76x faster in benchmarks and emphasizes simplicity over flexibility.</em></li>
+      <li><strong>What LLMs does it support?</strong> <em>→ Any LLM: OpenAI, Anthropic, Google, local models via Ollama. The framework is LLM-agnostic. Different agents in the same crew can use different models — use GPT-4 for the planner, Haiku for the researcher.</em></li>
+      <li><strong>What's the execution model?</strong> <em>→ Two process types: Sequential (tasks execute in order, output chains to next) and Hierarchical (a manager agent dynamically delegates to worker agents). Plus Flows: event-driven orchestration wrapping crews with deterministic control flow.</em></li>
+      <li><strong>How do agents use tools?</strong> <em>→ Tools are Python functions with type-safe schemas. Agents call tools to interact with the outside world (search, file I/O, APIs). MCP integration: CrewAI can wrap any MCP server's tools as CrewAI tools.</em></li>
+      <li><strong>Memory and learning?</strong> <em>→ Three memory types: short-term (within a crew run, RAG-based), long-term (persisted across runs), and entity memory (facts about people, projects, etc.). Plus a training loop where human feedback improves agent behavior.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Agent definition: role, goal, backstory, tools, LLM</td><td>The LLM inference engine itself</td></tr>
+        <tr><td>Task definition: description, expected output, context</td><td>Fine-tuning or training LLMs</td></tr>
+        <tr><td>Crew orchestration: sequential + hierarchical</td><td>Enterprise deployment platform (AMP)</td></tr>
+        <tr><td>Flows: event-driven, stateful orchestration</td><td>Visual no-code editor (Studio)</td></tr>
+        <tr><td>Memory system: short-term, long-term, entity</td><td>Billing, multi-tenancy, marketplace</td></tr>
+        <tr><td>Tool integration: custom + MCP adapter</td><td>Specific tool implementations</td></tr>
+        <tr><td>Delegation &amp; inter-agent communication</td><td>Inter-process agent communication (A2A)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1: Content pipeline</strong> — A crew of 3 agents: Researcher (searches the web, gathers facts), Writer (composes article from research), Editor (reviews and polishes). Sequential process: research → write → edit. Each agent's output is the next agent's context.</li>
+      <li><strong>UC2: Customer support triage</strong> — Hierarchical process: a Manager agent receives support tickets, delegates to specialist agents (Billing Agent, Technical Agent, Returns Agent) based on ticket category. Manager validates responses before sending.</li>
+      <li><strong>UC3: Code modernization pipeline</strong> — Flow wraps multiple crews: Step 1 (deterministic): parse legacy codebase. Step 2 (crew): analysis crew evaluates each module. Step 3 (deterministic): generate migration plan. Step 4 (crew): refactoring crew applies changes. State flows between steps.</li>
+      <li><strong>UC4: Multi-turn research with memory</strong> — An analyst crew runs weekly. Long-term memory preserves insights from past runs. Entity memory tracks key facts about competitors. Each run builds on accumulated knowledge, improving quality over time.</li>
+      <li><strong>UC5: Human-in-the-loop training</strong> — A crew runs a task. A human reviews the output and provides feedback. The training system stores the feedback. On subsequent runs, agents incorporate the feedback via long-term memory, producing better results.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Determinism + Autonomy (the central tension):</strong> Flows provide deterministic control flow (same input → same execution path). Crews within flows provide autonomous reasoning (agents decide how to accomplish tasks). The architecture lets developers choose where on the determinism-autonomy spectrum each step sits.</li>
+      <li><strong>LLM-agnostic:</strong> Any model provider. Mix models within a crew. Switch models without code changes. The framework abstracts the LLM interface.</li>
+      <li><strong>Token efficiency:</strong> LLM calls are expensive. Minimize unnecessary calls: caching tool results, short-term memory prevents re-computation, efficient context passing between agents (only relevant output, not full conversation history).</li>
+      <li><strong>Observability:</strong> Every agent step, tool call, delegation, and LLM interaction must be traceable. Real-time tracing for debugging. Integration with AgentOps, LangFuse, OpenTelemetry.</li>
+      <li><strong>Fault tolerance:</strong> Agent errors (hallucination, tool failure, infinite loops) must not crash the entire crew. Max iterations, max RPM, error callbacks, and graceful degradation.</li>
+      <li><strong>Extensibility:</strong> Custom tools, custom LLMs, custom memory providers, custom processes. The framework is a skeleton — developers fill in domain-specific logic.</li>
+    </ul>
+
+    <div class="callout tip">The key architectural insight from 1.7 billion workflows: the gap isn't intelligence — it's architecture. Most agent projects fail not because agents aren't smart enough, but because the surrounding system can't handle failures, can't be debugged, and can't be reproduced. CrewAI's answer: a deterministic backbone (Flows) with intelligence deployed where it matters (Crews). Structure where you need it, autonomy where it matters.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">Agents per Crew</div>
+        <div class="value">2–10</div>
+        <div class="detail">Simple: 2-3 (researcher + writer). Complex: 5-10 specialists with manager. More agents = more LLM calls.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">LLM Calls per Task</div>
+        <div class="value">3–15</div>
+        <div class="detail">Agent reasoning: 1-3 calls. Tool usage: 1-5 calls. Delegation: 2-5 calls. Error retries: 1-2 calls.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">LLM Calls per Crew Run</div>
+        <div class="value">10–100+</div>
+        <div class="detail">3 agents × 3 tasks × 5 calls/task = 45 calls minimum. Hierarchical with delegation: 100+.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Crew Execution Time</div>
+        <div class="value">30s – 20 min</div>
+        <div class="detail">Dominated by LLM latency (~1-5s per call). 50 calls × 2s avg = ~100s. Tool calls add more.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Token Cost per Crew Run</div>
+        <div class="value">$0.05 – $5.00</div>
+        <div class="detail">GPT-4: ~$10/M tokens. 50 calls × ~2K tokens = 100K tokens = ~$1. Local models: $0.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Platform Scale (AMP)</div>
+        <div class="value">1.7B+ workflows</div>
+        <div class="detail">Enterprise customers running millions of crew executions daily across healthcare, finance, logistics.</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1: LLM calls dominate latency and cost.</strong> A 5-agent crew making 50 LLM calls at 2 seconds each takes ~100 seconds minimum (sequential). This is the fundamental bottleneck. The framework must minimize unnecessary calls: cache tool results, pass only relevant context between agents, allow async/parallel execution where possible. Every saved LLM call = faster execution AND lower cost.</div>
+
+    <div class="callout decision"><strong>Key insight #2: Agent execution is embarrassingly stateful.</strong> Each agent maintains a conversation history, tool results, delegation state, and memory context. This state must flow correctly between agents in a crew and persist across runs for long-term memory. The execution engine is essentially a state machine — Flows make this explicit.</div>
+
+    <div class="callout decision"><strong>Key insight #3: Failure modes are the hard problem.</strong> Agents hallucinate, tools fail, LLM APIs rate-limit, infinite delegation loops emerge. The framework must bound every autonomous operation: max iterations (default 25), max RPM, timeout per tool call, error callbacks. Production multi-agent systems are 20% agent design, 80% failure handling.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"CrewAI has a dual architecture: Crews for autonomous collaboration and Flows for deterministic orchestration. The recommended production pattern is: start with a Flow to define the overall structure, embed Crews at specific steps where you need autonomous reasoning. Think of Flows as the manager and Crews as the teams the manager dispatches."</div>
+
+    <div class="sub">Key Architecture Decisions</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Complex tasks need multiple specialists</td><td style="color:var(--accent-cyan);font-weight:500">Role-based agent definition (role + goal + backstory)</td><td>Agents defined by natural-language persona, not code. The backstory steers the LLM's reasoning via prompt engineering. This is simpler than explicit skill definitions and leverages the LLM's ability to adopt personas. More specific role = better response.</td><td>—</td></tr>
+        <tr><td>Tasks must execute in a coordinated order</td><td style="color:var(--accent-cyan);font-weight:500">Process abstraction: Sequential + Hierarchical</td><td>Sequential: pipeline, output chains forward. Hierarchical: manager agent delegates dynamically. Graph-based (LangGraph) is more flexible but harder to debug at scale. Process abstraction is simpler, covers 90% of use cases.</td><td>—</td></tr>
+        <tr><td>Production needs deterministic control flow</td><td style="color:var(--accent-cyan);font-weight:500">Flows: event-driven backbone wrapping Crews</td><td>Flows provide conditional branching, loops, state management — all deterministic Python code. Crews are invoked at specific steps for autonomous reasoning. Pure agent autonomy without structure is unpredictable; pure determinism without agents is brittle.</td><td>CP</td></tr>
+        <tr><td>Agents need external capabilities</td><td style="color:var(--accent-cyan);font-weight:500">Tool abstraction with MCP adapter</td><td>Tools are Python functions with schemas. MCP adapter wraps any MCP server's tools as CrewAI tools. This avoids reinventing tool integrations — leverage the MCP ecosystem. LangChain tool compatibility maintained as an option.</td><td>—</td></tr>
+        <tr><td>Agents must improve over time</td><td style="color:var(--accent-cyan);font-weight:500">Three-tier memory: short + long + entity</td><td>Short-term: RAG within a single run. Long-term: persisted insights across runs. Entity: facts about named entities. Without memory, agents repeat the same mistakes. With memory, each run builds on past learning.</td><td>Eventual</td></tr>
+        <tr><td>Debugging multi-agent systems is hard</td><td style="color:var(--accent-cyan);font-weight:500">Built-in tracing + observability hooks</td><td>Every LLM call, tool invocation, delegation, and state transition is logged with structured metadata. Integration with AgentOps, LangFuse, OpenTelemetry. Without tracing, debugging a 50-call crew execution is impossible.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">System Architecture</div>
+    <div class="svg-diagram" data-anim>
+      <span class="dia-title">CrewAI Architecture</span>
+      <svg viewBox="0 0 780 540" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="arrg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+        <!-- Flow layer -->
+        <rect x="28" y="20" width="724" height="80" rx="10" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.15)" stroke-width="1.5"/>
+        <text x="42" y="38" fill="#39d2c0" font-size="9" font-weight="600" letter-spacing=".1em" opacity=".7">FLOW (Deterministic Backbone)</text>
+        <g><rect x="48" y="50" width="115" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="105" y="64" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Step 1</text><text x="105" y="76" fill="#6e7681" font-size="7" text-anchor="middle">parse_input()</text></g>
+        <g><rect x="183" y="50" width="115" height="36" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.5"/><text x="240" y="64" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Step 2: Crew</text><text x="240" y="76" fill="#6e7681" font-size="7" text-anchor="middle">research_crew()</text></g>
+        <g><rect x="318" y="50" width="115" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="375" y="64" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Step 3</text><text x="375" y="76" fill="#6e7681" font-size="7" text-anchor="middle">validate()</text></g>
+        <g><rect x="453" y="50" width="115" height="36" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.5"/><text x="510" y="64" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Step 4: Crew</text><text x="510" y="76" fill="#6e7681" font-size="7" text-anchor="middle">writing_crew()</text></g>
+        <g><rect x="588" y="50" width="115" height="36" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="645" y="64" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Step 5</text><text x="645" y="76" fill="#6e7681" font-size="7" text-anchor="middle">publish()</text></g>
+        <line x1="163" y1="68" x2="183" y2="68" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="298" y1="68" x2="318" y2="68" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="433" y1="68" x2="453" y2="68" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="568" y1="68" x2="588" y2="68" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <!-- State -->
+        <rect x="700" y="50" width="44" height="36" rx="6" fill="#161b22" stroke="var(--border)" stroke-width="1"/>
+        <text x="722" y="66" fill="#6e7681" font-size="8" text-anchor="middle" font-weight="600">State</text><text x="722" y="77" fill="#6e7681" font-size="6" text-anchor="middle">{...}</text>
+        <!-- Crew detail -->
+        <rect x="28" y="120" width="480" height="200" rx="10" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.15)" stroke-width="1.5"/>
+        <text x="42" y="138" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".1em" opacity=".7">CREW (Autonomous Agent Team)</text>
+        <!-- Process -->
+        <g><rect x="48" y="150" width="140" height="36" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="118" y="164" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Process Engine</text><text x="118" y="176" fill="#6e7681" font-size="7" text-anchor="middle">Sequential | Hierarchical</text></g>
+        <!-- Agents -->
+        <g><rect x="48" y="200" width="120" height="50" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="108" y="220" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Agent: Researcher</text><text x="108" y="233" fill="#6e7681" font-size="7" text-anchor="middle">role, goal, backstory</text><text x="108" y="243" fill="#6e7681" font-size="7" text-anchor="middle">LLM: Claude Sonnet</text></g>
+        <g><rect x="185" y="200" width="120" height="50" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="245" y="220" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Agent: Writer</text><text x="245" y="233" fill="#6e7681" font-size="7" text-anchor="middle">role, goal, backstory</text><text x="245" y="243" fill="#6e7681" font-size="7" text-anchor="middle">LLM: GPT-4o</text></g>
+        <g><rect x="322" y="200" width="120" height="50" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/><text x="382" y="220" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Agent: Editor</text><text x="382" y="233" fill="#6e7681" font-size="7" text-anchor="middle">role, goal, backstory</text><text x="382" y="243" fill="#6e7681" font-size="7" text-anchor="middle">LLM: GPT-4o</text></g>
+        <!-- Tasks -->
+        <g><rect x="48" y="265" width="120" height="36" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/><text x="108" y="280" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Task: Research</text><text x="108" y="292" fill="#6e7681" font-size="7" text-anchor="middle">agent → Researcher</text></g>
+        <g><rect x="185" y="265" width="120" height="36" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/><text x="245" y="280" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Task: Write</text><text x="245" y="292" fill="#6e7681" font-size="7" text-anchor="middle">agent → Writer</text></g>
+        <g><rect x="322" y="265" width="120" height="36" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/><text x="382" y="280" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">Task: Edit</text><text x="382" y="292" fill="#6e7681" font-size="7" text-anchor="middle">agent → Editor</text></g>
+        <!-- Task flow arrows -->
+        <line x1="168" y1="283" x2="185" y2="283" stroke="#bc8cff" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="305" y1="283" x2="322" y2="283" stroke="#bc8cff" stroke-width="1" marker-end="url(#arr)"/>
+        <!-- Right side: Tools, Memory, LLMs -->
+        <rect x="530" y="120" width="222" height="200" rx="10" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+        <text x="544" y="138" fill="#bc8cff" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">INTEGRATIONS</text>
+        <!-- Tools -->
+        <g><rect x="548" y="150" width="90" height="36" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="593" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Tools</text><text x="593" y="176" fill="#6e7681" font-size="7" text-anchor="middle">search, files, API</text></g>
+        <g><rect x="650" y="150" width="90" height="36" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="695" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">MCP Adapter</text><text x="695" y="176" fill="#6e7681" font-size="7" text-anchor="middle">any MCP server</text></g>
+        <!-- LLMs -->
+        <g><rect x="548" y="200" width="192" height="36" rx="5" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="644" y="214" fill="#f85149" font-size="9" text-anchor="middle" font-weight="600">LLM Providers</text><text x="644" y="226" fill="#6e7681" font-size="7" text-anchor="middle">OpenAI · Anthropic · Google · Ollama</text></g>
+        <!-- Memory -->
+        <g><rect x="548" y="250" width="192" height="56" rx="5" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="644" y="266" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Memory System</text><text x="644" y="280" fill="#6e7681" font-size="7" text-anchor="middle">Short-term (RAG) · Long-term (DB)</text><text x="644" y="291" fill="#6e7681" font-size="7" text-anchor="middle">Entity memory · User memory</text></g>
+        <!-- Observability -->
+        <rect x="28" y="340" width="724" height="60" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+        <text x="42" y="358" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">OBSERVABILITY &amp; GUARDRAILS</text>
+        <g><rect x="48" y="364" width="130" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="113" y="380" fill="#6e7681" font-size="8" text-anchor="middle">Tracing (AgentOps)</text></g>
+        <g><rect x="194" y="364" width="130" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="259" y="380" fill="#6e7681" font-size="8" text-anchor="middle">Max iterations (25)</text></g>
+        <g><rect x="340" y="364" width="130" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="405" y="380" fill="#6e7681" font-size="8" text-anchor="middle">Rate limiting (RPM)</text></g>
+        <g><rect x="486" y="364" width="130" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="551" y="380" fill="#6e7681" font-size="8" text-anchor="middle">Error callbacks</text></g>
+        <g><rect x="632" y="364" width="110" height="26" rx="4" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="687" y="380" fill="#6e7681" font-size="8" text-anchor="middle">Human-in-loop</text></g>
+        <!-- Output -->
+        <rect x="28" y="420" width="724" height="50" rx="8" fill="rgba(63,185,80,.02)" stroke="rgba(63,185,80,.12)" stroke-dasharray="4 2"/>
+        <text x="42" y="438" fill="#3fb950" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">CREW OUTPUT</text>
+        <g><rect x="48" y="444" width="100" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="98" y="457" fill="#6e7681" font-size="7" text-anchor="middle">raw (string)</text></g>
+        <g><rect x="162" y="444" width="100" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="212" y="457" fill="#6e7681" font-size="7" text-anchor="middle">json_dict</text></g>
+        <g><rect x="276" y="444" width="100" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="326" y="457" fill="#6e7681" font-size="7" text-anchor="middle">pydantic model</text></g>
+        <g><rect x="390" y="444" width="100" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="440" y="457" fill="#6e7681" font-size="7" text-anchor="middle">task_outputs[]</text></g>
+        <g><rect x="504" y="444" width="100" height="20" rx="3" fill="#161b22" stroke="var(--border)" stroke-width="1"/><text x="554" y="457" fill="#6e7681" font-size="7" text-anchor="middle">token_usage</text></g>
+        <!-- Connection: flow → crew -->
+        <line x1="240" y1="86" x2="240" y2="120" stroke="#d29922" stroke-width="1.5" marker-end="url(#arrg)"/>
+        <!-- Connection: agents → tools -->
+        <line x1="442" y1="225" x2="548" y2="168" stroke="#3fb950" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrg)"/>
+        <!-- Connection: agents → LLMs -->
+        <line x1="442" y1="225" x2="548" y2="218" stroke="#f85149" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+        <!-- Connection: agents → memory -->
+        <line x1="442" y1="250" x2="548" y2="278" stroke="#d29922" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+
+    <div class="sub">Flow: Sequential Crew Execution</div>
+    <div class="svg-diagram">
+      <span class="dia-title">crew.kickoff() — Sequential Process</span>
+      <svg viewBox="0 0 780 520" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ca1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="cg1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Kickoff -->
+        <rect x="280" y="10" width="220" height="30" rx="15" fill="#161b22" stroke="#e3b341" stroke-width="1.5"/>
+        <text x="390" y="29" fill="#e3b341" font-size="10" text-anchor="middle" font-weight="600">crew.kickoff()</text>
+        <line x1="390" y1="40" x2="390" y2="58" stroke="#6e7681" stroke-width="1" marker-end="url(#ca1)"/>
+
+        <!-- Process Engine -->
+        <rect x="280" y="58" width="220" height="24" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="390" y="74" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Process Engine (Sequential)</text>
+        <line x1="390" y1="82" x2="390" y2="100" stroke="#6e7681" stroke-width="1" marker-end="url(#ca1)"/>
+
+        <!-- Task 1: Research -->
+        <rect x="60" y="100" width="660" height="110" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.12)" stroke-width="1"/>
+        <text x="74" y="118" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".06em">TASK 1: RESEARCH</text>
+        <rect x="80" y="126" width="200" height="30" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1"/>
+        <text x="180" y="140" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">Researcher Agent</text>
+        <text x="180" y="151" fill="#6e7681" font-size="7" text-anchor="middle">role: "Senior Research Analyst"</text>
+        <text x="300" y="140" fill="#6e7681" font-size="8">LLM → "What are the key facts?"</text>
+        <text x="300" y="154" fill="#6e7681" font-size="8">Tool: web_search("AI trends 2026") → results</text>
+        <text x="300" y="168" fill="#6e7681" font-size="8">Tool: web_search("enterprise AI adoption") → results</text>
+        <text x="300" y="182" fill="#6e7681" font-size="8">LLM → "Synthesize findings into brief"</text>
+        <rect x="300" y="190" width="400" height="14" rx="3" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.2)" stroke-width=".6"/>
+        <text x="500" y="200" fill="#3fb950" font-size="7" text-anchor="middle">Output: "Research Brief: AI adoption reached 73%..."</text>
+
+        <!-- Arrow with context passing -->
+        <line x1="390" y1="210" x2="390" y2="238" stroke="#3fb950" stroke-width="1.2" marker-end="url(#cg1)"/>
+        <text x="406" y="228" fill="#3fb950" font-size="8" font-weight="500">output → context</text>
+
+        <!-- Task 2: Write -->
+        <rect x="60" y="238" width="660" height="100" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.12)" stroke-width="1"/>
+        <text x="74" y="256" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".06em">TASK 2: WRITE ARTICLE</text>
+        <rect x="80" y="264" width="200" height="30" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+        <text x="180" y="278" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">Writer Agent</text>
+        <text x="180" y="289" fill="#6e7681" font-size="7" text-anchor="middle">role: "Creative Content Strategist"</text>
+        <text x="300" y="278" fill="#6e7681" font-size="8">Context: [research brief from Task 1]</text>
+        <text x="300" y="292" fill="#6e7681" font-size="8">LLM → "Write 1500-word article based on research"</text>
+        <text x="300" y="306" fill="#6e7681" font-size="8">LLM → "Refine intro to be more engaging"</text>
+        <rect x="300" y="313" width="400" height="14" rx="3" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.2)" stroke-width=".6"/>
+        <text x="500" y="323" fill="#3fb950" font-size="7" text-anchor="middle">Output: "Article: The Rise of Enterprise AI..."</text>
+
+        <!-- Arrow -->
+        <line x1="390" y1="338" x2="390" y2="366" stroke="#3fb950" stroke-width="1.2" marker-end="url(#cg1)"/>
+        <text x="406" y="356" fill="#3fb950" font-size="8" font-weight="500">output → context</text>
+
+        <!-- Task 3: Edit -->
+        <rect x="60" y="366" width="660" height="100" rx="8" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.12)" stroke-width="1"/>
+        <text x="74" y="384" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".06em">TASK 3: EDIT</text>
+        <rect x="80" y="392" width="200" height="30" rx="5" fill="#161b22" stroke="#f85149" stroke-width="1"/>
+        <text x="180" y="406" fill="#f85149" font-size="9" text-anchor="middle" font-weight="600">Editor Agent</text>
+        <text x="180" y="417" fill="#6e7681" font-size="7" text-anchor="middle">role: "Senior Copy Editor"</text>
+        <text x="300" y="406" fill="#6e7681" font-size="8">Context: [article from Task 2]</text>
+        <text x="300" y="420" fill="#6e7681" font-size="8">LLM → "Review for grammar, clarity, accuracy"</text>
+        <text x="300" y="434" fill="#6e7681" font-size="8">LLM → "Suggest improvements and apply"</text>
+        <rect x="300" y="441" width="400" height="14" rx="3" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.2)" stroke-width=".6"/>
+        <text x="500" y="451" fill="#3fb950" font-size="7" text-anchor="middle">Output: "Final Article: [polished version]"</text>
+
+        <!-- Final output -->
+        <line x1="390" y1="466" x2="390" y2="484" stroke="#3fb950" stroke-width="1.2" marker-end="url(#cg1)"/>
+        <rect x="200" y="484" width="380" height="30" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="390" y="499" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">CrewOutput</text>
+        <text x="390" y="510" fill="#6e7681" font-size="7" text-anchor="middle">{raw: "Final Article...", token_usage: {total: 24500}, tasks_output: [...]}</text>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4);color:var(--bg)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="dd-core">Deep Dive 1: Core Abstractions — Agent, Task, Crew (~8 min)</div>
+
+    <div class="callout goal"><strong>Three primitives, one philosophy: role-playing agents.</strong> Instead of defining agents with code, you describe them in natural language. The LLM adopts the persona and reasons from that perspective. More specific role = better response.</div>
+
+    <div class="schema"><span class="table-name">Agent</span>
+{
+  <span class="pk">role</span>: "Senior Financial Analyst",          <span class="comment">// WHO the agent is</span>
+  <span class="pk">goal</span>: "Produce accurate stock analysis reports",   <span class="comment">// WHAT it aims to do</span>
+  <span class="pk">backstory</span>: "You're a 15-year veteran at Goldman Sachs, <span class="comment">// WHY it thinks this way</span>
+    known for spotting undervalued tech stocks...",
+  llm: "claude-sonnet-4-5-20250929",           <span class="comment">// which model to use</span>
+  tools: [web_search, calculator, sec_filings], <span class="comment">// what it can do</span>
+  allow_delegation: true,                       <span class="comment">// can it ask other agents?</span>
+  memory: true,                                 <span class="comment">// enable memory system</span>
+  max_iter: 25,                                 <span class="comment">// prevent infinite loops</span>
+  max_rpm: 30,                                  <span class="comment">// rate limit LLM calls</span>
+  verbose: true                                 <span class="comment">// log every step</span>
+}
+
+<span class="table-name">Task</span>
+{
+  <span class="pk">description</span>: "Analyze AAPL stock: financials, competitive position, risks",
+  <span class="pk">expected_output</span>: "A structured report with: valuation, risks, recommendation",
+  agent: financial_analyst,                     <span class="comment">// who does it</span>
+  tools: [sec_filings],                         <span class="comment">// task-specific tools (override agent)</span>
+  context: [previous_research_task],            <span class="comment">// output from upstream tasks</span>
+  output_json: StockReport,                     <span class="comment">// Pydantic model for structured output</span>
+  async_execution: false,                       <span class="comment">// sync by default</span>
+  human_input: false,                           <span class="comment">// request human feedback?</span>
+  callback: on_task_complete                    <span class="comment">// hook for custom logic</span>
+}
+
+<span class="table-name">Crew</span>
+{
+  agents: [researcher, analyst, writer],
+  tasks: [research_task, analysis_task, writing_task],
+  process: Process.sequential,                  <span class="comment">// or Process.hierarchical</span>
+  memory: true,                                 <span class="comment">// enable crew-level memory</span>
+  planning: true,                               <span class="comment">// pre-plan before execution</span>
+  manager_llm: "gpt-4o",                        <span class="comment">// for hierarchical process</span>
+  verbose: true
+}</div>
+
+    <div class="callout decision"><strong>Why role + goal + backstory instead of explicit skill definitions?</strong> LLMs are remarkably good at adopting personas through natural language. A "15-year Goldman Sachs analyst" agent produces qualitatively different output than a generic "financial agent" — it uses appropriate jargon, considers institutional-grade risk factors, and reasons at the right level of detail. The backstory is prompt engineering in disguise — but it's developer-friendly because it mirrors how humans think about team composition. The tradeoff: less precise than formal skill specs, but far more expressive and easier to iterate on.</div>
+
+    <!-- DD2 -->
+    <div class="sub" id="dd-process">Deep Dive 2: Process Orchestration (~8 min)</div>
+
+    <div class="callout goal"><strong>Two execution models for different complexity levels.</strong> Sequential is a pipeline: tasks execute in order, each consuming the previous output. Hierarchical is a managed team: a manager agent dynamically delegates to workers.</div>
+
+    <table>
+      <thead><tr><th>Process</th><th>How It Works</th><th>Best For</th><th>Tradeoff</th></tr></thead>
+      <tbody>
+        <tr><td>Sequential</td><td>Tasks execute in listed order. Output of task N becomes context for task N+1. Deterministic execution path.</td><td>Linear workflows: research → write → edit. Clear dependencies. Simple debugging.</td><td>Can't adapt dynamically. If task 2 reveals task 1 was wrong, no automatic backtracking.</td></tr>
+        <tr><td>Hierarchical</td><td>A manager agent (auto-created or custom) receives all tasks. Dynamically delegates to worker agents based on capabilities. Validates output before accepting.</td><td>Complex projects: the right agent for each subtask isn't known in advance. Manager can re-assign if quality is poor.</td><td>More LLM calls (manager reasoning). Less predictable. Harder to debug — manager's decisions are opaque.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>How does delegation work?</strong> When <code>allow_delegation: true</code>, an agent can ask another agent for help mid-task. The delegating agent formulates a question, the delegate agent processes it, and the result flows back. This is inter-agent communication within a crew. Example: the Writer is composing an article and realizes it needs a specific statistic. Instead of guessing, it delegates to the Researcher: "What's the current AI adoption rate in healthcare?" The Researcher uses its web_search tool and returns the answer. The Writer continues with accurate data. Delegation is bounded by max_iter to prevent infinite delegation loops.</div>
+
+    <div class="callout tip"><strong>The planning optimization.</strong> When <code>planning: true</code>, CrewAI generates a plan BEFORE executing tasks. The planner LLM analyzes all tasks and agents, then creates an optimized execution plan with agent assignments and task ordering. This adds one LLM call upfront but can significantly improve quality by ensuring agents have the right context and tasks are decomposed effectively. Think of it as a "pre-flight checklist" before the crew starts working.</div>
+
+    <!-- DD3 -->
+    <div class="sub" id="dd-memory">Deep Dive 3: Memory &amp; Learning System (~5 min)</div>
+
+    <div class="callout goal"><strong>Memory transforms agents from stateless to learning.</strong> Without memory, a crew forgets everything between runs. With memory, it accumulates knowledge, improves with feedback, and avoids repeating mistakes.</div>
+
+    <table>
+      <thead><tr><th>Memory Type</th><th>Scope</th><th>Storage</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr><td>Short-term</td><td>Single crew run</td><td>In-memory RAG (embeddings)</td><td>Recent context within current execution. Agent recalls what was discussed 3 tasks ago without re-computing.</td></tr>
+        <tr><td>Long-term</td><td>Across runs (persistent)</td><td>SQLite / external DB</td><td>Learnings from past executions. "Last time we analyzed AAPL, the P/E ratio was 28.5." Builds institutional knowledge.</td></tr>
+        <tr><td>Entity</td><td>Across runs (persistent)</td><td>SQLite / external DB</td><td>Facts about named entities. "Competitor X launched product Y in Q2." Maintains a knowledge graph of key entities.</td></tr>
+        <tr><td>User</td><td>Per-user (persistent)</td><td>External DB</td><td>User preferences and history. "This user prefers concise reports with bullet points." Personalizes output.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>How does training work?</strong> CrewAI supports human-in-the-loop training: (1) Crew runs a task. (2) Human reviews output and provides feedback: "The risk section was too vague — include specific percentage impacts." (3) Feedback is stored in long-term memory. (4) On subsequent runs, agents retrieve relevant feedback via RAG and incorporate it. This isn't fine-tuning the LLM — it's augmenting the agent's context with human wisdom. Each training iteration improves output quality without changing the underlying model. The feedback loop is: run → review → store → retrieve → improve.</div>
+
+    <!-- DD4 -->
+    <div class="sub" id="dd-flows">Deep Dive 4: Flows Architecture (~7 min)</div>
+
+    <div class="callout goal"><strong>Flows are the production architecture.</strong> A Flow is a deterministic, event-driven, stateful program that orchestrates Crews. Flows handle conditional branching, loops, parallel execution, and state management — all in regular Python code. Crews are invoked at specific steps where autonomous reasoning is needed.</div>
+
+    <div class="schema"><span class="comment">// A Flow: deterministic backbone with Crews at key steps</span>
+
+<span class="table-name">@Flow</span>
+class ContentPipeline(Flow):
+    <span class="fk">state</span>: PipelineState              <span class="comment">// typed state, flows between steps</span>
+
+    @start()
+    def <span class="pk">parse_input</span>(self):            <span class="comment">// Step 1: deterministic</span>
+        self.state.topic = extract_topic(self.state.raw_input)
+        self.state.keywords = extract_keywords(self.state.raw_input)
+
+    @listen(parse_input)
+    def <span class="pk">research</span>(self):               <span class="comment">// Step 2: autonomous (Crew)</span>
+        crew = Crew(agents=[researcher], tasks=[research_task])
+        result = crew.kickoff(inputs={"topic": self.state.topic})
+        self.state.research = result.raw
+
+    @listen(research)
+    def <span class="pk">validate_research</span>(self):       <span class="comment">// Step 3: deterministic</span>
+        if len(self.state.research) < 500:
+            <span class="fk">raise RetryError("Research too thin")</span>
+        self.state.validated = True
+
+    @listen(validate_research)
+    def <span class="pk">write_and_edit</span>(self):          <span class="comment">// Step 4: autonomous (Crew)</span>
+        crew = Crew(agents=[writer, editor], tasks=[write_task, edit_task])
+        result = crew.kickoff(inputs={"research": self.state.research})
+        self.state.article = result.raw
+
+    @listen(write_and_edit)
+    def <span class="pk">publish</span>(self):                 <span class="comment">// Step 5: deterministic</span>
+        save_to_cms(self.state.article)
+        notify_team(self.state.article)</div>
+
+    <div class="callout decision"><strong>Why Flows + Crews instead of just Crews?</strong> Pure crews (autonomous agents running freely) are unpredictable in production. Pure deterministic code (no agents) can't handle ambiguous, creative, or knowledge-intensive tasks. Flows provide the scaffold: predictable execution paths, typed state, conditional logic, error handling — all in regular Python that developers already know. Crews provide the intelligence: reasoning, tool use, collaboration at specific steps where it's needed. This mirrors how real organizations work: a business process (Flow) defines the overall workflow, and specialized teams (Crews) are dispatched at key stages. The pattern lets you control the determinism-autonomy dial per step: some steps are pure code (parse, validate, publish), others are full agent crews (research, write). This is the architecture that emerged from 1.7 billion production workflows.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5);color:var(--bg)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Agent enters infinite loop (keeps calling tools without progress)</span><span class="mitigation"><code>max_iter: 25</code> — after 25 iterations without producing a final answer, the agent is forced to return its best current output. This is the single most important guardrail. Without it, a confused agent can burn unlimited tokens and time. The iteration counter tracks LLM calls + tool calls. On hitting the limit, the agent outputs whatever it has, prefixed with a warning.</span></div>
+    <div class="failure-row"><span class="scenario">Delegation loop (Agent A delegates to B, B delegates back to A)</span><span class="mitigation">Delegation depth counter: each delegation increments a counter. If depth exceeds a threshold (default: 3), delegation is refused and the agent must answer itself. Additionally, an agent cannot delegate back to the agent that delegated to it (cycle detection). The delegation chain is tracked in the execution context.</span></div>
+    <div class="failure-row"><span class="scenario">LLM API rate limit hit (429 error)</span><span class="mitigation"><code>max_rpm: 30</code> — framework-level rate limiting per agent. If a crew of 5 agents each has max_rpm: 30, total is 150 RPM. On 429: exponential backoff with jitter. The queue ensures no burst exceeds the limit. For hierarchical process: the manager's rate limit is separate from workers'.</span></div>
+    <div class="failure-row"><span class="scenario">Tool execution fails (API timeout, invalid response)</span><span class="mitigation">Tool calls are wrapped in try/catch. On failure: the error message is passed back to the agent's context as a tool result: "Error: API timeout. Try a different approach." The agent can retry with different parameters or use an alternative tool. Max 3 retries per tool call. After that, the agent must proceed without the tool result.</span></div>
+    <div class="failure-row"><span class="scenario">Agent hallucinates confidently wrong output</span><span class="mitigation">Multiple mitigations: (1) Schema validation: if <code>output_json</code> is set, the output must conform to a Pydantic model — structural hallucinations are caught. (2) Hierarchical process: the manager agent reviews worker output before accepting. (3) Human-in-the-loop: <code>human_input: true</code> on critical tasks pauses for human review. (4) Training feedback: human corrections stored in long-term memory improve future runs.</span></div>
+    <div class="failure-row"><span class="scenario">Crew execution costs spiral (unexpected token usage)</span><span class="mitigation">Token usage tracked per agent, per task, and per crew. <code>token_usage</code> in CrewOutput enables cost monitoring. Budget limits can be set via callbacks: if cumulative tokens exceed threshold, abort crew with a cost warning. Caching tool results prevents re-computation. Short-term memory prevents agents from re-asking the same questions.</span></div>
+
+    <div class="sub">CrewAI vs. LangGraph — Architectural Comparison</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>CrewAI</th><th>LangGraph</th></tr></thead>
+      <tbody>
+        <tr><td>Abstraction</td><td>Agents + Tasks + Crews + Flows</td><td>Nodes + Edges + State Graph</td></tr>
+        <tr><td>Philosophy</td><td>Role-playing agents with natural language</td><td>Explicit state machine with code</td></tr>
+        <tr><td>Execution</td><td>Sequential / Hierarchical processes</td><td>Graph traversal with conditional edges</td></tr>
+        <tr><td>State</td><td>Flow state (typed) + agent context</td><td>Global state dict passed through graph</td></tr>
+        <tr><td>Debugging</td><td>"Debug the agent" — trace LLM reasoning</td><td>"Debug the graph" — trace edge conditions</td></tr>
+        <tr><td>Flexibility</td><td>Opinionated: covers 90% of use cases simply</td><td>Maximum flexibility: any topology possible</td></tr>
+        <tr><td>Learning curve</td><td>Low: define agents in YAML/Python, run</td><td>Higher: understand graph patterns, state mgmt</td></tr>
+        <tr><td>LangChain dep.</td><td>None (standalone)</td><td>Tightly coupled</td></tr>
+        <tr><td>Performance</td><td>5.76x faster in benchmarks</td><td>Baseline</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Observability.</strong> CrewAI's tracing captures: every LLM call (prompt, response, latency, tokens), every tool invocation (input, output, duration), every delegation (from, to, question, answer), every state transition in Flows. Integration: AgentOps for real-time dashboards, LangFuse for analytics, OpenTelemetry for distributed tracing. Key metrics: crew execution time, tokens per crew run, task success rate, delegation depth, tool error rate. SLOs: crew completion rate &gt;95%, cost per crew &lt;budget threshold, no iteration limit breaches in production.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="evolution">What I'd Build Next</div>
+    <ul class="items">
+      <li><strong>A2A protocol integration:</strong> Crews as A2A servers — expose a crew as a remote agent that other systems (LangGraph, Semantic Kernel, etc.) can discover via Agent Card and delegate to via A2A. CrewAI already integrates with MCP for tools; A2A extends this to agent-level interop.</li>
+      <li><strong>Adaptive process selection:</strong> Instead of static sequential/hierarchical, the system dynamically chooses the optimal process based on task complexity. Simple tasks → sequential. Complex multi-domain tasks → hierarchical. Learned from historical execution data.</li>
+      <li><strong>Agent evals &amp; benchmarking:</strong> Automated evaluation pipeline: run a crew on a test set, score outputs against ground truth, compute metrics (accuracy, completeness, latency, cost). Track quality over time. Alert when a model update degrades crew performance.</li>
+      <li><strong>Multi-modal agents:</strong> Agents that can reason over images, audio, and video — not just text. A design crew where one agent generates images, another critiques them visually. Requires multi-modal LLM support and visual tool integration.</li>
+      <li><strong>Real-time streaming crews:</strong> Instead of batch execution (kickoff → wait → result), crews that stream intermediate results. The Researcher streams findings as it discovers them. The Writer starts composing before research is fully complete. Reduces perceived latency for long-running crews.</li>
+      <li><strong>Cost optimization engine:</strong> Automatically select the cheapest model that meets quality thresholds for each agent. Use a small model for routine tasks, escalate to GPT-4 only when the small model's confidence is low. Dynamic model routing based on task difficulty.</li>
+    </ul>
+
+    <div class="callout say">"CrewAI's architecture solves the fundamental tension in production AI agents: autonomy vs. control. The dual architecture — deterministic Flows as the backbone, autonomous Crews at key steps — gives developers the best of both worlds. Role-based agents (role + goal + backstory) make complex agent systems intuitive to design. Two process types (Sequential for pipelines, Hierarchical for managed teams) cover the execution spectrum. Three-tier memory enables learning across runs. Built-in guardrails (max iterations, rate limits, schema validation) tame the chaos of autonomous agents. The result: a framework where 80% of the work is regular Python (Flows) and 20% is autonomous intelligence (Crews) — deployed where it matters most."</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7: Q&A ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div style="margin:8px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why use multiple agents instead of one powerful agent with all the tools?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Three concrete reasons: (1) Context window pollution: giving one agent 20 tools, a massive backstory covering all domains, and a complex multi-step goal overwhelms the context window. The agent loses focus and starts hallucinating. Specialized agents with 3-5 tools and a clear, narrow role produce dramatically better output — they stay in character. (2) Model optimization: a research agent that needs to search the web can use a cheaper, faster model (Haiku). A complex analysis agent that needs deep reasoning uses a more capable model (Opus). One monolithic agent forces you to use the most expensive model for everything. Multi-agent lets you match model capability to task difficulty. (3) Debuggability: when a single agent produces bad output, you don't know which step failed — was it the research, the analysis, or the writing? With separate agents, you can trace exactly which agent failed and why, look at its inputs and outputs, and fix that specific agent without touching the others.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do Flows solve the problem that pure agent autonomy creates?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Pure agent autonomy has three production-killing problems: (1) Non-determinism: same input produces different execution paths. You can't predict cost, latency, or output quality. Enterprises need budgets and SLAs. (2) No error boundaries: if one agent fails in an autonomous system, the entire chain can collapse or produce garbage. (3) Unobservability: in a free-running agent system, tracing why the output is wrong requires reading through potentially hundreds of LLM calls with no structure. Flows solve all three: they provide a deterministic backbone — same input, same execution path, every time. Error handling is explicit Python (try/except, retry, fallback). Each step is individually observable and testable. Crews are invoked at specific steps, scoped to specific subtasks, with bounded autonomy (max_iter, max_rpm). The Flow controls WHEN intelligence is applied; the Crew controls HOW. This is why the insight from 1.7 billion workflows is "the gap isn't intelligence, it's architecture."</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">When would you use hierarchical over sequential process?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Sequential when you know the exact pipeline upfront: research → analyze → write → review. Each step's input and output are well-defined. This is the majority of use cases and should be the default — it's predictable, efficient, and easy to debug. Hierarchical when the task decomposition itself requires intelligence: a support ticket arrives and the system must decide whether it's a billing issue, a technical issue, or a returns issue — and route to the appropriate specialist. The manager agent makes this routing decision dynamically based on ticket content. Hierarchical also shines when quality validation matters: the manager reviews each agent's output and can re-assign tasks if the quality is insufficient. The tradeoff is real: hierarchical uses 2-3x more LLM calls (the manager reasons about delegation and validation). Start with sequential for stability, move to hierarchical only when you need dynamic task allocation or output validation. Never start with hierarchical — it's harder to debug and more expensive.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does CrewAI's memory system differ from fine-tuning?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Fine-tuning changes the model weights — you need a dataset, compute budget, and the model is permanently altered. It's expensive, slow (hours/days), and you can't easily undo it. CrewAI's memory is context augmentation, not weight modification. Long-term memory stores past insights and human feedback in a database. On each run, relevant memories are retrieved via RAG and injected into the agent's prompt as additional context. The model itself is unchanged — the memories are prepended to the conversation. This has four advantages: (1) Instant: new feedback is available on the next run, no retraining needed. (2) Reversible: delete bad memories without retraining. (3) Transparent: you can inspect exactly what memories are influencing the agent — no black-box weight changes. (4) Model-agnostic: switch from GPT-4 to Claude and your memories transfer perfectly. The tradeoff: memory augments the context window, which has finite size. Very long memory histories must be pruned or summarized. Fine-tuning can encode deeper behavioral changes. For most enterprise use cases, memory + good prompting covers 90% of what fine-tuning would achieve, at 1% of the cost.</p>
+      </div>
+    </div>
+
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you prevent a crew from spiraling out of control in terms of cost and time?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Five layers of control: (1) <code>max_iter</code> per agent (default 25): hard cap on reasoning cycles. An agent stuck in a loop is forced to output after 25 iterations. (2) <code>max_rpm</code> per agent: rate-limits LLM calls. Prevents one runaway agent from exhausting your API quota. (3) Token budget via callbacks: a callback function monitors cumulative token usage across the crew. When it exceeds a threshold, the crew is terminated with a cost warning. The CrewOutput includes total token_usage for cost tracking. (4) Tool call timeouts: each tool invocation has a configurable timeout. A tool that hangs doesn't block the entire crew — the agent receives a timeout error and adapts. (5) Delegation depth limit: prevents infinite A→B→A→B delegation chains. Default depth of 3 — after that, delegation is refused. Together, these five guardrails bound the worst case: even a completely confused crew will terminate within max_iter × num_agents LLM calls, spend at most max_rpm × execution_time tokens, and complete within a predictable time budget.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+</body>
+</html>

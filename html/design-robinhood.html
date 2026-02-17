@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Robinhood — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Robinhood</h1><span>Stock Trading Platform · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-order">Order Lifecycle & State Machine</a>
+  <a href="#dd-market">Market Data Pipeline</a>
+  <a href="#dd-ledger">Ledger & Double-Entry Accounting</a>
+  <a href="#dd-shard">Sharding & Blast Radius</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a retail stock brokerage platform like Robinhood. Critically, Robinhood is a BROKER, not an exchange — it doesn't match buyers and sellers. It accepts orders from users and ROUTES them to market makers (Citadel Securities, Virtu, etc.) for execution. Users see real-time market data, place orders, and track their portfolio. The system must handle real money with absolute correctness while serving consumer-scale traffic that spikes violently during market events."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ Order execution quality: fill rate (% of orders that execute), price improvement (did the customer get a better price than the quoted spread?), and execution speed. Secondary: platform reliability during volatile markets (the system MUST NOT go down during a meme-stock spike — that's when customers need it most and when Robinhood has historically failed). This shapes priority ordering: CORRECTNESS > AVAILABILITY > SPEED.</em></li>
+      <li><strong>Core products?</strong> <em>→ Stocks, ETFs, options, and crypto trading. Commission-free. Revenue from payment for order flow (PFOF) and interest on uninvested cash.</em></li>
+      <li><strong>Order types?</strong> <em>→ Market orders (execute immediately at best price), limit orders (execute only at specified price or better), stop orders, stop-limit orders.</em></li>
+      <li><strong>Who executes trades?</strong> <em>→ NOT us. We route orders to external market makers via FIX protocol. They execute and report back fills.</em></li>
+      <li><strong>Settlement?</strong> <em>→ T+1 (trade date + 1 business day). Shares and cash settle through a clearinghouse. Robinhood self-clears via Robinhood Securities.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~25M funded accounts, ~750K requests/sec normal, ~5M req/sec during meme-stock events. ~5-10M orders/day.</em></li>
+      <li><strong>Regulatory?</strong> <em>→ SEC, FINRA regulated. Every order, fill, cancellation must be auditable. Pattern day trading rules, margin requirements, trading halts must be enforced.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Order placement & lifecycle (state machine)</td><td>Options pricing / Greeks computation</td></tr>
+        <tr><td>Order routing to market makers</td><td>Crypto wallet / blockchain internals</td></tr>
+        <tr><td>Real-time market data streaming</td><td>Tax lot optimization details</td></tr>
+        <tr><td>Portfolio & position tracking</td><td>Margin lending risk models</td></tr>
+        <tr><td>Double-entry ledger (cash & positions)</td><td>Customer support workflows</td></tr>
+        <tr><td>Risk checks (buying power, trading halts)</td><td>Regulatory reporting file formats</td></tr>
+        <tr><td>Sharding architecture for blast radius</td><td>Mobile app frontend</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (View Market Data):</strong> User opens app → sees real-time prices for watched stocks, updated every second via WebSocket. ~25M concurrent connections during market hours.</li>
+      <li><strong>UC2 (Place Order):</strong> User taps "Buy 10 shares of AAPL at market" → system validates buying power, reserves funds, routes to market maker, receives fill, updates positions. End-to-end: &lt;500ms.</li>
+      <li><strong>UC3 (Partial Fill):</strong> Limit order for 1,000 shares → market maker fills 400, then 300, then 300 across 3 separate fill events. System must correctly update position after each partial fill.</li>
+      <li><strong>UC4 (View Portfolio):</strong> User sees: cash balance, buying power, total equity, positions with current market value, P&L per position, order history. Values must be EXACT — not eventually consistent.</li>
+      <li><strong>UC5 (Meme Stock Spike):</strong> GameStop event. Traffic jumps 7× in minutes. System must not drop orders, must enforce risk controls, may restrict trading if clearing deposit requirements spike.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Financial correctness above all:</strong> Every cent must be accounted for. No phantom shares. No double-counted cash. The ledger is the source of truth, and it must balance at all times.</li>
+      <li><strong>ACID for trades:</strong> Order state transitions, balance updates, and position changes must be transactional. Partial updates are a regulatory violation.</li>
+      <li><strong>Eventually consistent is OK for:</strong> Market data quotes (advisory, not authoritative). Notifications. Leaderboards.</li>
+      <li><strong>Availability during market hours:</strong> 9:30 AM – 4:00 PM ET. Pre/after-hours: 7 AM – 8 PM ET. Downtime during market hours is catastrophic.</li>
+      <li><strong>Auditability:</strong> Every order, fill, cancellation, balance change is logged with timestamps. Regulators can request full reconstruction of any account's history.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: CONSUMER-SCALE TRAFFIC with INSTITUTIONAL-GRADE FINANCIAL CORRECTNESS. Prices can be fast and approximate (read path). Trades must be slow and exact (write path). Combining these two paths in the same system causes cascading failures during spikes. The architecture MUST separate them.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Funded Accounts</div><div class="value">~25M</div><div class="detail">Each account: cash balance, positions, order history, tax lots. Strong consistency required.</div></div>
+      <div class="est-card"><div class="label">Normal API Traffic</div><div class="value">~750K req/sec</div><div class="detail">~80% reads (portfolio, quotes, watchlists). ~20% writes (orders, deposits).</div></div>
+      <div class="est-card"><div class="label">Spike Traffic (Meme Events)</div><div class="value">~5M req/sec</div><div class="detail">7× normal. Concentrated on a few tickers. Must survive without dropping orders.</div></div>
+      <div class="est-card"><div class="label">Orders / Day</div><div class="value">~5-10M</div><div class="detail">Normal: ~5M. Meme-stock days: ~10M+. Each order: 3-5 state transitions.</div></div>
+      <div class="est-card"><div class="label">Market Data Symbols</div><div class="value">~10K actively traded</div><div class="detail">Each symbol: price update every ~100ms. ~100K updates/sec total. Fanned out to millions of users.</div></div>
+      <div class="est-card"><div class="label">WebSocket Connections</div><div class="value">~10-25M concurrent</div><div class="detail">Every user with the app open gets real-time prices. Massive fan-out problem.</div></div>
+      <div class="est-card"><div class="label">Ledger Entries / Day</div><div class="value">~50-100M</div><div class="detail">Each order generates 2-6 ledger entries (reserve, fill, settle). Each deposit/withdrawal: 2 entries.</div></div>
+      <div class="est-card"><div class="label">Assets Under Custody</div><div class="value">~$100B+</div><div class="detail">Average account: ~$4K. Every cent tracked with double-entry accounting.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> The read:write asymmetry is extreme but the WRITE PATH is what matters most. A dropped read means a stale price quote (annoying). A dropped or duplicated write means a wrong trade (regulatory violation, financial loss). The entire architecture must prioritize write correctness even at the cost of read latency.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> Traffic is NOT uniform. It's shaped by the market: 9:30 AM open → massive spike. Meme-stock events → 7× overnight. The system must handle 7× in minutes without pre-scaling. This argues for: pre-provisioned capacity for worst case, NOT auto-scaling (too slow for a 60-second spike).</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> 25M accounts × ACID requirements = sharding is inevitable. But unlike social media (shard by user, reads cross shards), financial sharding must ensure a user's ENTIRE financial state (cash + positions + orders) lives in ONE shard. Cross-shard transactions are not acceptable for financial correctness.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The cardinal rule: SEPARATE the read path (market data — fast, approximate, eventually consistent) from the write path (trading — slow, exact, ACID). These two systems must not share infrastructure, because a market data spike must never degrade order execution."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Financial correctness: no phantom shares</td><td style="color:var(--accent-cyan);font-weight:500">CockroachDB with serializable isolation</td><td>Order state transitions + balance updates must be atomic. No eventual consistency for money. CockroachDB = distributed SQL with ACID.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Need active-active for market hours DR</td><td style="color:var(--accent-cyan);font-weight:500">CockroachDB (not PostgreSQL)</td><td>Raft consensus across regions. If US-East fails during trading, US-West continues. PostgreSQL requires manual failover.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Ledger must always balance</td><td style="color:var(--accent-cyan);font-weight:500">Double-entry bookkeeping in single transaction</td><td>Stored procedure inserts debit + credit atomically. CHECK constraint verifies sum = 0. Single-row updates could lose money.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Live market data to 25M connected users</td><td style="color:var(--accent-cyan);font-weight:500">Kafka → WebSocket fan-out (not polling)</td><td>Price updates pushed instantly. Polling at 1s intervals = 25M requests/sec wasted. Fan-out by symbol allows independent scaling.</td><td>—</td></tr>
+      <tr><td>Blast radius isolation for incidents</td><td style="color:var(--accent-cyan);font-weight:500">Shard by user_id (not by symbol)</td><td>A bug affecting shard 7 impacts 1/N users, not all users trading AAPL. Symbol-based sharding would make hot stocks a single point of failure.</td><td>—</td></tr>
+      <tr><td>Regulatory: 7-year audit trail</td><td style="color:var(--accent-cyan);font-weight:500">Append-only Kafka log + immutable archive</td><td>Order events retained in Kafka (30 days) then archived to S3 (7 years). FINRA/SEC can examine any historical order.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_2751" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_2751h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(247,120,186,.02)" stroke="rgba(247,120,186,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#f778ba" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EXTERNAL</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="390" y1="94" x2="332" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="390" y1="94" x2="448" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <text x="423" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">prices</text>
+    <line x1="332" y1="194" x2="105" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="105" y1="254" x2="219" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="219" y1="254" x2="447" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="219" y1="254" x2="675" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="675" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="219" y1="254" x2="561" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="333" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="390" y1="354" x2="448" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <text x="423" y="272" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">fan-out</text>
+    <line x1="219" y1="294" x2="332" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="561" y1="294" x2="332" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <line x1="333" y1="294" x2="448" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_2751)" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="78" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">📱 Mobile / Web App</text>
+    <rect class="svg-node" x="281" y="154" width="102" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="332" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway</text>
+    <text x="332" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · rate limit</text>
+    <rect class="svg-node" x="397" y="154" width="102" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="448" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🔌 WebSocket Gateway</text>
+    <text x="448" y="184" fill="#6e7681" font-size="8" text-anchor="middle">real-time prices</text>
+    <rect class="svg-node" x="55" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="105" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔀 Shard Router</text>
+    <text x="105" y="284" fill="#6e7681" font-size="8" text-anchor="middle">user_id → shard</text>
+    <rect class="svg-node" x="169" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="219" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📋 Order Service</text>
+    <text x="219" y="284" fill="#6e7681" font-size="8" text-anchor="middle">sharded by user</text>
+    <rect class="svg-node" x="283" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="333" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 Market Data</text>
+    <text x="333" y="284" fill="#6e7681" font-size="8" text-anchor="middle">live quotes</text>
+    <rect class="svg-node" x="397" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="447" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🛡️ Risk Engine</text>
+    <text x="447" y="284" fill="#6e7681" font-size="8" text-anchor="middle">pre-trade checks</text>
+    <rect class="svg-node" x="511" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="561" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💰 Ledger</text>
+    <text x="561" y="284" fill="#6e7681" font-size="8" text-anchor="middle">double-entry</text>
+    <rect class="svg-node" x="625" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="675" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">⚡ Execution GW</text>
+    <text x="675" y="284" fill="#6e7681" font-size="8" text-anchor="middle">FIX protocol</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="371" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">order events · market data</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="390" y="471" fill="#f778ba" font-size="10" font-weight="600" text-anchor="middle">🏦 Market Makers</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">Citadel · Virtu</text>
+    <rect class="svg-node" x="281" y="554" width="102" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="332" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🪳 CockroachDB</text>
+    <text x="332" y="584" fill="#6e7681" font-size="8" text-anchor="middle">orders · ledger</text>
+    <rect class="svg-node" x="397" y="554" width="102" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="448" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="448" y="584" fill="#6e7681" font-size="8" text-anchor="middle">market data cache</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>📱 API Gateway <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">INGRESS</span></h4>
+        <ul>
+          <li>Auth (OAuth2 + MFA), rate limiting</li>
+          <li>Routes: market data → read path, orders → write path</li>
+          <li>WebSocket upgrade for real-time data</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 Market Data Service <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">READ PATH</span></h4>
+        <ul>
+          <li>Ingests real-time quotes from exchanges/market makers</li>
+          <li>Publishes via Kafka → WebSocket fan-out</li>
+          <li>Best-effort delivery. Stale quotes are OK.</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📋 Order Service <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">WRITE PATH</span></h4>
+        <ul>
+          <li>Accepts orders, validates, persists state machine</li>
+          <li>Pre-trade risk checks (buying power, halts)</li>
+          <li>Routes to market makers via FIX protocol</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔀 Shard Router <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">ROUTING</span></h4>
+        <ul>
+          <li>Maps user_id → shard_id</li>
+          <li>Each shard: own app servers + own PostgreSQL</li>
+          <li>Blast radius: shard failure affects only that shard's users</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>💰 Ledger Service <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">FINANCE</span></h4>
+        <ul>
+          <li>Double-entry accounting for every money movement</li>
+          <li>Source of truth for balances and positions</li>
+          <li>Immutable append-only journal</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚡ Execution Gateway <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">EXTERNAL</span></h4>
+        <ul>
+          <li>FIX protocol connection to market makers</li>
+          <li>Sends orders out, receives fill reports</li>
+          <li>Handles partial fills, rejects, cancellations</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🛡️ Risk Engine <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">GUARD</span></h4>
+        <ul>
+          <li>Pre-trade: buying power, margin, pattern day trader</li>
+          <li>Real-time: position limits, concentration risk</li>
+          <li>Market-level: halt enforcement, circuit breakers</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🏦 Settlement / Clearing <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">BACK OFFICE</span></h4>
+        <ul>
+          <li>T+1 settlement with DTCC / clearinghouse</li>
+          <li>Reconciliation: match internal records with street-side</li>
+          <li>Deposit/withdrawal (ACH transfers)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Place a Market Order (Buy 10 AAPL)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 752" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9536" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">: taps "Buy 10 AAPL at market"</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">→ auth, rate limit, route to write path</text>
+    <line x1="280" y1="168" x2="280" y2="206" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <rect class="svg-node" x="122" y="208" width="316" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="226" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Shard Router</text>
+    <text x="280" y="242" fill="#6e7681" font-size="9" text-anchor="middle">→ user_id=12345 → shard_7</text>
+    <line x1="280" y1="252" x2="280" y2="354" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="268" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. CREATE order → state = PENDING_VALIDATION</text>
+    <text x="296" y="284" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Persist to PostgreSQL (shard_7) in same txn:</text>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Insert order row</text>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Write audit log entry</text>
+    <rect class="svg-node" x="106" y="356" width="349" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="384" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Order Service (shard_7)</text>
+    <line x1="280" y1="400" x2="280" y2="438" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <rect class="svg-node" x="115" y="440" width="331" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="458" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Execution Gateway</text>
+    <text x="280" y="474" fill="#6e7681" font-size="9" text-anchor="middle">→ FIX NewOrderSingle to Citadel</text>
+    <line x1="280" y1="484" x2="280" y2="538" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="500" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Fill: 10 shares @ $209.50</text>
+    <rect class="svg-node" x="122" y="540" width="316" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="558" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Market Maker</text>
+    <text x="280" y="574" fill="#6e7681" font-size="9" text-anchor="middle">→ executes → returns FIX ExecutionReport</text>
+    <line x1="280" y1="584" x2="280" y2="686" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="600" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">5. PROCESS FILL (single atomic txn):</text>
+    <text x="296" y="616" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Order state → FILLED</text>
+    <text x="296" y="632" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Ledger: release reserved funds → debit actual cost ($2,095)</text>
+    <text x="296" y="648" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">- Ledger: credit user&#x27;s AAPL position +10 shares</text>
+    <rect class="svg-node" x="106" y="688" width="349" height="44" rx="7" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="280" y="716" fill="#e3b341" font-size="12" font-weight="600" text-anchor="middle">Order Service (shard_7)</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Real-Time Market Data (Read Path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Real-Time Market Data (Read Path)</span>
+  <svg viewBox="0 0 560 536" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a711" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="98" y="40" width="364" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Exchange / Market Maker Feed</text>
+    <line x1="280" y1="84" x2="280" y2="138" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Normalize, validate, publish to Kafka topic "quotes.AAPL"</text>
+    <rect class="svg-node" x="113" y="140" width="334" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="158" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Market Data Ingest</text>
+    <text x="280" y="174" fill="#6e7681" font-size="9" text-anchor="middle">dedicated service</text>
+    <line x1="280" y1="184" x2="280" y2="222" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <rect class="svg-node" x="133" y="224" width="295" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="242" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Kafka</text>
+    <text x="280" y="258" fill="#6e7681" font-size="9" text-anchor="middle">partitioned by symbol</text>
+    <line x1="280" y1="268" x2="280" y2="338" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="284" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Subscription map: which users are watching AAPL?</text>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">→ push update to each subscribed WebSocket connection</text>
+    <rect class="svg-node" x="103" y="340" width="355" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="368" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">WebSocket Fan-Out Service</text>
+    <line x1="280" y1="384" x2="280" y2="470" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a711)"/>
+    <text x="296" y="400" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">This path is COMPLETELY SEPARATE from the trading path.</text>
+    <text x="296" y="416" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">If this path goes down: users see stale prices but CAN STILL TRAD</text>
+    <text x="296" y="432" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">If the trading path goes down: users see prices but CANNOT TRADE.</text>
+    <rect class="svg-node" x="112" y="472" width="337" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="490" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">25M connected users</text>
+    <text x="280" y="506" fill="#6e7681" font-size="9" text-anchor="middle">see price update in real time</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The deep dives I want to cover: (1) The order state machine — the most critical piece of financial correctness. (2) Market data fan-out — the hardest scaling problem (25M WebSockets). (3) The double-entry ledger — how we guarantee every cent is accounted for. (4) Sharding architecture — how Robinhood scaled from a single DB to sharded PostgreSQL with blast radius isolation."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-order">
+    <div class="sub">Deep Dive 1: Order Lifecycle & State Machine (~10 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> An order is NOT a single action. It's a multi-step process with possible failures at every step: validation might fail, funds might be insufficient, the market maker might reject, fills might be partial, the user might cancel mid-flight. Every state transition must be durable, auditable, and recoverable.</div>
+
+    <div class="schema"><span class="comment">── Order State Machine ──</span>
+
+     ┌──────────────┐
+     │   <span class="pk">PENDING</span>     │  ← User submitted order
+     └──────┬───────┘
+            │ validate
+     ┌──────▼───────┐
+     │  <span class="pk">VALIDATED</span>   │  ← Risk checks passed
+     └──────┬───────┘
+            │ reserve funds
+     ┌──────▼───────┐
+     │ <span class="pk">FUNDS_HELD</span>  │  ← Buying power locked in ledger
+     └──────┬───────┘
+            │ route to market maker
+     ┌──────▼───────┐
+     │   <span class="pk">ROUTED</span>     │  ← Sent via FIX, awaiting response
+     └──────┬───────┘
+            │ fill report(s)
+     ┌──────▼───────┐     ┌──────────────┐
+     │<span class="pk">PARTIALLY_FILLED</span>│────▶│   <span class="pk">FILLED</span>     │  ← All shares received
+     └──────┬───────┘     └──────────────┘
+            │
+     (can receive more fills until fully filled)
+
+  <span class="comment">Exception paths (can occur from multiple states):</span>
+     ───▶ <span class="fk">REJECTED</span>     ← Market maker rejects (bad symbol, halted, etc.)
+     ───▶ <span class="fk">CANCELLED</span>    ← User cancels (if not yet filled)
+     ───▶ <span class="fk">EXPIRED</span>      ← Limit order expires at end of day
+     ───▶ <span class="fk">FAILED</span>       ← System error (funds released, user notified)
+
+  <span class="comment">EVERY transition:</span>
+  <span class="comment">  1. Persisted atomically in PostgreSQL (same txn as ledger update)</span>
+  <span class="comment">  2. Audit log entry written (who, what, when, why)</span>
+  <span class="comment">  3. Event published to Kafka (for notifications, analytics)</span></div>
+
+    <div class="callout decision"><strong>Why model orders as an explicit state machine?</strong> Financial systems fail in complex ways: the market maker might respond 30 seconds later, or not at all. Network partitions happen. Servers crash mid-transaction. A state machine with durable transitions means: on restart, the system can examine the order's current state and resume from EXACTLY where it left off. No guessing. No duplicates. A "stuck" order in ROUTED state triggers a timeout → cancel attempt → funds release. Without this explicitness, failure recovery becomes ad-hoc and error-prone.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Idempotency</strong></p>
+    <ul class="items">
+      <li><strong>Client-side:</strong> Every order request includes a unique <code>idempotency_key</code> (UUID generated by the client). If the same key is sent twice (e.g., network retry), the server returns the same response without creating a duplicate order.</li>
+      <li><strong>Market-maker side:</strong> Each order sent to the market maker has a unique <code>clOrdID</code> (FIX protocol). Fill reports reference this ID. Duplicate fill reports (network retry from market maker) are deduplicated by checking if this fill was already processed.</li>
+      <li><strong>Ledger side:</strong> Every ledger entry has a unique <code>transaction_id</code> derived from the order event. Re-processing the same event produces the same transaction_id → no double-counting.</li>
+    </ul>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Buying Power Calculation</strong></p>
+    <div class="schema"><span class="comment">── Buying Power (real-time, per user) ──</span>
+
+<span class="pk">buying_power</span> = cash_balance
+               + margin_available          <span class="comment">// for margin accounts</span>
+               - pending_order_reserves    <span class="comment">// funds locked for open orders</span>
+               - pending_withdrawals       <span class="comment">// ACH withdrawals in flight</span>
+
+<span class="comment">Computed from the ledger in real time.</span>
+<span class="comment">MUST be checked atomically with fund reservation:</span>
+<span class="comment">  BEGIN TRANSACTION</span>
+<span class="comment">    SELECT buying_power FOR UPDATE  -- row-level lock</span>
+<span class="comment">    IF buying_power >= estimated_cost THEN</span>
+<span class="comment">      INSERT ledger_entry (debit cash, credit pending_orders)</span>
+<span class="comment">      UPDATE order SET state = 'FUNDS_HELD'</span>
+<span class="comment">    ELSE</span>
+<span class="comment">      UPDATE order SET state = 'REJECTED', reason = 'insufficient_funds'</span>
+<span class="comment">    END IF</span>
+<span class="comment">  COMMIT</span>
+
+<span class="comment">The SELECT FOR UPDATE prevents two concurrent orders from both</span>
+<span class="comment">seeing the same buying power and both reserving (double-spending).</span></div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-market">
+    <div class="sub">Deep Dive 2: Market Data Pipeline (~6 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Ingest ~100K price updates/sec from exchange feeds, and fan out to ~25M connected users via WebSocket. Each user watches a different set of symbols. This is a massive pub-sub fan-out problem — but correctness is relaxed (stale quotes are acceptable for a few seconds).</div>
+
+    <div class="schema"><span class="comment">── Market Data Architecture ──</span>
+
+<span class="pk">Tier 1: Ingest</span>
+  Exchange/market maker feeds → Market Data Ingest Service
+  Normalize: different feeds use different formats
+  Validate: reject obviously bad quotes (negative prices, stale timestamps)
+  Publish to Kafka topic per symbol: <span class="fk">quotes.AAPL</span>, <span class="fk">quotes.TSLA</span>, ...
+  Retention: very short (minutes). Only latest quote matters.
+
+<span class="pk">Tier 2: Aggregation</span>
+  Kafka consumers compute derived data:
+  - OHLCV candles (1min, 5min, 1hr, 1day)
+  - VWAP (volume-weighted average price)
+  - Sparkline data for watchlists
+  Published to Redis (latest quote per symbol) for REST API fallback.
+
+<span class="pk">Tier 3: Fan-Out (WebSocket)</span>
+  Fleet of WebSocket servers (~1,000+ nodes)
+  Each server holds ~25K concurrent connections
+  Each connection has a subscription set: {AAPL, TSLA, GOOG, ...}
+  
+  <span class="comment">Fan-out approach: SYMBOL-BASED MULTICAST</span>
+  Kafka consumer per WS server reads quotes for all symbols.
+  For each quote update:
+    Look up local subscription map: which connections watch this symbol?
+    Push update to those connections only.
+
+  <span class="comment">Why not user-based fan-out?</span>
+  <span class="comment">If 5M users watch AAPL, publishing one Kafka message per user = 5M messages.</span>
+  <span class="comment">Instead: each WS server has a LOCAL subscription map. One Kafka message</span>
+  <span class="comment">per symbol per server. Server does the local fan-out in-memory.</span>
+  <span class="comment">1,000 servers × 1 msg = 1,000 Kafka messages instead of 5,000,000.</span></div>
+
+    <div class="callout decision"><strong>Why Kafka + local fan-out over a dedicated pub-sub like Redis Pub/Sub?</strong> At 100K updates/sec with 25M subscribers, Redis Pub/Sub would need to push every message to every subscriber — O(subscribers) per message. Kafka decouples: each WebSocket server is an independent consumer that reads ALL quotes and does local fan-out to its own connections. This scales horizontally by adding more WebSocket servers. Each server handles its own 25K connections independently. Tradeoff: every WebSocket server reads ALL symbols (even ones no local user watches). Mitigated by partitioning Kafka by symbol groups and having WebSocket servers only subscribe to partitions they need.</div>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-ledger">
+    <div class="sub">Deep Dive 3: Ledger & Double-Entry Accounting (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Every financial movement — deposit, withdrawal, order reservation, fill, dividend, fee — must be recorded as a double-entry ledger transaction. The ledger must ALWAYS balance: total debits = total credits. This is not optional — it's a regulatory requirement and the foundation of financial integrity.</div>
+
+    <div class="schema"><span class="comment">── Double-Entry Ledger ──</span>
+
+<span class="table-name">ledger_entries</span>
+  <span class="pk">id</span>               <span class="type">BIGINT PK (monotonically increasing)</span>
+  <span class="pk">transaction_id</span>   <span class="type">UUID (groups related entries — all entries in one txn share this)</span>
+  <span class="fk">account_id</span>       <span class="type">BIGINT (e.g., user_12345_cash, user_12345_aapl, clearing_house)</span>
+  entry_type       <span class="type">ENUM (debit, credit)</span>
+  amount           <span class="type">DECIMAL(18,8) — NEVER use float for money</span>
+  currency         <span class="type">VARCHAR (USD, AAPL shares, etc.)</span>
+  description      <span class="type">TEXT</span>
+  created_at       <span class="type">TIMESTAMP WITH TIMEZONE</span>
+  <span class="fk">order_id</span>         <span class="type">BIGINT NULL (link to originating order)</span>
+
+<span class="comment">INVARIANT: For every transaction_id, SUM(debits) = SUM(credits)</span>
+<span class="comment">INVARIANT: Account balance = SUM(credits) - SUM(debits) for that account</span>
+
+<span class="comment">Example: User buys 10 AAPL @ $209.50 = $2,095</span>
+
+  <span class="pk">txn_id: abc123</span>
+  ┌─────────────────────────────────┬──────────┬───────────┐
+  │ Account                         │ Debit    │ Credit    │
+  ├─────────────────────────────────┼──────────┼───────────┤
+  │ user_12345_cash                 │ $2,095   │           │
+  │ user_12345_aapl_position        │          │ 10 shares │
+  │ clearing_cash_payable           │          │ $2,095    │
+  │ clearing_aapl_receivable        │ 10 shares│           │
+  └─────────────────────────────────┴──────────┴───────────┘
+
+<span class="comment">Cash left the user → went to clearing. Shares went from clearing → user.</span>
+<span class="comment">Every debit has a matching credit. The system always balances.</span></div>
+
+    <ul class="items">
+      <li><strong>Append-only:</strong> Ledger entries are NEVER updated or deleted. A correction is a new entry that reverses the original (debit becomes credit and vice versa). This ensures full auditability — regulators can reconstruct any account's history from the ledger alone.</li>
+      <li><strong>Balance computation:</strong> Current balance = <code>SUM(credits) - SUM(debits)</code> for an account. For performance, we maintain a materialized <code>account_balances</code> table that's updated in the SAME transaction as new ledger entries. The raw ledger is the source of truth; the balance table is a cached aggregate.</li>
+      <li><strong>Reconciliation:</strong> End-of-day process computes balances from raw ledger entries and compares to the balance table. Any discrepancy is a critical alert. Separately, internal balances are reconciled against the clearinghouse's records (street-side reconciliation).</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why double-entry over a simple balance field?</strong> A simple <code>UPDATE balance = balance - 2095</code> is fragile: if the process crashes after debiting cash but before crediting shares, money disappears. Double-entry in a single transaction ensures atomicity: BOTH sides of the entry are written together or neither is. The invariant (debits = credits) is a built-in consistency check — if it EVER doesn't balance, you know there's a bug. Simple balance fields have no such self-checking property.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-shard">
+    <div class="sub">Deep Dive 4: Sharding & Blast Radius (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Robinhood scaled from a single PostgreSQL database to a sharded architecture after traffic grew 7× during the meme-stock era. The key insight: shard the ENTIRE application stack per user, not just the database. Each shard is an independent failure domain.</div>
+
+    <div class="schema"><span class="comment">── Sharding Architecture ──</span>
+
+<span class="pk">Before (monolith):</span>
+  All users → one app tier → one PostgreSQL
+  Problem: one bad query, one DB lock → ALL users affected
+
+<span class="pk">After (sharded):</span>
+  Each shard = isolated unit:
+    ┌─────────────────────────────────────┐
+    │  <span class="table-name">Shard 7</span>                             │
+    │  ┌─────────────┐  ┌──────────────┐  │
+    │  │ App Servers  │  │ PostgreSQL   │  │
+    │  │ (dedicated)  │  │ (dedicated)  │  │
+    │  └─────────────┘  └──────────────┘  │
+    │  Own deployment pipeline             │
+    │  Own monitoring & alerting            │
+    │  ~500K users assigned to this shard   │
+    └─────────────────────────────────────┘
+
+<span class="pk">Routing:</span>
+  Request → <span class="fk">Shard Router</span> → extract user_id → lookup <span class="fk">shard_mapping</span>
+  shard_mapping: user_id → shard_id (stored in dedicated DB, cached in Redis)
+  Route request to shard_7's app servers.
+
+<span class="pk">Aggregation Layer:</span>
+  Some API calls need data across shards (e.g., admin dashboards).
+  Stateless aggregation service fans out to all shards, merges results.
+  Custom cursor format encodes per-shard pagination state.
+
+<span class="pk">Kafka:</span>
+  Every shard consumes ALL messages, but only processes its own users.
+  High-throughput topics get per-shard Kafka topics to reduce filtering.</span></div>
+
+    <div class="callout decision"><strong>Why application-level sharding over database-level sharding (Citus, CockroachDB)?</strong> Application-level sharding gives: (1) Complete blast radius isolation — a shard's PostgreSQL can crash without affecting other shards. This is CRITICAL for a financial system where a stuck transaction on one shard must not block trading for all users. (2) Independent deployments — a risky migration can be rolled out to one shard first (canary). (3) No distributed transaction overhead — all of a user's data (orders, ledger, positions) is colocated in one PostgreSQL, so ACID transactions stay local. Tradeoff: operational complexity (50 shards = 50 PostgreSQL clusters to manage). But Robinhood decided this was worth it for the isolation guarantees.</div>
+
+    <ul class="items">
+      <li><strong>Shard count:</strong> Started with ~10 shards, grown to ~50+. Each shard serves ~500K users. Can add shards indefinitely — just assign new users to new shards.</li>
+      <li><strong>Shard migration:</strong> Moving a user between shards requires: (1) halt trading for that user briefly, (2) copy all data (orders, ledger, positions) to new shard, (3) update shard_mapping, (4) resume. Rare operation — only for rebalancing.</li>
+      <li><strong>Cross-shard queries:</strong> The aggregation layer handles these, but they're slow (fan-out + merge). The architecture avoids cross-shard queries on the hot path. Portfolio view = one shard only (all user data colocated).</li>
+    </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Orders &amp; positions</td>
+        <td style="color:var(--accent-cyan)">CockroachDB (sharded)</td>
+        <td>Serializable isolation for order state transitions. Sharded by user_id. Geo-distributed for DR. ACID required — no eventual consistency for money.</td>
+      </tr>
+      <tr>
+        <td>Ledger (double-entry)</td>
+        <td style="color:var(--accent-cyan)">CockroachDB</td>
+        <td>Every transaction = debit + credit entry. Append-only. Sum of all entries must equal zero. Audit trail is immutable.</td>
+      </tr>
+      <tr>
+        <td>Market data (live)</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>Latest quotes per symbol. Updated by market data ingest service. TTL-based expiration. Read by WebSocket fan-out.</td>
+      </tr>
+      <tr>
+        <td>Market data (historical)</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL / TimescaleDB</td>
+        <td>OHLCV candles for charts. Time-series partitioned. Queried for sparklines and full charts.</td>
+      </tr>
+      <tr>
+        <td>Order events</td>
+        <td style="color:var(--accent-cyan)">Kafka</td>
+        <td>order.placed, order.filled, order.cancelled. Consumed by ledger, notifications, compliance, analytics.</td>
+      </tr>
+      <tr>
+        <td>User accounts &amp; KYC</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>PII, SSN (encrypted at rest), KYC status, account type. Relational integrity with orders.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Market maker doesn't respond (order stuck in ROUTED)</span><span class="mitigation">Timeout after 30 seconds → attempt cancel via FIX CancelRequest. If no cancel ack: mark as PENDING_CANCEL, alert operations team. DO NOT release funds until confirmed cancelled or filled — the market maker may still fill. This is a "stuck order" and requires human review in extreme cases.</span></div>
+    <div class="failure-row"><span class="scenario">Server crash mid-order (after FUNDS_HELD, before ROUTED)</span><span class="mitigation">On restart, scan orders in FUNDS_HELD state older than X seconds. Re-attempt routing or roll back (release funds). State machine ensures we know exactly where we left off. Idempotency keys prevent duplicate routing.</span></div>
+    <div class="failure-row"><span class="scenario">Duplicate fill report from market maker</span><span class="mitigation">Each fill has a unique execID (FIX protocol). Deduplicated at the execution gateway: store processed execIDs in a set. If seen before → ignore. Without this, user would get double shares.</span></div>
+    <div class="failure-row"><span class="scenario">Shard PostgreSQL goes down</span><span class="mitigation">~500K users on that shard cannot trade. Other shards completely unaffected. PostgreSQL replica promoted to primary (automated failover). Users may see ~30-60 second interruption. Blast radius: 2% of users (1 of 50 shards), not 100%.</span></div>
+    <div class="failure-row"><span class="scenario">Meme-stock traffic spike (7× in minutes)</span><span class="mitigation">Pre-provisioned capacity for 10× steady state. Shard architecture distributes load. If capacity is exceeded: queue orders (don't drop), degrade market data updates (reduce frequency), circuit breaker on non-essential features (leaderboards, news). NEVER drop or lose an order.</span></div>
+    <div class="failure-row"><span class="scenario">ACH deposit fails after funds credited</span><span class="mitigation">User deposits $1,000 via ACH → funds credited provisionally → user buys stock → ACH bounces 3 days later. Ledger: reverse the deposit entry (debit user_cash $1,000). If user has insufficient cash: negative balance, margin call, forced liquidation of positions. This is why deposits are marked "provisional" until ACH settles.</span></div>
+    <div class="failure-row"><span class="scenario">Ledger imbalance detected in reconciliation</span><span class="mitigation">CRITICAL alert. All trading potentially halted for investigation. Find the offending transaction, create correcting entries. Report to compliance. This should NEVER happen if the double-entry system is implemented correctly — its occurrence indicates a serious bug.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> The system is sharded by user_id — each user's orders, positions, and balances live on the same CockroachDB shard. This means a single user's &quot;Buy AAPL&quot; transaction is a single-shard operation (fast), while cross-user operations (settlement batches) are cross-shard (slower, but run nightly). The Shard Router hashes user_id to determine the target shard, ensuring consistent routing. Market data is the broadcast scaling challenge: every price update for AAPL must reach every user watching AAPL. The WebSocket fan-out service subscribes to Kafka partitioned by symbol and maintains in-memory subscriber lists. At 25M connected users during market hours, the fan-out layer needs ~50 servers, each holding 500K connections. During meme-stock events (GameStop), specific symbols generate 100x normal load — we handle this by pre-scaling fan-out partitions for trending symbols.</div>
+
+    <div class="sub">Settlement & Clearing (T+1)</div>
+    <ul class="items">
+      <li><strong>Trade date (T):</strong> Order is filled. User sees shares in portfolio and reduced cash. Internally, the ledger shows shares as "pending settlement."</li>
+      <li><strong>T+1 (next business day):</strong> Actual settlement. DTCC (clearinghouse) transfers shares from seller's broker to buyer's broker. Cash moves in the opposite direction. Robinhood's clearing arm reconciles with DTCC.</li>
+      <li><strong>Deposit requirement:</strong> Between T and T+1, Robinhood must deposit collateral with DTCC proportional to unsettled trades. During the GME event, DTCC increased this requirement dramatically → Robinhood had to restrict buying to manage deposit requirements. This is a LIQUIDITY RISK, not a technology failure.</li>
+      <li><strong>Netting:</strong> At end of day, buys and sells in the same stock are netted. If 1M shares of AAPL were bought and 900K sold across all users, only the NET 100K shares actually settle. Reduces capital requirements.</li>
+    </ul>
+
+    <div class="sub">Regulatory Compliance</div>
+    <ul class="items">
+      <li><strong>Audit trail:</strong> Every order, fill, cancellation, account change stored permanently. Immutable append-only log. SEC/FINRA can request records for any time period.</li>
+      <li><strong>Pattern Day Trader (PDT):</strong> If account has &lt;$25K and executes 4+ day trades in 5 business days → account flagged, trading restricted. Enforced by the risk engine before every order.</li>
+      <li><strong>Trading halts:</strong> Exchange can halt trading on a symbol (circuit breaker). Risk engine subscribes to halt feeds and blocks orders on halted symbols. Must be enforced within milliseconds of the halt announcement.</li>
+      <li><strong>Best execution:</strong> SEC Rule 606 requires brokers to demonstrate they route orders to get the best price for users. Robinhood must track and report execution quality metrics by market maker.</li>
+      <li><strong>KYC/AML:</strong> Know Your Customer / Anti-Money Laundering checks at account opening. Suspicious activity monitoring on transactions (large deposits, rapid trading patterns).</li>
+    </ul>
+
+    <div class="sub">Observability</div>
+    <ul class="items">
+      <li><strong>Order pipeline metrics:</strong> Orders per second, fill latency (time from ROUTED to FILLED), rejection rate, stuck order count (ROUTED for >30s).</li>
+      <li><strong>Ledger health:</strong> Balance reconciliation status, transaction rate, any imbalance alerts.</li>
+      <li><strong>Per-shard health:</strong> DB connection pool usage, query latency p99, replication lag. Dashboard showing all 50 shards at a glance.</li>
+      <li><strong>Market data pipeline:</strong> Quote staleness (time since last update per symbol), WebSocket connection count, fan-out latency.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> Financial regulatory compliance drives the security architecture. PCI DSS for payment card handling — card numbers never stored, only tokenized references. SOX compliance requires immutable audit trails for every financial transaction — the ledger is append-only by design. All PII (SSN, address, bank account numbers) encrypted at rest with AES-256 and in transit with TLS 1.3. Key management via HSM (Hardware Security Module). Access control is RBAC with principle of least privilege — the market data service cannot access user PII. API authentication uses OAuth 2.0 with short-lived JWTs (15-minute expiry). Rate limiting per user: 10 orders/second (prevents algorithmic trading on a retail platform). FINRA/SEC reporting: all order events are archived for 7 years in immutable storage for regulatory examination.</div>
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: Robinhood's architecture is defined by ONE cardinal rule — separate the read path (market data, fast and approximate) from the write path (trading, slow and exact). The read path ingests ~100K quotes/sec and fans out to 25M WebSocket connections via Kafka and local subscription maps. The write path processes orders through a deterministic state machine with durable transitions, ACID transactions against a sharded PostgreSQL cluster, and a double-entry ledger that guarantees every cent is accounted for. Sharding is at the APPLICATION level — each shard is an independent failure domain with its own app servers, database, and deployment pipeline, giving blast radius isolation where one shard's failure affects only 2% of users. Orders are routed to external market makers via FIX protocol, and fills are processed idempotently to prevent double-counting. The ledger's dual invariants (debits = credits per transaction, balance = sum of entries per account) provide a self-checking system that catches errors before they become regulatory violations."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Options Trading</td><td>Far more complex order types (spreads, straddles). Greeks computation requires real-time pricing models. Position tracking becomes multi-dimensional (strike, expiry, underlying). Risk engine complexity increases dramatically.</td></tr>
+        <tr><td>Crypto Trading (24/7)</td><td>Markets never close — no "overnight" for maintenance. Settlement is blockchain-based (not T+1). Wallet management adds custody complexity. Price feeds from decentralized sources with varying reliability.</td></tr>
+        <tr><td>Fractional Shares</td><td>User buys 0.37 shares of AAPL. Exchange only trades whole shares → Robinhood must aggregate fractional orders into whole-share orders, execute, and allocate fills proportionally. A "mini-exchange" within the broker.</td></tr>
+        <tr><td>Real-Time P&L Streaming</td><td>Portfolio value changes every time any held stock's price changes. With 25M users × avg 5 positions × ~100K price updates/sec, this is a massive computation: recalculate and push P&L for every affected user. Requires a streaming computation engine (Flink/Kafka Streams).</td></tr>
+        <tr><td>Smart Order Routing</td><td>Route to the market maker offering the best price improvement, not just the default. Requires real-time comparison of execution quality across market makers. Regulatory pressure to demonstrate best execution.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This system is defined by a tension that doesn't exist in most other designs: MONEY. Every architectural decision filters through the question "what happens if this fails and real money is involved?" The answer is always: make it recoverable, auditable, and self-checking. State machines give recoverability. Double-entry ledgers give self-checking. Append-only audit logs give auditability. Shard isolation gives blast radius control. The prices on the screen can be wrong for a second — annoying but harmless. A single duplicated fill or phantom share is a regulatory incident. CORRECTNESS > SPEED > AVAILABILITY. That ordering defines every tradeoff in the system.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why CockroachDB instead of PostgreSQL for the order service?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Two reasons: geographic distribution and serializable isolation at scale. Robinhood needs active-active in at least two regions for disaster recovery — if US-East goes down during market hours, orders must still process. CockroachDB provides this natively with consensus-based replication across regions. PostgreSQL would require complex leader-follower replication with manual failover. Second, order state transitions need serializable isolation — when we go from PENDING → FILLED and update the user's cash balance, no other transaction should see an intermediate state. CockroachDB provides serializable by default without the performance cliff that PostgreSQL experiences under serializable isolation. The tradeoff: CockroachDB has higher write latency than single-node PostgreSQL (~10-20ms vs ~2ms) due to consensus rounds, but that's acceptable for order processing where correctness matters more than speed.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you ensure the ledger always balances?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">By making it physically impossible to create an unbalanced entry. Every ledger write is a single database transaction that inserts exactly two rows: a debit and a credit of equal amounts. The application code doesn't INSERT individual rows — it calls a stored procedure that takes (from_account, to_account, amount) and atomically creates both entries. The procedure has a CHECK constraint: it queries the running sum of all entries, and if the result isn't zero, the transaction aborts. Additionally, a nightly batch job independently recalculates all account balances by summing all ledger entries per account and compares against the cached balance. Any discrepancy triggers a P1 alert. This belt-and-suspenders approach means: the application layer CAN'T create imbalances (procedural enforcement), and even if a bug somehow did, the nightly reconciliation catches it within hours.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What happens if a market maker fills an order but the acknowledgment is lost?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is the FIX protocol's bread and butter. Every order has a unique ClOrdID (client order ID) that's generated by Robinhood's Execution Gateway. The market maker returns an ExecutionReport referencing this ClOrdID. If the acknowledgment is lost, the Execution Gateway resends a StatusRequest with the same ClOrdID. The market maker responds with the current status of that order — either filled, rejected, or pending. Crucially, the order's state in our system doesn't change until we receive a confirmed ExecutionReport. If we sent the order and got no response, the order stays in SENT state. A reconciliation process runs every minute: for any order in SENT state for &gt;30 seconds, it queries the market maker. If the query also fails, we escalate to the manual operations desk. We NEVER assume an order was filled without confirmation — assuming a fill and updating the user's portfolio with phantom shares would be a regulatory violation.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you handle the GameStop scenario — extreme load on a single stock?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The system is sharded by user_id, not by symbol, so a single hot stock doesn't create a database hotspot. However, it creates three other hotspots: (1) Market data: AAPL price updates need to reach everyone watching it. We pre-partition the WebSocket fan-out by symbol, so we can scale the GME partition independently — add more fan-out servers for that specific symbol. (2) Order volume: 50x normal order rate for one stock. The Shard Router distributes these across all user shards (since different users are on different shards), so no single shard is overwhelmed. (3) Execution Gateway: all GME orders route to the same market makers. We maintain multiple FIX sessions per market maker and load-balance across them. The circuit breaker pattern applies: if a market maker stops responding within SLA, we fail fast and try alternate venues. The controversial aspect: Robinhood can also restrict trading on specific symbols as a business decision (with proper disclosure), which is what happened with GME.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

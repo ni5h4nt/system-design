@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Expedia — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Expedia</h1><span>Online Travel Agency · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-search">Search & Aggregation</a>
+  <a href="#dd-pricing">Pricing & Availability Cache</a>
+  <a href="#dd-booking">Multi-Supplier Booking</a>
+  <a href="#dd-suppliers">Supplier Integration Layer</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing an Online Travel Agency like Expedia. The critical thing to understand up front: Expedia OWNS NO INVENTORY. It doesn't own a single hotel room, airplane seat, or rental car. It's an AGGREGATOR — it connects to hundreds of external suppliers (airlines, hotel chains, GDS systems, car rental companies), queries their inventory in real time, presents unified search results to the user, and then books through those suppliers on the user's behalf. This makes it fundamentally different from Amazon (which has a warehouse) or Robinhood (which connects to a few market makers). Expedia's core challenge is: aggregate inventory from hundreds of slow, unreliable, heterogeneous external systems and present it as a fast, unified shopping experience."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ Booking conversion rate: searches that result in a completed booking. Secondary: revenue per search (RPS), which factors in both conversion rate and booking value. A 0.1% improvement in conversion on 600M searches/month = massive revenue. This shapes architecture: search must be FAST (slow search → user abandons → lost booking), prices must be ACCURATE at checkout (price change → user abandons → lost booking), and ranking must surface the MOST BOOKABLE results, not just the cheapest.</em></li>
+      <li><strong>Products?</strong> <em>→ Flights, hotels (700K+ properties), car rentals, vacation packages (flight + hotel bundle), activities/experiences, cruises. We'll focus on flights + hotels as the core.</em></li>
+      <li><strong>Where does inventory come from?</strong> <em>→ Hotels: direct connections (Marriott, Hilton APIs), hotel switches (Derbysoft, SiteMinder), channel managers. Flights: GDS (Amadeus, Sabre, Travelport), direct airline connections (NDC). Car: Hertz, Avis APIs directly.</em></li>
+      <li><strong>Revenue model?</strong> <em>→ Hotel: merchant model (Expedia buys wholesale, sells at markup) or agency model (takes commission). Flights: primarily booking fees + ancillary revenue. Packages: bundle discount funded by margin.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~70M monthly visitors, ~600M searches/month, ~30M bookings/year across all brands (Expedia, Hotels.com, Vrbo, Orbitz).</em></li>
+      <li><strong>Latency?</strong> <em>→ Search results must appear in &lt;3 seconds. But suppliers can take 5-15 seconds to respond. This is the fundamental tension.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Hotel search & booking</td><td>Vrbo / vacation rental specifics</td></tr>
+        <tr><td>Flight search & booking</td><td>Cruise booking</td></tr>
+        <tr><td>Multi-supplier aggregation</td><td>Loyalty/rewards program</td></tr>
+        <tr><td>Pricing & availability caching</td><td>Content management (photos, reviews)</td></tr>
+        <tr><td>Package bundling (flight + hotel)</td><td>Advertising platform</td></tr>
+        <tr><td>Booking state machine & confirmation</td><td>Customer service / call center</td></tr>
+        <tr><td>Supplier integration layer</td><td>SEO / marketing infrastructure</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (Hotel Search):</strong> User searches "Hotels in Paris, Mar 15-20, 2 adults" → system queries multiple suppliers in parallel → merges, deduplicates, ranks → shows 200+ hotels with prices in &lt;3 seconds.</li>
+      <li><strong>UC2 (Flight Search):</strong> "NYC → London, Mar 15, round trip, 1 adult" → fan out to GDS + direct airline APIs → aggregate hundreds of itineraries → sort by price/duration/stops → show results in &lt;3 seconds.</li>
+      <li><strong>UC3 (Hotel Booking):</strong> User selects a hotel, enters details, pays → system re-checks availability with supplier (price may have changed!) → if available, confirms booking → sends confirmation email + itinerary.</li>
+      <li><strong>UC4 (Package Booking):</strong> "Flight + Hotel to Paris" → book flight with airline + hotel with hotel supplier → BOTH must succeed → if hotel fails after flight succeeds, must handle partial failure gracefully.</li>
+      <li><strong>UC5 (Price Change at Checkout):</strong> User searched 20 minutes ago, price was $150/night. At checkout, re-query shows $165/night. Must display price change transparently and let user decide.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Search speed &lt;3 seconds:</strong> Despite querying 10+ external suppliers that may each take 5-15 seconds. This REQUIRES caching and progressive loading ("show what we have, keep loading more").</li>
+      <li><strong>High availability:</strong> Downtime during peak booking season (holidays, summer) is directly lost revenue. Target: 99.99%.</li>
+      <li><strong>Price accuracy at booking time:</strong> The price shown to the user MUST match what's charged. If it changes between search and booking, the user must be notified. This is a legal (consumer protection) requirement.</li>
+      <li><strong>Eventual consistency for search:</strong> Search results can show slightly stale pricing/availability. It's OK if a hotel shows "available" but is actually sold out — the error is caught at booking time. This tradeoff enables caching.</li>
+      <li><strong>Multi-currency, multi-language:</strong> 70+ countries, 35+ languages, 40+ currencies. Prices must be converted and displayed correctly.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: SEARCH SPEED vs. INVENTORY FRESHNESS. Suppliers are slow (5-15 seconds), unreliable (timeouts, errors), and heterogeneous (different APIs, formats, protocols). Users expect results in &lt;3 seconds. The only way to bridge this gap: AGGRESSIVE CACHING of availability/pricing + REAL-TIME VERIFICATION at booking time. The cache makes search fast but introduces staleness. The booking-time re-check ensures correctness. The architecture is designed around this two-phase model: fast-but-approximate SEARCH → slow-but-exact BOOKING.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Monthly Visitors</div><div class="value">~70M</div><div class="detail">Across all Expedia Group brands. Strong seasonality: summer and holiday peaks.</div></div>
+      <div class="est-card"><div class="label">Searches / Month</div><div class="value">~600M</div><div class="detail">~20M/day, ~230/sec average, ~1K/sec peak. Each search fans out to multiple suppliers.</div></div>
+      <div class="est-card"><div class="label">Supplier Queries / Search</div><div class="value">~10-30</div><div class="detail">Each user search → fan-out to 10-30 supplier endpoints. Peak: 30K supplier calls/sec.</div></div>
+      <div class="est-card"><div class="label">Bookings / Year</div><div class="value">~30M</div><div class="detail">~100K/day, ~1.2/sec average. Conversion rate: ~5% of sessions result in a booking.</div></div>
+      <div class="est-card"><div class="label">Hotel Properties</div><div class="value">~700K+</div><div class="detail">Across 250K destinations. Each has 5-50 room types × 365 future dates = massive price matrix.</div></div>
+      <div class="est-card"><div class="label">Flight Itineraries / Search</div><div class="value">~500-2,000</div><div class="detail">A single route can return hundreds of itineraries. Must sort, filter, and rank in milliseconds.</div></div>
+      <div class="est-card"><div class="label">Price Cache Size</div><div class="value">~50-100 TB</div><div class="detail">700K hotels × ~20 room types × 365 dates × multiple suppliers = billions of rate entries.</div></div>
+      <div class="est-card"><div class="label">Gross Bookings</div><div class="value">~$100B+ / year</div><div class="detail">Expedia Group total. Revenue ~$13B (commission/markup on bookings).</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1 — The fan-out amplification problem:</strong> 1 user search = 10-30 external API calls. At 1K user searches/sec peak = 30K supplier calls/sec. Suppliers are slow (2-15 second response) and rate-limited. Without caching, this is unsustainable. The availability cache exists primarily to reduce supplier fan-out, not just for speed.</div>
+
+    <div class="callout decision"><strong>Key insight #2 — The search:book ratio is ~200:1.</strong> 600M searches/month but only 2.5M bookings/month. This means: optimizing SEARCH performance matters 200× more than optimizing BOOKING performance. Search must be fast (cached). Booking can be slow (real-time supplier call) because it happens 200× less often and the user is committed.</div>
+
+    <div class="callout decision"><strong>Key insight #3 — Hotels and flights are COMPLETELY DIFFERENT inventory models.</strong> Hotels: static properties with dynamic rates/availability per night. Flights: dynamic itineraries constructed from flight segments with complex fare rules. The search/caching strategy must be different for each. Don't design a generic "travel search" — design hotel search and flight search separately.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"I'll organize this around the two-phase model: SEARCH (fast, cached, approximate) and BOOKING (slow, real-time, exact). Between them is the PRICING CACHE that bridges the speed gap. And underneath everything is the SUPPLIER INTEGRATION LAYER that normalizes the chaos of hundreds of different external APIs."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Suppliers take 5-15s, user expects &lt;3s</td><td style="color:var(--accent-cyan);font-weight:500">Aggressive caching + progressive loading</td><td>Cache popular searches in Redis. Show cached results immediately, live rates as they arrive. Waiting for all suppliers = 15s page load.</td><td style="color:var(--accent-orange);font-weight:600">AP for search</td></tr>
+      <tr><td>Booking must be ACID (charge + reserve atomically)</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL for bookings + saga pattern</td><td>Payment charge and supplier reservation must be coordinated. Failure at any step triggers compensating transactions (refund, release).</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Rates change every few minutes</td><td style="color:var(--accent-cyan);font-weight:500">Cassandra for rate cache (TTL-based expiration)</td><td>High write volume from supplier feeds. TTL auto-expires stale rates. Cassandra handles write-heavy workloads better than PostgreSQL.</td><td style="color:var(--accent-orange);font-weight:600">AP (stale rates acceptable for search)</td></tr>
+      <tr><td>Multiple suppliers return different formats</td><td style="color:var(--accent-cyan);font-weight:500">Adapter-per-supplier (not generic parser)</td><td>Marriott XML ≠ Booking.com JSON ≠ Amadeus EDIFACT. Each adapter normalizes to internal schema. Generic parser would be brittle.</td><td>—</td></tr>
+      <tr><td>Supplier confirmation can fail after payment</td><td style="color:var(--accent-cyan);font-weight:500">Saga with compensating transactions</td><td>If supplier rejects after payment: auto-refund. If payment fails after reservation: release hold. Event-driven with Kafka for audit trail.</td><td>—</td></tr>
+      <tr><td>PCI compliance for payments</td><td style="color:var(--accent-cyan);font-weight:500">Tokenized payment vault (booking service never sees card numbers)</td><td>Card tokenized at edge. Only the vault + PSP see raw numbers. Reduces PCI scope from entire system to one component.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_9929" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_9929h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="390" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <text x="365" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">static</text>
+    <line x1="390" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="447" y1="194" x2="105" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="447" y1="194" x2="447" y2="254" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_9929)" opacity=".6"/>
+    <line x1="105" y1="254" x2="219" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="105" y1="254" x2="333" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="105" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="219" y1="294" x2="447" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="447" y1="254" x2="561" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="447" y1="254" x2="675" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="447" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <line x1="447" y1="294" x2="448" y2="554" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_9929)" opacity=".6"/>
+    <line x1="219" y1="294" x2="332" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9929)" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">📱 Traveler</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">Web · App</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌍 CDN</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">images · static</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">auth · route</text>
+    <rect class="svg-node" x="55" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="105" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔍 Search Orchestrat…</text>
+    <text x="105" y="284" fill="#6e7681" font-size="8" text-anchor="middle">fan-out to suppliers</text>
+    <rect class="svg-node" x="169" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="219" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🏨 Hotel Adapter</text>
+    <text x="219" y="284" fill="#6e7681" font-size="8" text-anchor="middle">normalize rates</text>
+    <rect class="svg-node" x="283" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="333" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">✈️ Flight Adapter</text>
+    <text x="333" y="284" fill="#6e7681" font-size="8" text-anchor="middle">GDS integration</text>
+    <rect class="svg-node" x="397" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="447" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📋 Booking Engine</text>
+    <text x="447" y="284" fill="#6e7681" font-size="8" text-anchor="middle">saga orchestrator</text>
+    <rect class="svg-node" x="511" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="561" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💰 Pricing</text>
+    <text x="561" y="284" fill="#6e7681" font-size="8" text-anchor="middle">markup · tax · FX</text>
+    <rect class="svg-node" x="625" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="675" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">💳 Payment</text>
+    <text x="675" y="284" fill="#6e7681" font-size="8" text-anchor="middle">PCI · multi-currency</text>
+    <rect class="svg-node" x="283" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="333" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="333" y="384" fill="#6e7681" font-size="8" text-anchor="middle">search results · rates</text>
+    <rect class="svg-node" x="397" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="447" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">💨 Memcached</text>
+    <text x="447" y="384" fill="#6e7681" font-size="8" text-anchor="middle">hotel metadata</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="471" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">booking events · notifications</text>
+    <rect class="svg-node" x="281" y="554" width="102" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="332" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📊 Cassandra</text>
+    <text x="332" y="584" fill="#6e7681" font-size="8" text-anchor="middle">rate cache · availability</text>
+    <rect class="svg-node" x="397" y="554" width="102" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="448" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL</text>
+    <text x="448" y="584" fill="#6e7681" font-size="8" text-anchor="middle">bookings · users</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🔍 Search Orchestrator <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">SEARCH</span></h4>
+        <ul>
+          <li>Receives user search request</li>
+          <li>Decides: cache hit? Or fan-out to suppliers?</li>
+          <li>Merges, deduplicates, ranks results</li>
+          <li>Returns progressive results (&lt;3 sec)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>💰 Pricing & Availability Cache <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">CACHE</span></h4>
+        <ul>
+          <li>Pre-fetched hotel rates for popular searches</li>
+          <li>TTL-based staleness (15 min - 2 hours)</li>
+          <li>Billions of rate entries (hotel × room × date)</li>
+          <li>The bridge between fast search and slow suppliers</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🏨 Hotel Service <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">VERTICAL</span></h4>
+        <ul>
+          <li>Hotel content (descriptions, photos, amenities)</li>
+          <li>Rate plans, room types, cancellation policies</li>
+          <li>Geo-spatial search (hotels near X)</li>
+          <li>Review aggregation</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>✈️ Flight Service <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">VERTICAL</span></h4>
+        <ul>
+          <li>Itinerary construction from segments</li>
+          <li>Fare rules, baggage policies</li>
+          <li>GDS integration (Amadeus, Sabre)</li>
+          <li>Direct airline (NDC) connections</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📦 Booking Engine <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">WRITE PATH</span></h4>
+        <ul>
+          <li>Re-verifies price & availability with supplier</li>
+          <li>Handles price changes at checkout</li>
+          <li>Coordinates multi-supplier bookings</li>
+          <li>State machine: pending → confirmed → ticketed</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔌 Supplier Integration Layer <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">ADAPTERS</span></h4>
+        <ul>
+          <li>Adapters for 100+ supplier APIs</li>
+          <li>Normalizes heterogeneous formats (XML, JSON, EDIFACT)</li>
+          <li>Connection pooling, rate limiting, circuit breakers</li>
+          <li>Retry logic, timeout handling per supplier</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>💳 Payment Service <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">FINANCE</span></h4>
+        <ul>
+          <li>PCI-compliant card processing</li>
+          <li>Merchant model: Expedia charges customer</li>
+          <li>Agency model: supplier charges customer</li>
+          <li>Multi-currency, FX conversion</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 Ranking & Personalization <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">ML</span></h4>
+        <ul>
+          <li>Sort results by relevance, not just price</li>
+          <li>Personalized based on user history</li>
+          <li>Sponsored listings (hotel bidding for placement)</li>
+          <li>Conversion-optimized ranking</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Hotel Search ("Paris, Mar 15-20, 2 adults")</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 336" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a4913" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">enters search →</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">→</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a4913)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 1: GEO LOOKUP</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">"Paris" → geo_id=2734 (Paris, France)</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Fetch all hotel property IDs in Paris: ~4,500 hotels</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 2: CHECK PRICING CACHE (parallel, &lt;50ms)</text>
+    <rect class="svg-node" x="112" y="272" width="337" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Search Orchestrator</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Hotel Booking (User selects a hotel and pays)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Hotel Booking (User selects a hotel and pays)</span>
+  <svg viewBox="0 0 560 252" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a8896" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="134" y="40" width="292" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">User</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">selects: "Hotel Le Marais, Deluxe Room, $180/</text>
+    <line x1="280" y1="84" x2="280" y2="186" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 1: RE-CHECK AVAILABILITY (real-time supplier call, 2-8 sec)</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Call supplier API: "Is Deluxe Room at Hotel Le Marais available</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">for Mar 15-20 at $180/night?"</text>
+    <text x="296" y="148" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">THREE POSSIBLE OUTCOMES:</text>
+    <rect class="svg-node" x="119" y="188" width="322" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="216" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Booking Engine</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The deep dives: (1) Search & aggregation — the fan-out pattern and how to handle slow suppliers. (2) Pricing cache — how to cache billions of rates with acceptable staleness. (3) Multi-supplier booking — handling partial failures in flight + hotel packages. (4) Supplier integration layer — normalizing the chaos of 100+ different APIs."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-search">
+    <div class="sub">Deep Dive 1: Search & Aggregation (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> A user search for "Hotels in Paris" must query dozens of suppliers, each with different response times (500ms to 15 seconds), different data formats, and different reliability. Results must be merged, deduplicated (same hotel from multiple suppliers), normalized (tax-inclusive vs. exclusive, per-night vs. total), ranked, and returned in &lt;3 seconds. The search orchestrator is the hardest piece of the system.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">The Scatter-Gather Pattern</strong></p>
+    <div class="schema"><span class="comment">── Search Orchestrator: Scatter-Gather ──</span>
+
+<span class="pk">1. SCATTER (fan-out to suppliers in parallel)</span>
+  For each applicable supplier for this destination:
+    - Spawn async request with TIMEOUT (3 sec hard limit)
+    - Each request goes through the Supplier Integration Layer
+    - Supplier adapter translates to supplier's API format
+
+  Optimization: DON'T query all 100+ suppliers for every search.
+  <span class="fk">Supplier Selection Engine</span> picks the 10-20 relevant suppliers:
+    - Which suppliers have hotels in Paris?
+    - Which suppliers are healthy (not in circuit-breaker state)?
+    - Which suppliers have responded fast recently?
+    - Which suppliers have the best conversion rates for this market?
+
+<span class="pk">2. GATHER (collect responses as they arrive)</span>
+  Use a <span class="fk">completion-based model</span>, NOT wait-for-all:
+    - As each supplier response arrives → parse, normalize, add to result set
+    - After 2 seconds: return whatever we have (early return)
+    - Continue collecting in background for 1 more second
+    - After 3 seconds: hard cutoff, discard late responses
+    - Straggling supplier responses update the cache for NEXT search
+
+  <span class="comment">Result: User sees results in 2 seconds even if 5 suppliers are slow.</span>
+  <span class="comment">Tradeoff: Might miss some results from slow suppliers.</span>
+  <span class="comment">Mitigation: Cache has their rates from a recent prior query.</span>
+
+<span class="pk">3. MERGE & DEDUPLICATE</span>
+  Same hotel from multiple suppliers? How to know?
+    - <span class="fk">Property Mapping Table</span>: maps supplier-specific hotel IDs to 
+      Expedia's canonical property_id.
+    - "Marriott Paris Le Marais" from Supplier A = property_id 88421
+    - "Paris Le Marais Marriott" from Supplier B = property_id 88421
+    - This mapping is maintained by a content team + ML matching.
+  
+  For duplicate properties: pick the supplier offering best rate for the user.
+  Factor in: price, cancellation policy, Expedia margin, supplier reliability.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Hotel Search vs. Flight Search — Why They're Different</strong></p>
+    <table>
+      <thead><tr><th>Dimension</th><th>Hotel Search</th><th>Flight Search</th></tr></thead>
+      <tbody>
+        <tr><td>Inventory</td><td>Static properties with dynamic rates per night</td><td>Dynamic itineraries constructed from flight segments</td></tr>
+        <tr><td>Cacheability</td><td>HIGH — rates change slowly (hours). Same hotel, same dates = same rate.</td><td>LOW — fares change constantly, seat-level availability is volatile.</td></tr>
+        <tr><td>Search space</td><td>Bounded: hotels in [city] for [dates]. Typically 50-5,000 properties.</td><td>Combinatorial: segments × connections × fare classes. Thousands of itineraries.</td></tr>
+        <tr><td>Suppliers</td><td>Many small suppliers + hotel switches</td><td>3 major GDS (Amadeus, Sabre, Travelport) + airline NDC</td></tr>
+        <tr><td>Dedup</td><td>Same hotel from multiple suppliers → property mapping</td><td>Same itinerary from GDS + airline direct → itinerary fingerprint</td></tr>
+        <tr><td>Pricing</td><td>Rate per night × number of nights. Relatively simple.</td><td>Complex fare rules: advance purchase, min stay, Saturday night, fare class availability.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why scatter-gather with early return instead of waiting for all suppliers?</strong> A single slow supplier (15 sec response) would delay the entire search to 15 seconds — unacceptable. With early return at 2 seconds: we show ~80% of results immediately. The missing results from slow suppliers are either (a) already in the cache from a previous search, or (b) genuinely missing but the user likely won't notice among 200+ results. The completion-based model also naturally handles supplier outages — a down supplier is equivalent to a slow one (it times out and is skipped).</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-pricing">
+    <div class="sub">Deep Dive 2: Pricing & Availability Cache (~7 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> 700K hotels × ~20 room types × 365 future dates = ~5 billion rate cells. Each cell: (price, availability, cancellation_policy, supplier_id). This is a massive, constantly-changing matrix. We need to cache it aggressively for search speed, but stale prices lead to poor user experience at booking time ("price changed!"). How to balance freshness vs. performance?</strong></div>
+
+    <div class="schema"><span class="comment">── Pricing Cache Architecture ──</span>
+
+<span class="pk">Cache Key Structure:</span>
+  hotel:{property_id}:room:{room_type_id}:date:{YYYY-MM-DD}:supplier:{supplier_id}
+
+<span class="pk">Cache Value:</span>
+  {
+    rate: 180.00,           <span class="comment">// nightly rate in supplier's currency</span>
+    currency: "EUR",
+    availability: true,
+    rate_plan_id: "BAR_FLEX",
+    cancellation: "free_until_72h",
+    meal_plan: "breakfast_included",
+    tax_inclusive: true,
+    fetched_at: "2026-02-14T10:30:00Z",
+    ttl_seconds: 3600       <span class="comment">// varies by demand</span>
+  }
+
+<span class="pk">Cache Population Strategies:</span>
+
+  <span class="fk">1. ON-DEMAND (reactive)</span>
+     User searches → cache miss → query supplier → cache result
+     Good for: long-tail destinations, unusual date ranges
+     Problem: first search is slow (has to wait for supplier)
+
+  <span class="fk">2. PRE-FETCH (proactive)</span>
+     Background job continuously queries suppliers for popular routes.
+     Prioritized by: search volume, booking revenue, upcoming dates.
+     "Paris hotels for next 90 days" pre-fetched every 30 minutes.
+     Good for: popular destinations, drives cache hit rate to 80%+
+     Cost: generates massive supplier API traffic → rate limit concerns
+
+  <span class="fk">3. PUSH FROM SUPPLIER</span>
+     Some suppliers push rate changes to Expedia in near-real-time.
+     "Marriott Paris Le Marais updated rate for Mar 15: $195"
+     Best freshness, lowest Expedia API cost.
+     Problem: only sophisticated suppliers support this.
+
+<span class="pk">TTL Strategy (adaptive staleness):</span>
+  High demand (Paris in summer):      TTL = 15-30 minutes
+  Medium demand (Nashville in March):  TTL = 1-2 hours
+  Low demand (rural Idaho in winter):  TTL = 6-24 hours
+  Close dates (checking in tomorrow):  TTL = 5-15 minutes
+  Far dates (6 months out):            TTL = 4-12 hours
+
+<span class="comment">Principle: The more volatile the rate, the shorter the TTL.</span>
+<span class="comment">Close-in dates + high demand = rates change fast → short TTL.</span>
+<span class="comment">Far-out dates + low demand = rates stable → long TTL.</span></div>
+
+    <div class="callout decision"><strong>What happens when cache is stale and user tries to book?</strong> This is the "price change at checkout" problem. User sees $150/night from cache. They click "Book." Booking engine re-queries supplier in real time: actual rate is $165/night. Three strategies: (1) SHOW PRICE CHANGE — transparent, legally safe, but frustrating. ~5-10% of bookings hit this. (2) HONOR CACHED PRICE — eat the $15 difference. Good UX but erodes margin. Some OTAs do this for small differences (&lt;5%). (3) PRE-BOOK PRICE LOCK — when user adds to cart, immediately re-verify and hold the rate for 15 minutes. Best UX but doubles supplier API calls. Expedia's real approach: a blend — honor small differences, show large ones, and use price-lock for high-value bookings.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Cache Technology Choice</strong></p>
+    <ul class="items">
+      <li><strong>Redis Cluster</strong> for hot data (next 30 days, popular destinations). In-memory, &lt;1ms reads. ~5-10 TB.</li>
+      <li><strong>Distributed cache (Memcached / custom)</strong> for warm data (30-180 days out). Larger capacity, slightly slower.</li>
+      <li><strong>Database (Cassandra)</strong> for cold data (180+ days out, long-tail). Query on cache miss, backfill to Redis on access.</li>
+      <li><strong>Cache invalidation:</strong> TTL-based (automatic expiry) + event-based (supplier pushes rate change → invalidate specific key). No manual purging needed — stale data simply expires.</li>
+    </ul>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-booking">
+    <div class="sub">Deep Dive 3: Multi-Supplier Booking (~6 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> A vacation package = flight (from airline via GDS) + hotel (from hotel supplier) + car rental (from Hertz). THREE separate suppliers, THREE separate booking calls. What if the flight books successfully but the hotel is sold out? We can't leave the customer with half a package. This is a distributed transaction across systems we DON'T control.</div>
+
+    <div class="schema"><span class="comment">── Package Booking: Saga Pattern ──</span>
+
+<span class="pk">The Problem:</span>
+  We cannot use traditional 2PC (two-phase commit) because:
+  - Suppliers are EXTERNAL — they don't participate in our transactions
+  - Each supplier has different cancellation policies and timing
+  - We don't control their APIs or reliability
+
+<span class="pk">Solution: SAGA with compensating transactions</span>
+
+  <span class="fk">Step 1: Book Flight</span> (highest cancellation cost → book first)
+    → Call airline/GDS → receive PNR (booking reference)
+    → State: FLIGHT_BOOKED
+    → Compensation: cancel PNR (usually free within 24 hours for flights)
+
+  <span class="fk">Step 2: Book Hotel</span>
+    → Call hotel supplier → receive confirmation number
+    → State: HOTEL_BOOKED
+    → Compensation: cancel hotel booking (per cancellation policy)
+
+  <span class="fk">Step 3: Book Car</span> (if applicable)
+    → Call car rental API → receive confirmation
+    → State: CAR_BOOKED
+    → Compensation: cancel car rental (usually free)
+
+  <span class="fk">Step 4: Charge Payment</span>
+    → Capture pre-auth → finalize total charge
+    → State: PAYMENT_CAPTURED
+
+  <span class="fk">Step 5: Confirm Package</span>
+    → State: PACKAGE_CONFIRMED
+    → Send unified confirmation email with all components
+
+<span class="pk">FAILURE HANDLING:</span>
+
+  If Step 2 (hotel) fails after Step 1 (flight) succeeded:
+    → Cancel flight (compensating transaction)
+    → Release payment pre-auth
+    → Show user: "Hotel no longer available. Would you like to choose another?"
+    → Suggest alternative hotels that ARE available
+
+  If Step 4 (payment) fails after Steps 1-3 succeeded:
+    → Cancel car, cancel hotel, cancel flight (reverse order)
+    → Show user: "Payment failed. Please try another card."
+
+<span class="comment">Order of booking matters: book the HARDEST-TO-CANCEL component first.</span>
+<span class="comment">Flights: 24-hour free cancellation (DOT rule). Book first.</span>
+<span class="comment">Hotels: varies. Free cancellation hotels booked before non-refundable.</span>
+<span class="comment">Cars: almost always free cancellation. Book last.</span></div>
+
+    <div class="callout decision"><strong>Why the saga pattern over synchronous all-or-nothing?</strong> We can't do an all-or-nothing atomic transaction because: (1) Suppliers are external — no distributed transaction protocol spans Amadeus + Marriott + Hertz. (2) Booking calls take 2-10 seconds each — holding all three in a single blocking transaction would take 30+ seconds and risk timeouts. (3) Suppliers don't support "reserve without booking" (no prepare phase). The saga pattern trades atomicity for availability: we book sequentially, and if a later step fails, we COMPENSATE by cancelling earlier steps. This occasionally results in "phantom bookings" (a booking that exists for 30 seconds before being cancelled), which is an acceptable tradeoff for the industry.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-suppliers">
+    <div class="sub">Deep Dive 4: Supplier Integration Layer (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Expedia connects to 100+ suppliers, each with a different API. Marriott uses REST/JSON. Amadeus GDS uses EDIFACT (a 1980s message format). Some hotel switches use XML/SOAP. Each supplier has different rate structures, cancellation policies, error codes, and quirks. The integration layer must present a UNIFIED INTERFACE to Expedia's internal services while handling all this heterogeneity underneath.</strong></div>
+
+    <div class="schema"><span class="comment">── Supplier Integration Layer ──</span>
+
+<span class="pk">Architecture: Adapter Pattern</span>
+
+  Internal services use a <span class="fk">canonical API</span>:
+    searchAvailability(destination, checkin, checkout, guests) → [RateOffer]
+    bookRoom(property_id, room_type, rate_plan, guest_details) → Confirmation
+    cancelBooking(confirmation_id) → CancellationResult
+
+  Each supplier has a dedicated <span class="fk">Adapter</span> that implements this interface:
+
+  ┌──────────────────────────────────────────────────────┐
+  │  <span class="table-name">Canonical API</span>  (what internal services call)         │
+  └────────────────────────┬─────────────────────────────┘
+                           │
+  ┌────────────────────────▼─────────────────────────────┐
+  │  <span class="table-name">Adapter Registry</span>  (route to correct adapter)         │
+  └──┬──────────┬──────────┬──────────┬──────────────────┘
+     │          │          │          │
+  ┌──▼──┐   ┌──▼──┐   ┌──▼──┐   ┌──▼──────┐
+  │Marriott  │Amadeus  │Derbysoft  │Hilton  │  ... 100+ adapters
+  │REST/JSON │EDIFACT  │XML/SOAP   │REST    │
+  └─────┘   └─────┘   └──────┘   └────────┘
+
+<span class="pk">Each adapter handles:</span>
+  - Protocol translation (REST, SOAP, EDIFACT, proprietary)
+  - Data mapping (supplier room types → canonical room types)
+  - Rate normalization (tax-inclusive vs. exclusive, per-night vs. total)
+  - Currency conversion
+  - Error code mapping (supplier-specific → canonical errors)
+  - Authentication (API keys, OAuth, certificates)
+  - Rate limiting (respect supplier's API limits)
+  - Retry logic (supplier-specific: some are idempotent, some aren't)
+
+<span class="pk">Resilience per supplier:</span>
+  - <span class="fk">Circuit breaker:</span> If supplier fails 5× in 60 sec → trip circuit
+    → Skip this supplier for 30 sec → probe with test request → close circuit
+  - <span class="fk">Timeout:</span> Per-supplier configured (Marriott: 3 sec, small hotel chain: 8 sec)
+  - <span class="fk">Fallback:</span> If supplier down → serve from pricing cache (stale but available)
+  - <span class="fk">Bulkhead:</span> Each supplier gets its own thread pool / connection pool
+    → Slow Supplier A can't exhaust connections needed for Supplier B</div>
+
+    <ul class="items">
+      <li><strong>Property mapping:</strong> The most under-appreciated problem. Supplier A calls it "Marriott Paris Opera." Supplier B calls it "Paris Marriott Hotel." Same hotel, different names, different IDs. A PROPERTY MAPPING TABLE (maintained by content team + ML matching) maps every supplier's hotel ID to Expedia's canonical property_id. Errors here → duplicate listings or missed inventory.</li>
+      <li><strong>Rate parity:</strong> Hotels often require that OTAs show the same rate as the hotel's own website ("rate parity clause"). The integration layer must track which rates are "parity" and which are "opaque" (discounted but hidden behind a bundle).</li>
+      <li><strong>Connectivity monitoring:</strong> Dashboard showing real-time health of each supplier connection: response time, error rate, availability. Alerts when a supplier degrades. Some suppliers have scheduled maintenance windows — the system must handle these gracefully.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why one adapter per supplier instead of a generic XML/JSON parser?</strong> Because each supplier's API is an order of magnitude more quirky than it appears. Marriott returns rates including resort fees but excluding taxes. Hilton returns rates excluding both. Amadeus returns fares in a currency that may differ from the request currency. One supplier uses "0" for available and another uses "true." A supplier's "Deluxe King" room might map to another's "Superior Room with King Bed." These semantic differences CANNOT be handled by a generic parser — each adapter encodes deep supplier-specific knowledge built up over years of integration. The adapter is the organizational boundary: the supplier integration team for Marriott owns the Marriott adapter end-to-end.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Search results cache</td>
+        <td style="color:var(--accent-cyan)">Redis + Cassandra</td>
+        <td>Redis for hot queries (same search repeated). Cassandra for warm cache (rates &lt; 15 min old). Avoids re-querying slow suppliers.</td>
+      </tr>
+      <tr>
+        <td>Booking records</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>ACID for payment and reservation. Order ID, guest details, payment tokens, confirmation numbers. Sharded by booking_id.</td>
+      </tr>
+      <tr>
+        <td>Hotel/flight metadata</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL + Memcached</td>
+        <td>Property descriptions, photos, amenities. Heavily cached — metadata changes infrequently. Memcached reduces DB load 10x.</td>
+      </tr>
+      <tr>
+        <td>Rate availability</td>
+        <td style="color:var(--accent-cyan)">Cassandra</td>
+        <td>Supplier rates by (hotel_id, date_range, room_type). High write volume from supplier feeds. TTL-based expiration for stale rates.</td>
+      </tr>
+      <tr>
+        <td>Booking events</td>
+        <td style="color:var(--accent-cyan)">Kafka</td>
+        <td>booking.initiated, booking.confirmed, booking.cancelled. Consumed by notifications, analytics, supplier reconciliation.</td>
+      </tr>
+      <tr>
+        <td>Supplier API responses</td>
+        <td style="color:var(--accent-cyan)">S3</td>
+        <td>Raw XML/JSON responses archived for dispute resolution. Retained for 2 years per contract.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Major supplier goes down (e.g., Marriott API outage)</span><span class="mitigation">Circuit breaker trips within 30 seconds. All Marriott properties served from pricing cache (stale but available). Search results still include Marriott hotels with cached rates. Booking attempts for Marriott → show "temporarily unavailable, try again later." Other suppliers completely unaffected (bulkhead isolation).</span></div>
+    <div class="failure-row"><span class="scenario">GDS (Amadeus) outage — no flight inventory</span><span class="mitigation">Fall back to direct airline connections (NDC) where available. For airlines only on Amadeus: flight search shows partial results with disclaimer "some airlines temporarily unavailable." Hotel search completely unaffected. Monitor GDS status page, auto-recover when GDS comes back.</span></div>
+    <div class="failure-row"><span class="scenario">Price change between search and booking</span><span class="mitigation">Booking engine always re-verifies price with supplier before charging. If price increased &gt;5%: show user transparently "Price changed from $150 to $165." User decides. If price decreased: book at lower price (good UX, builds trust). Track "price change rate" per supplier as a quality metric.</span></div>
+    <div class="failure-row"><span class="scenario">Package booking: hotel fails after flight booked</span><span class="mitigation">Saga compensating transaction: cancel the flight (free within 24h per DOT rule). Notify user: "Hotel no longer available." Offer: (1) alternative hotels at similar price, (2) book flight-only, (3) cancel entirely. No charge to customer for the cancelled flight.</span></div>
+    <div class="failure-row"><span class="scenario">Payment failure after supplier confirmed booking</span><span class="mitigation">We now have a "confirmed but unpaid" booking. Retry payment with stored card. If retry fails: attempt to cancel with supplier (cancellation may incur fee if policy is strict). If supplier won't cancel: Expedia eats the cost. This is rare (&lt;0.1% of bookings) but tracked as a loss metric.</span></div>
+    <div class="failure-row"><span class="scenario">Cache poisoning — wrong rates cached</span><span class="mitigation">A supplier API returns malformed data (e.g., $0/night instead of $200/night). Validation layer in the adapter catches: reject rates below cost floor or above ceiling. If bad data enters cache: caught at booking time when re-verification shows vastly different price. Alert triggered, cache key invalidated, supplier team investigates.</span></div>
+    <div class="failure-row"><span class="scenario">Holiday traffic spike (10× normal search volume)</span><span class="mitigation">Search is read-heavy → scales horizontally (add more search orchestrator instances). Cache absorbs most load (no extra supplier calls). Supplier fan-out is the bottleneck — reduce fan-out by relying more on cache, increase timeout thresholds. Booking volume increases proportionally but is 200× less than search → not the bottleneck.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> The search path is the scaling bottleneck: a single hotel search (&quot;Paris, 5 nights, 2 adults&quot;) fans out to 10+ suppliers, each returning 50-500 results. Without caching, every search would trigger 10 external API calls taking 5-15 seconds each. The caching strategy is multi-layered: (1) Redis caches exact query matches for 5 minutes (same destination, dates, guests), (2) Cassandra caches individual supplier responses by hotel_id + date range for 15 minutes, (3) pre-fetched rates for popular destinations are refreshed every 10 minutes by a background job. For the booking path, traffic is ~100x lower than search (only ~2% of searches convert), so PostgreSQL handles it without sharding for most scenarios. Scaling challenges specific to travel: seasonality (10x traffic during holiday booking periods) requires auto-scaling, and supplier APIs are the ultimate bottleneck — we cannot make them faster, only cache more aggressively and degrade gracefully when they're slow (show cached results with &quot;prices from&quot; instead of live rates).</div>
+
+    <div class="sub">Ranking & Personalization</div>
+    <ul class="items">
+      <li><strong>Default sort:</strong> ML-ranked by predicted conversion probability. Features: price competitiveness, hotel quality score, review rating, distance to city center, user's booking history, device type.</li>
+      <li><strong>Sponsored placements:</strong> Hotels bid for premium placement (top of results, "Recommended" badge). This is a significant revenue stream. Blended with organic results — marked as "Ad" per FTC guidelines.</li>
+      <li><strong>Personalization signals:</strong> Past bookings (prefers 4-star hotels), search history (always picks free cancellation), loyalty status, price sensitivity (clicks on sorted-by-price vs. recommended).</li>
+      <li><strong>A/B testing:</strong> Ranking models are constantly A/B tested. Metric: booking conversion rate (CVR) and revenue per search (RPS). A 0.1% CVR improvement on 600M searches/month = significant revenue.</li>
+    </ul>
+
+    <div class="sub">Reconciliation & Finance</div>
+    <ul class="items">
+      <li><strong>Merchant model:</strong> Expedia charges customer $200/night. Pays hotel $160/night. Margin: $40/night. Expedia is the merchant of record — handles chargebacks, refunds.</li>
+      <li><strong>Agency model:</strong> Customer pays hotel directly. Hotel pays Expedia 15-25% commission. Less financial risk for Expedia but less control over pricing.</li>
+      <li><strong>Reconciliation:</strong> For every booking, reconcile: (1) what we charged the customer, (2) what the supplier confirms, (3) what the supplier invoices us. Discrepancies → dispute with supplier. Run nightly batch matching booking records to supplier invoices.</li>
+      <li><strong>Refunds/cancellations:</strong> Each booking component has its own cancellation policy. "Free cancellation until 48h before check-in" → refund full amount. Non-refundable → no refund. Partial cancellation of a package → recalculate bundle pricing.</li>
+    </ul>
+
+    <div class="sub">Content & Property Data</div>
+    <ul class="items">
+      <li><strong>Property content:</strong> 700K properties × (description, 50+ photos, amenities, location, star rating, policies). Stored in a content service separate from pricing. Updated infrequently (weeks/months). CDN-cached aggressively.</li>
+      <li><strong>Reviews:</strong> Millions of verified guest reviews. Aggregated across Expedia Group brands. Review scores factor into search ranking. Fraud detection on fake reviews (ML model).</li>
+      <li><strong>Photo quality:</strong> Professional photography program for top properties. AI-based photo scoring to surface the best images. Photos are the #1 factor in hotel conversion — more impactful than price for many travelers.</li>
+    </ul>
+  </div>
+</div>
+
+
+    <div class="sub">Security &amp; Access Control</div>
+    <div class="callout decision"><strong>Security &amp; Access Control.</strong> PCI DSS compliance is mandatory: payment card data is tokenized immediately and stored in a PCI-compliant vault. The booking service never sees raw card numbers — only tokenized references. Guest PII (passport numbers, addresses) is encrypted at rest and access-logged. GDPR compliance: right-to-erasure implemented via a PII anonymization pipeline that can purge a guest's data across all systems within 72 hours. API security: OAuth 2.0 for partner APIs, API keys with per-partner rate limits for supplier integrations. Fraud detection: ML model scores each booking for fraud signals (mismatched billing/guest country, last-minute high-value bookings, velocity checks). High-risk bookings are held for manual review before supplier confirmation, preventing chargeback losses.</div>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> SLOs: search results in &lt;3 seconds (p95, despite supplier latency), booking confirmation in &lt;10 seconds, search availability 99.95%. Supplier health is monitored per-integration: if Marriott's API degrades (latency &gt;5s or error rate &gt;5%), the search orchestrator marks it as &quot;slow&quot; and either (1) returns cached results for Marriott properties or (2) extends the timeout but shows results from fast suppliers immediately (&quot;more results loading...&quot;). Booking pipeline has end-to-end tracing from user click through supplier confirmation, with alerting on: (1) booking failure rate &gt;2% (normal is &lt;0.5%), (2) supplier timeout rate &gt;10%, (3) payment decline rate spike. Revenue-impacting metrics (search-to-book conversion rate, average booking value) are dashboarded alongside technical metrics — a latency increase that doesn't affect conversion is lower priority than one that does.</div>
+
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: Expedia's architecture is built around a fundamental two-phase model — fast-but-approximate SEARCH and slow-but-exact BOOKING — bridged by an aggressive PRICING CACHE. Search uses scatter-gather with early return: fan out to 10-20 suppliers in parallel, return results as they arrive within 2-3 seconds, skip slow suppliers. The pricing cache holds billions of rate entries (700K hotels × room types × dates) with adaptive TTLs (15 minutes for hot inventory, hours for cold). At booking time, the system re-verifies the EXACT price and availability with the supplier, handling the inevitable price changes transparently. Multi-supplier packages use a saga pattern with compensating transactions — if the hotel fails after the flight books, cancel the flight. Underneath it all, the Supplier Integration Layer's 100+ adapters normalize the chaos of different APIs, protocols, and data formats into a canonical interface. The adapters encode years of supplier-specific knowledge and are the true competitive moat — they're why building an OTA is so hard."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>AI Trip Planner</td><td>LLM-powered conversational search: "Plan a romantic week in Italy for under $3K." Requires multi-step reasoning across flights, hotels, activities. Generates itineraries by combining search results with knowledge of destinations. Very different UX from the traditional form-based search.</td></tr>
+        <tr><td>Dynamic Packaging Engine</td><td>Algorithmically construct the optimal flight + hotel + car bundle price. The bundle price must be cheaper than booking individually (otherwise why bundle?). Requires real-time optimization across supplier margins and inventory. The "opaque" rate model: show discounted rate only in bundle, hiding the per-component price.</td></tr>
+        <tr><td>Fintech (Buy Now Pay Later)</td><td>Let users split a $2,000 vacation into 4 monthly payments. Requires credit risk assessment, payment scheduling, collections for missed payments. Partnership with BNPL providers (Affirm, Klarna) or build in-house. Booking must be confirmed immediately but payment collected over time.</td></tr>
+        <tr><td>Real-Time Price Alerts</td><td>User saves a search → monitor prices continuously → notify when price drops. Requires a massive background price-monitoring pipeline: millions of saved searches × periodic re-evaluation. Streaming architecture (Kafka + Flink) to compare cached rates against user thresholds.</td></tr>
+        <tr><td>Supplier Yield Management</td><td>Help hotels dynamically price rooms based on demand, competitor pricing, and events. Build a B2B analytics platform that surfaces insights to hotel partners. Aligns Expedia's interests (more bookings) with hotels' interests (higher revenue per room).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> What makes Expedia architecturally unique among the systems we've designed is that it OWNS NOTHING. No inventory, no rooms, no seats. Its entire value comes from AGGREGATION — connecting slow, heterogeneous, unreliable external systems and presenting them as a fast, unified shopping experience. The search:book ratio of 200:1 tells you where to invest engineering effort: make SEARCH blazing fast (caching, scatter-gather, early return) and make BOOKING correct (re-verify, saga pattern, compensating transactions). The supplier integration layer — those 100+ adapters with years of supplier-specific knowledge baked in — is the true moat. Anyone can build a search UI. Almost nobody can build and maintain reliable connections to hundreds of travel suppliers simultaneously. That's why OTAs are a consolidating market: the integration complexity creates an enormous barrier to entry.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you return search results in 3 seconds when suppliers take 5-15 seconds?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Three techniques combined: (1) aggressive caching — for popular queries (Paris hotels, NYC flights), we have pre-fetched cached results that can be returned instantly while fresh supplier queries run in the background. (2) Progressive loading — we show cached results immediately with a &quot;prices from $X&quot; label, then replace with live rates as suppliers respond. The UI shows a loading indicator per supplier. (3) Timeout with partial results — we set a 3-second deadline. Whatever suppliers have responded by then, we show. Slow suppliers get their results dropped or shown as &quot;check availability.&quot; The ranking algorithm actually helps here: the most popular hotels tend to be from the fastest suppliers (Booking.com, Expedia's own inventory), so the first results shown are usually the most relevant. The key UX insight: showing 80% of results in 2 seconds is better than showing 100% in 12 seconds.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What happens when a booking fails after the payment is charged?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is a distributed saga with compensating transactions. The booking flow is: (1) reserve inventory with supplier (hold), (2) charge payment, (3) confirm with supplier. If step 3 fails (supplier rejects the confirmation — maybe the room was booked by someone else in the race condition window), we execute compensations in reverse: (3b) refund payment → (2b) release hold. The refund is automatic and immediate for card payments. For step 1 failures (supplier hold fails), we never reach payment — the user sees &quot;this option is no longer available.&quot; The trickiest failure is the &quot;phantom booking&quot; — supplier confirmation succeeds but our system crashes before recording it. For this, we run a reconciliation job every hour: fetch booking status from each supplier and compare against our records. Mismatches create cases for operations. Suppliers also send daily reconciliation files (similar to bank settlement), which is the final catch-all.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

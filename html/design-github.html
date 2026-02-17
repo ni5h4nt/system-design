@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design GitHub — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design GitHub</h1><span>Code Hosting & Collaboration · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-git">Git Storage & Spokes Replication</a>
+  <a href="#dd-pr">Pull Request Workflow</a>
+  <a href="#dd-search">Code Search</a>
+  <a href="#dd-actions">Actions / CI Pipeline</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a code hosting and collaboration platform like GitHub. Developers push code via Git over HTTPS/SSH, browse repositories through a web UI, collaborate via pull requests with code review, track work with issues, search across billions of files, and run CI/CD workflows. The fundamental challenge: Git is a DISTRIBUTED version control system designed for local use — we must host 400M+ repositories centrally while maintaining Git's semantics, ensuring zero data loss, and serving a massive read-heavy traffic pattern."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome is the platform optimizing for?</strong> <em>→ Developer velocity: code-to-production cycle time. How fast can a developer go from idea → commit → PR → review → merge → deploy? Secondary: collaboration quality (PR review turnaround, code review coverage). This shapes architecture: git push must be fast, PR creation instant, CI integration seamless. Any friction in the inner loop multiplies across millions of developers.</em></li>
+      <li><strong>Core operations?</strong> <em>→ git push, git clone/fetch/pull (the hot path), web UI browsing (file tree, diff, blame), Pull Requests (create, review, merge), Issues, Search, Actions/CI.</em></li>
+      <li><strong>Protocols?</strong> <em>→ Git over HTTPS (majority of traffic) and Git over SSH. Web API (REST + GraphQL). WebSockets for real-time updates.</em></li>
+      <li><strong>Read:write ratio for Git ops?</strong> <em>→ Extremely read-heavy. ~50:1 or higher. Clones and fetches dominate. Pushes are relatively rare.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~150M developers, ~420M repositories, ~3B files indexed for search, ~100M pull requests/year.</em></li>
+      <li><strong>Data durability requirement?</strong> <em>→ Absolute. Losing a repository's data is catastrophic. Three replicas minimum.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Git hosting (push/clone/fetch over HTTPS+SSH)</td><td>GitHub Copilot / AI features</td></tr>
+        <tr><td>Repository storage & replication (Spokes)</td><td>GitHub Packages (registry)</td></tr>
+        <tr><td>Web UI (file browsing, diffs, blame)</td><td>GitHub Pages (static hosting)</td></tr>
+        <tr><td>Pull Request workflow (review, merge)</td><td>GitHub Mobile (client app)</td></tr>
+        <tr><td>Code search across all repos</td><td>Billing / marketplace</td></tr>
+        <tr><td>CI/CD (Actions) — high level</td><td>GitHub Codespaces (cloud IDE)</td></tr>
+        <tr><td>Webhooks & notifications</td><td>Enterprise Server (on-prem)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (Clone/Fetch):</strong> Developer runs <code>git clone https://github.com/org/repo</code> → system locates repo replica, streams packfile to client. Must handle repos from 1 KB to 100 GB.</li>
+      <li><strong>UC2 (Push):</strong> Developer runs <code>git push</code> → system receives new objects, updates refs, replicates to all replicas atomically, fires webhooks, triggers Actions.</li>
+      <li><strong>UC3 (Pull Request):</strong> Developer opens PR → system computes diff, runs merge checks, enables code review (inline comments, approvals), and merges when ready.</li>
+      <li><strong>UC4 (Browse):</strong> User visits <code>github.com/org/repo</code> → system renders file tree, README, commit history. Most visited page on GitHub. Must be sub-second.</li>
+      <li><strong>UC5 (Search):</strong> Developer searches <code>"handleAuth" language:typescript</code> → system searches across 3B+ files and returns results in seconds.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Durability:</strong> Zero repository data loss. Every push is replicated to 3 independent servers before being acknowledged.</li>
+      <li><strong>Availability:</strong> Git reads (clone/fetch) must remain available even if a replica server fails. 99.99% target.</li>
+      <li><strong>Latency:</strong> Web UI page load &lt;500ms. Git clone of medium repo (&lt;1GB) starts streaming within 1-2s.</li>
+      <li><strong>Consistency:</strong> After a successful <code>git push</code>, all subsequent reads (from any replica) must see the new refs. Strong consistency for writes.</li>
+      <li><strong>Isolation:</strong> A "hot" repository (millions of clones) must not degrade performance for other repos sharing the same server ("fate sharing" avoidance).</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: Git is a CONTENT-ADDRESSED OBJECT STORE where every object is identified by its SHA hash. This gives us automatic deduplication and integrity checking, but makes sharding non-trivial — a repository is a DAG of objects that must be colocated. The architecture must replicate ENTIRE REPOSITORIES (not individual objects) across servers while maintaining strong consistency on ref updates (branch pointers).</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Repositories</div><div class="value">~420M</div><div class="detail">From tiny 1-file repos to monorepos with 100GB+. Long tail distribution.</div></div>
+      <div class="est-card"><div class="label">Developers</div><div class="value">~150M</div><div class="detail">~30M DAU. Peak concurrent: ~5M.</div></div>
+      <div class="est-card"><div class="label">Git Operations / Day</div><div class="value">~500M</div><div class="detail">~400M reads (clone/fetch), ~100M writes (push). ~50:1 read:write ratio.</div></div>
+      <div class="est-card"><div class="label">Git Reads / Sec (peak)</div><div class="value">~10K</div><div class="detail">Each read streams a packfile. Heavy I/O — megabytes per request.</div></div>
+      <div class="est-card"><div class="label">Git Pushes / Sec (peak)</div><div class="value">~2K</div><div class="detail">Each push: receive objects + update refs + replicate to 3 servers.</div></div>
+      <div class="est-card"><div class="label">Web/API Requests / Sec</div><div class="value">~200K</div><div class="detail">File browsing, PR pages, API calls. Mostly cacheable. CDN-served for assets.</div></div>
+      <div class="est-card"><div class="label">Total Git Object Storage</div><div class="value">~100+ PB</div><div class="detail">420M repos × avg ~250MB compressed. 3 replicas = ~300 PB raw. Deduplication (forks share objects) reduces significantly.</div></div>
+      <div class="est-card"><div class="label">PR Merges / Day</div><div class="value">~2M</div><div class="detail">Each merge: compute merge commit, update refs, trigger webhooks + Actions.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> Git operations are I/O-heavy, not compute-heavy. A <code>git clone</code> of a 500MB repo requires streaming 500MB of packfile from disk to network. The bottleneck is disk throughput and network bandwidth, not CPU. This means the storage layer design dominates everything.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> 420M repos can't fit on one server. But repos are independent — they don't reference each other (except forks). This makes SHARDING straightforward: partition repos across storage servers. Each repo lives on exactly one set of 3 replica servers. The routing layer maps repo → server set.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> The 50:1 read:write ratio means we can serve reads from ANY of the 3 replicas (load balancing), but writes must be serialized and replicated to ALL 3 (strong consistency). This is the classic "reads scale, writes are the bottleneck" pattern.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The architecture has TWO distinct traffic paths: (1) Git protocol traffic (clone/fetch/push over HTTPS and SSH) — heavy I/O, streams packfiles, hits the storage layer directly. (2) Web/API traffic — renders UI pages, handles PRs, issues, search — backed by MySQL + caches. Let me draw both."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Zero repository data loss</td><td style="color:var(--accent-cyan);font-weight:500">Spokes: 3-replica synchronous replication</td><td>Push not acknowledged until all 3 replicas confirm. Git-level replication understands packfile semantics. Disk-level (DRBD) doesn't.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Repository data is filesystem, not relational</td><td style="color:var(--accent-cyan);font-weight:500">NFS/Gitaly (not MySQL for git objects)</td><td>Git objects are a DAG of files. Storing packfiles in a relational DB adds overhead with zero benefit. Filesystem is the natural fit.</td><td>—</td></tr>
+      <tr><td>Metadata: repos, issues, PRs need joins</td><td style="color:var(--accent-cyan);font-weight:500">MySQL sharded by repo_id (Vitess)</td><td>Most queries are repo-scoped. Vitess manages shard routing. All repo data co-located for single-shard queries.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Code search across 200M repos</td><td style="color:var(--accent-cyan);font-weight:500">Custom trigram index (not Elasticsearch)</td><td>Trigram index enables regex search. ES can't do arbitrary regex. Trigram pre-filtering reduces search space 99.99%.</td><td>—</td></tr>
+      <tr><td>Massive read amplification on web UI</td><td style="color:var(--accent-cyan);font-weight:500">Memcached for query result caching</td><td>A single repo page triggers dozens of DB queries. Memcached reduces DB load 10x. Simple GET/SET — no data structures needed.</td><td>—</td></tr>
+      <tr><td>CI: ephemeral, untrusted code execution</td><td style="color:var(--accent-cyan);font-weight:500">Ephemeral VMs (not containers)</td><td>Hardware-level isolation. Container escape = game over for shared kernel. VMs destroyed after each workflow run.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_9358" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_9358h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="390" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <text x="365" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">static</text>
+    <line x1="390" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="447" y1="194" x2="219" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="447" y1="194" x2="333" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <text x="394" y="222" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">git://</text>
+    <line x1="333" y1="254" x2="447" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="447" y1="294" x2="390" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="219" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="219" y1="294" x2="276" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="219" y1="294" x2="504" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="219" y1="294" x2="447" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <line x1="561" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_9358)" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👩‍💻 Developer</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">git CLI · browser</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌍 CDN</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">static assets</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">⚖️ L7 Load Balancer</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">HTTPS · routing</text>
+    <rect class="svg-node" x="169" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="219" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🖥️ Web Frontend</text>
+    <text x="219" y="284" fill="#6e7681" font-size="8" text-anchor="middle">Rails app</text>
+    <rect class="svg-node" x="283" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="333" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📦 Git Backend</text>
+    <text x="333" y="284" fill="#6e7681" font-size="8" text-anchor="middle">pack protocol</text>
+    <rect class="svg-node" x="397" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="447" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔄 Spokes</text>
+    <text x="447" y="284" fill="#6e7681" font-size="8" text-anchor="middle">3-replica replication</text>
+    <rect class="svg-node" x="511" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="561" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">⚡ Actions Runner</text>
+    <text x="561" y="284" fill="#6e7681" font-size="8" text-anchor="middle">CI/CD workflows</text>
+    <rect class="svg-node" x="283" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="333" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">💨 Memcached</text>
+    <text x="333" y="384" fill="#6e7681" font-size="8" text-anchor="middle">query cache</text>
+    <rect class="svg-node" x="397" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="447" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="447" y="384" fill="#6e7681" font-size="8" text-anchor="middle">jobs · sessions</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="471" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">webhooks · events</text>
+    <rect class="svg-node" x="226" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="276" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐬 MySQL</text>
+    <text x="276" y="584" fill="#6e7681" font-size="8" text-anchor="middle">repos · users · issues</text>
+    <rect class="svg-node" x="340" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="390" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📁 NFS / Gitaly</text>
+    <text x="390" y="584" fill="#6e7681" font-size="8" text-anchor="middle">git object storage</text>
+    <rect class="svg-node" x="454" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="504" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🔎 Elasticsearch</text>
+    <text x="504" y="584" fill="#6e7681" font-size="8" text-anchor="middle">code search</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🌐 Load Balancers <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">INGRESS</span></h4>
+        <ul>
+          <li>L7 (HTTPS): web UI, API, git-over-HTTPS</li>
+          <li>L4 (TCP): git-over-SSH (long-lived connections)</li>
+          <li>Separate LBs — different traffic profiles</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🖥️ Web Frontend <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">APP</span></h4>
+        <ul>
+          <li>Ruby on Rails application</li>
+          <li>Renders pages: file tree, PRs, issues, diffs</li>
+          <li>REST API + GraphQL API</li>
+          <li>Stateless — scales horizontally</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔑 SSH Gateway <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">AUTH</span></h4>
+        <ul>
+          <li>Terminates SSH, authenticates public keys</li>
+          <li>Maps SSH key → user account → repo permissions</li>
+          <li>Proxies Git protocol to Git Backend</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚙️ Git Backend (RPC) <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">CORE</span></h4>
+        <ul>
+          <li>Stateless workers that execute Git operations</li>
+          <li>git-upload-pack (for clone/fetch)</li>
+          <li>git-receive-pack (for push)</li>
+          <li>Talks to Spokes for storage layer access</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📦 Spokes (Git Storage) <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">STORAGE</span></h4>
+        <ul>
+          <li>3 replicas per repo on 3 independent servers</li>
+          <li>Three-phase commit for writes</li>
+          <li>Reads load-balanced across replicas</li>
+          <li>Federated filesystem (bare metal, ext4)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🗄️ MySQL (Metadata) <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">DATA</span></h4>
+        <ul>
+          <li>Users, orgs, permissions, repo metadata</li>
+          <li>PRs, issues, comments, reviews</li>
+          <li>Sharded by repo_id / org_id</li>
+          <li>Strong consistency for permissions</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔍 Search Service <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">SEARCH</span></h4>
+        <ul>
+          <li>Code search across 3B+ files</li>
+          <li>Custom search engine (not Elasticsearch)</li>
+          <li>Indexes trigrams for substring matching</li>
+          <li>Async re-index on push events</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🚀 Actions (CI/CD) <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">COMPUTE</span></h4>
+        <ul>
+          <li>Event-driven: triggered by push, PR, schedule</li>
+          <li>Job queue → runner pool (ephemeral VMs)</li>
+          <li>Artifacts stored in object storage (S3/Azure Blob)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: git clone (read path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 584" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1521" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="127" y="40" width="307" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Developer</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">:</text>
+    <line x1="280" y1="84" x2="280" y2="154" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. TLS termination, extract auth token</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Route to Git Backend worker</text>
+    <rect class="svg-node" x="116" y="156" width="328" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="174" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">L7 Load Balancer</text>
+    <text x="280" y="190" fill="#6e7681" font-size="9" text-anchor="middle">HTTPS</text>
+    <line x1="280" y1="200" x2="280" y2="286" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. Auth check: does user have read access to org/repo? (MySQL/cac</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. Route lookup: which Spokes servers host org/repo? (routing tab</text>
+    <text x="296" y="248" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">5. Pick nearest/least-loaded replica</text>
+    <rect class="svg-node" x="124" y="288" width="313" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="316" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Git Backend</text>
+    <line x1="280" y1="332" x2="280" y2="418" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="348" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">6. Execute git-upload-pack on the bare repo</text>
+    <text x="296" y="364" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">7. Negotiate with client: what objects does client already have?</text>
+    <text x="296" y="380" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">8. Generate and stream packfile with missing objects</text>
+    <rect class="svg-node" x="119" y="420" width="322" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="438" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Spokes Replica</text>
+    <text x="280" y="454" fill="#6e7681" font-size="9" text-anchor="middle">one of 3</text>
+    <line x1="280" y1="464" x2="280" y2="518" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <text x="296" y="480" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Key: read served from ANY replica. No coordination needed. Scales</text>
+    <rect class="svg-node" x="127" y="520" width="307" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="538" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Developer</text>
+    <text x="280" y="554" fill="#6e7681" font-size="9" text-anchor="middle">receives objects, writes local .git directory</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: git push (write path)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: git push (write path)</span>
+  <svg viewBox="0 0 560 368" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a5105" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="127" y="40" width="307" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Developer</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">:</text>
+    <line x1="280" y1="84" x2="280" y2="154" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5105)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Auth check: does user have write access?</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Route to Spokes proxy for this repo</text>
+    <rect class="svg-node" x="124" y="156" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="184" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Git Backend</text>
+    <line x1="280" y1="200" x2="280" y2="302" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a5105)"/>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. Acquire distributed lock for this repo</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. THREE-PHASE COMMIT:</text>
+    <text x="296" y="248" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Phase 1 (PREPARE): send objects to all 3 replicas</text>
+    <text x="296" y="264" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Phase 2 (LOCK): all replicas lock refs, verify preconditions</text>
+    <rect class="svg-node" x="122" y="304" width="316" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="322" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Spokes Proxy</text>
+    <text x="280" y="338" fill="#6e7681" font-size="9" text-anchor="middle">write coordinator</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 3: Web UI (browse repository)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 3: Web UI (browse repository)</span>
+  <svg viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a8896" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="130" y="40" width="301" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Browser</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">: GET https://github.com/org/repo</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <rect class="svg-node" x="136" y="124" width="289" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">CDN</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">static assets: JS, CSS, images → cache HIT</text>
+    <line x1="280" y1="168" x2="280" y2="206" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <rect class="svg-node" x="133" y="208" width="295" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="226" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">L7 LB</text>
+    <text x="280" y="242" fill="#6e7681" font-size="9" text-anchor="middle">→</text>
+    <line x1="280" y1="252" x2="280" y2="354" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <text x="296" y="268" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Fetch repo metadata from MySQL (name, description, stars, visi</text>
+    <text x="296" y="284" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Fetch file tree via Git RPC call to Spokes replica</text>
+    <text x="296" y="300" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. Render README.md (markdown → HTML, cached aggressively)</text>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. Fetch recent commits from Git log</text>
+    <rect class="svg-node" x="122" y="356" width="316" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="374" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Web Frontend</text>
+    <text x="280" y="390" fill="#6e7681" font-size="9" text-anchor="middle">Rails</text>
+  </svg>
+</div>
+
+    <div class="callout say">"I want to deep-dive: (1) Spokes — the Git storage and replication system that's the heart of GitHub. (2) The Pull Request workflow — how diffs, reviews, and merges work at scale. (3) Code search across 3B files. (4) Actions/CI pipeline architecture."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-git">
+    <div class="sub">Deep Dive 1: Git Storage & Spokes Replication (~10 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Store 420M Git repositories on distributed servers with 3× replication, strong consistency on writes, load-balanced reads, and zero data loss — while handling the extreme diversity from tiny repos to 100GB+ monorepos.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">How Git Stores Data (quick primer)</strong></p>
+    <div class="schema"><span class="comment">── Git Object Model ──</span>
+
+Git stores everything as <span class="pk">content-addressed objects</span> in a DAG:
+
+<span class="table-name">blob</span>     → file contents (SHA-1 of content)
+<span class="table-name">tree</span>     → directory listing (references blobs and other trees)
+<span class="table-name">commit</span>   → snapshot (references a tree + parent commit(s) + metadata)
+<span class="table-name">tag</span>      → named pointer to a commit
+
+<span class="fk">refs</span> (branches, tags) → human-readable pointers to commit SHAs
+  e.g., refs/heads/main → abc123def456
+
+<span class="comment">A "repository" = a collection of objects + refs.</span>
+<span class="comment">Objects are immutable and content-addressed.</span>
+<span class="comment">Refs are mutable pointers (the ONLY mutable state in Git).</span>
+
+<span class="comment">For storage efficiency, objects are packed into "packfiles"</span>
+<span class="comment">which use delta compression (store diffs between similar objects).</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Spokes Architecture</strong></p>
+    <ul class="items">
+      <li><strong>Three replicas per repo:</strong> Every repo is stored as a bare Git repository on 3 independently chosen file servers. Servers are bare metal machines with ext4 filesystems and large SSDs.</li>
+      <li><strong>Routing table:</strong> A mapping from <code>repo_id → [server_A, server_B, server_C]</code>. Stored in MySQL, cached aggressively. The Git Backend looks up this table to find where a repo lives.</li>
+      <li><strong>Reads:</strong> Served from ANY of the 3 replicas. Load-balanced for performance. If one replica is busy or down, reads route to another.</li>
+      <li><strong>Writes:</strong> Coordinated by a Spokes proxy via three-phase commit across all 3 replicas. Write succeeds only if ALL 3 replicas confirm.</li>
+    </ul>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Three-Phase Commit (Write Path)</strong></p>
+    <div class="schema"><span class="comment">── Spokes Write Protocol ──</span>
+
+<span class="pk">Phase 1: PREPARE</span>
+  Spokes proxy sends new Git objects (packfile) to all 3 replicas.
+  Each replica receives and stores objects locally (quarantine area).
+  Replica responds: "objects received, ready to update refs."
+
+<span class="pk">Phase 2: LOCK</span>
+  Proxy instructs all replicas to lock the affected refs.
+  Each replica verifies preconditions:
+    - Is the ref still pointing where the client expects? (no concurrent push)
+    - Are all required objects present?
+  Replica responds: "refs locked, preconditions verified."
+  If ANY replica fails → ABORT (release locks, discard objects).
+
+<span class="pk">Phase 3: COMMIT</span>
+  Proxy instructs all replicas to atomically update refs.
+  Each replica: move refs to new SHA, release locks.
+  Proxy waits for all 3 confirmations → ACK success to client.
+
+<span class="comment">Why 3-phase, not 2-phase?</span>
+<span class="comment">The LOCK phase ensures all replicas can commit BEFORE any does.</span>
+<span class="comment">This prevents a state where 1 replica commits but another can't</span>
+<span class="comment">(e.g., due to concurrent push conflict), leaving replicas inconsistent.</span></div>
+
+    <div class="callout decision"><strong>Why replicate at the Git application layer, not the disk layer (DRBD/RAID)?</strong> Disk-level replication treats repos as opaque bytes — it can't understand Git semantics (ref updates, object integrity). Application-level replication leverages Git's own protocol: send packfiles, update refs transactionally. This gives us: (1) replica-level consistency checks (SHA verification), (2) the ability to route repos to ANY 3 servers (not fixed pairs), (3) re-replication to any new server on failure (just <code>git clone</code> internally). Tradeoff: more complex protocol than DRBD, but dramatically more flexible and reliable.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Handling Hot Repos & Fate Sharing</strong></p>
+    <ul class="items">
+      <li><strong>Problem:</strong> A viral repo (millions of clones) on Server A degrades performance for ALL other repos on Server A.</li>
+      <li><strong>Solution:</strong> Monitor per-server I/O load. If a repo becomes "hot," Spokes can add additional read replicas (temporarily increase from 3 to 5+) and rebalance the routing table. The hot repo's reads spread across more servers.</li>
+      <li><strong>Fork deduplication:</strong> When a repo is forked, the fork initially shares the same object store (objects are content-addressed, identical). Only new objects from the fork are stored separately. This saves enormous storage — a repo with 10K forks doesn't store 10K copies of the same objects.</li>
+    </ul>
+
+    <div class="callout tip"><strong>Checksums for replica consistency:</strong> Spokes computes incremental checksums of each replica's refs. If replicas' checksums diverge (indicating inconsistency), a repair process kicks in — compares refs, identifies the divergence, and re-syncs. This is cheap to compute incrementally (updated on every ref change) rather than requiring a full scan.</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-pr">
+    <div class="sub">Deep Dive 2: Pull Request Workflow (~7 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> PRs are GitHub's killer feature. A PR combines: diff computation (potentially huge), code review (inline comments, threads, approvals), status checks (CI results), merge conflict detection, and the merge itself — all backed by Git operations but presented as a web collaboration workflow.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">PR Data Model</strong></p>
+    <div class="schema"><span class="table-name">pull_requests</span>
+  <span class="pk">id</span>               <span class="type">BIGINT PK</span>
+  <span class="fk">repo_id</span>          <span class="type">BIGINT FK → repositories</span>
+  number           <span class="type">INT (per-repo sequential: PR #42)</span>
+  <span class="fk">author_id</span>        <span class="type">BIGINT FK → users</span>
+  head_ref         <span class="type">VARCHAR (source branch: "feature/auth")</span>
+  head_sha         <span class="type">CHAR(40) (current HEAD of source branch)</span>
+  base_ref         <span class="type">VARCHAR (target branch: "main")</span>
+  base_sha         <span class="type">CHAR(40) (target branch HEAD at PR creation)</span>
+  merge_commit_sha <span class="type">CHAR(40) NULL (set after merge)</span>
+  state            <span class="type">ENUM (open, closed, merged)</span>
+  mergeable        <span class="type">ENUM (mergeable, conflicting, checking, unknown)</span>
+  title            <span class="type">TEXT</span>
+  body             <span class="type">TEXT (markdown)</span>
+  created_at       <span class="type">TIMESTAMP</span>
+
+<span class="table-name">reviews</span>
+  <span class="pk">id</span>, <span class="fk">pr_id</span>, <span class="fk">reviewer_id</span>, state (approved/changes_requested/commented), body
+
+<span class="table-name">review_comments</span>
+  <span class="pk">id</span>, <span class="fk">review_id</span>, <span class="fk">pr_id</span>, path, line, side (left/right), body
+
+<span class="table-name">status_checks</span>
+  <span class="pk">id</span>, <span class="fk">pr_id</span>, sha, context ("CI/build"), state (pending/success/failure), target_url</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Diff Computation</strong></p>
+    <ul class="items">
+      <li><strong>What:</strong> The diff between <code>base_sha</code> (target branch) and <code>head_sha</code> (source branch). Actually a three-way diff: find the merge base, then diff base→head and base→target.</li>
+      <li><strong>Where:</strong> Computed on the Git Backend by calling <code>git diff</code> on the Spokes replica. For large diffs (thousands of files), this is expensive.</li>
+      <li><strong>Caching:</strong> Diffs are cached by the key <code>(base_sha, head_sha)</code>. Since SHAs are immutable, this cache NEVER needs invalidation. A new push to the PR branch changes <code>head_sha</code> → new cache key → new diff computed. Old cache entries still valid (for viewing old versions of the PR).</li>
+      <li><strong>Mergeability check:</strong> Async background job runs <code>git merge --no-commit</code> to test if the PR can merge cleanly. Result stored in <code>mergeable</code> field. Re-computed when either branch changes.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why cache diffs by SHA pair, not by PR ID?</strong> A PR's diff changes every time someone pushes to the head branch or the base branch advances. SHA pairs are immutable — the diff between two specific commits never changes. This gives us a perfectly content-addressed cache with no invalidation logic. Tradeoff: storage (many diff caches per PR as it evolves), but diffs compress well and old ones are evicted by LRU.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Merge Strategies</strong></p>
+    <table>
+      <thead><tr><th>Strategy</th><th>Git Command</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Merge commit</td><td>git merge --no-ff</td><td>Creates a merge commit with two parents. Preserves full branch history.</td></tr>
+        <tr><td>Squash and merge</td><td>git merge --squash</td><td>Combines all PR commits into a single commit on the target branch. Clean history.</td></tr>
+        <tr><td>Rebase and merge</td><td>git rebase + fast-forward</td><td>Replays PR commits on top of target. Linear history. No merge commit.</td></tr>
+      </tbody>
+    </table>
+    <ul class="items">
+      <li>Merge operation is a <code>git push</code> under the hood — goes through the full Spokes three-phase commit.</li>
+      <li>Branch protection rules checked server-side BEFORE the merge: required reviewers? required status checks passed? no force-push?</li>
+      <li>Merge queue (for busy repos): PRs lined up and merged sequentially, each tested against the latest base. Prevents "merge skew" where two PRs that individually pass CI break when combined.</li>
+    </ul>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-search">
+    <div class="sub">Deep Dive 3: Code Search (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Search across 3B+ files in 420M repos for arbitrary code patterns. Must support: exact string match, regex, language filtering, file path filtering, and return results in seconds.</div>
+
+    <ul class="items">
+      <li><strong>Index structure:</strong> Trigram index. Every 3-character subsequence of every file is indexed. Query <code>"handleAuth"</code> → look up trigrams <code>han, and, ndl, dle, leA, eAu, Aut, uth</code> → intersect posting lists → candidate files → verify with full-text scan.</li>
+      <li><strong>Index size:</strong> ~150 TB for 3B files. Distributed across a cluster of search nodes. Sharded by repository.</li>
+      <li><strong>Indexing pipeline:</strong> Push event → Kafka → search indexer reads new/changed files from Spokes replica → updates trigram index. Near-real-time: new code searchable within ~30 seconds of push.</li>
+      <li><strong>Ranking:</strong> Results ranked by: repo popularity (stars, forks), file path relevance, number of matches, language match. Not just "first match found."</li>
+      <li><strong>Scope:</strong> User can scope to a single repo, an org, or all of GitHub. Single-repo search uses the repo's own index partition → very fast. Global search fans out across all partitions → slower but still seconds.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why a custom search engine, not Elasticsearch?</strong> Code search has unique requirements: trigram matching (not word tokenization), regex support, language-aware parsing, and extreme scale (3B files). Elasticsearch's inverted index is designed for natural language text, not code. A custom trigram-based engine gives better precision for code patterns (e.g., <code>func.*Auth</code> regex) and can be optimized for the specific query patterns developers use. Tradeoff: massive engineering investment to build and maintain a custom search engine.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-actions">
+    <div class="sub">Deep Dive 4: Actions / CI Pipeline (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Every push and PR can trigger CI workflows — build, test, lint, deploy. This is COMPUTE-HEAVY, UNPREDICTABLE, and must scale independently of the Git hosting layer.</div>
+
+    <div class="schema"><span class="comment">── Actions Architecture ──</span>
+
+<span class="pk">Event Trigger:</span>
+  git push / PR open / schedule / manual dispatch
+      <span class="arrow">│</span>
+      <span class="arrow">▼</span>
+<span class="pk">Event Dispatcher:</span>
+  Matches event against all .github/workflows/*.yml in the repo
+  Creates job graph (workflow → jobs → steps, with dependencies)
+      <span class="arrow">│</span>
+      <span class="arrow">▼</span>
+<span class="pk">Job Queue:</span>  (persistent, durable — no job lost)
+  Jobs queued by priority: paid accounts > free tier
+  Queued jobs wait for a runner to become available
+      <span class="arrow">│</span>
+      <span class="arrow">▼</span>
+<span class="pk">Runner Pool:</span>
+  <span class="fk">GitHub-hosted:</span> ephemeral VMs (Linux, macOS, Windows)
+    - Fresh VM per job. No state leakage between jobs.
+    - Destroyed after job completes.
+    - Auto-scaled based on queue depth.
+  <span class="fk">Self-hosted:</span> customer's own machines registered as runners
+      <span class="arrow">│</span>
+      <span class="arrow">▼</span>
+<span class="pk">Execution:</span>
+  Runner clones repo (from Spokes), executes workflow steps
+  Logs streamed in real-time to GitHub (stored in blob storage)
+  Artifacts uploaded to object storage (S3/Azure Blob)
+  Status checks posted back to the PR</div>
+
+    <div class="callout decision"><strong>Why ephemeral VMs, not containers?</strong> Security is paramount — workflows run UNTRUSTED code (any contributor can modify a workflow file). Containers share a kernel with the host — a kernel exploit could escape. Ephemeral VMs provide hardware-level isolation via hypervisor. Each job gets a fresh VM, and it's destroyed after completion. Tradeoff: VMs have longer startup time (~20-40s) than containers (~2s), and are more expensive. For self-hosted runners, customers CAN use containers — but they accept the security tradeoff.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Repository metadata</td>
+        <td style="color:var(--accent-cyan)">MySQL (sharded)</td>
+        <td>Repos, issues, PRs, users. Sharded by repo_id. Vitess for shard management. Heavy read load from web UI.</td>
+      </tr>
+      <tr>
+        <td>Git objects (packfiles)</td>
+        <td style="color:var(--accent-cyan)">NFS → Gitaly</td>
+        <td>Actual git data. 3-replica Spokes replication. Append-only (git objects are immutable). ~200M repos.</td>
+      </tr>
+      <tr>
+        <td>Code search index</td>
+        <td style="color:var(--accent-cyan)">Elasticsearch</td>
+        <td>Source code indexed for full-text search. Updated on push via Kafka event. Trigram index for regex search.</td>
+      </tr>
+      <tr>
+        <td>Background jobs</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>Sidekiq job queue for webhooks, notifications, CI triggers. Job state and dedup keys.</td>
+      </tr>
+      <tr>
+        <td>Session &amp; cache</td>
+        <td style="color:var(--accent-cyan)">Memcached</td>
+        <td>Page fragment caching. User sessions. DB query result caching. Massive read amplification reduction.</td>
+      </tr>
+      <tr>
+        <td>Webhook events</td>
+        <td style="color:var(--accent-cyan)">Kafka</td>
+        <td>push, pull_request, issues events. Consumed by Actions, external integrations, analytics.</td>
+      </tr>
+      <tr>
+        <td>CI artifacts &amp; logs</td>
+        <td style="color:var(--accent-cyan)">S3</td>
+        <td>Actions workflow logs, build artifacts. Lifecycle policy for retention (90 days default).</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Spokes replica server dies</span><span class="mitigation">2 surviving replicas continue serving reads immediately. Writes degrade: Spokes proxy detects failure, can operate in 2-of-3 mode (reduced durability) or fail writes until a replacement replica is provisioned. Background process re-replicates affected repos to a new server. Zero data loss as long as 1 replica survives.</span></div>
+    <div class="failure-row"><span class="scenario">Concurrent pushes to same branch</span><span class="mitigation">Spokes lock prevents concurrent ref updates. Second push fails with "non-fast-forward" error (standard Git behavior). Developer must pull first. This is by design — Git's concurrency model is optimistic locking on refs.</span></div>
+    <div class="failure-row"><span class="scenario">100 GB monorepo clone hammers storage</span><span class="mitigation">Git protocol supports partial clone (--filter=blob:none) and shallow clone (--depth=1) to reduce data transfer. Server-side: packfile generation is the bottleneck — rate-limited per-repo to prevent one clone from saturating the server. Large repos can have pre-computed packfiles cached.</span></div>
+    <div class="failure-row"><span class="scenario">DDoS on popular repo (millions of clones)</span><span class="mitigation">CDN caches packfiles for popular repos (especially release archives). Spokes adds temporary read replicas for hot repos. Rate limiting per-IP. Git smart HTTP allows conditional fetches (only send new objects since last fetch).</span></div>
+    <div class="failure-row"><span class="scenario">MySQL metadata DB failure</span><span class="mitigation">MySQL is replicated (primary + replicas). Read replicas for web UI queries. Failover to replica on primary failure. Git operations (clone/push) can continue if Spokes routing table is cached — Git storage is independent of MySQL.</span></div>
+    <div class="failure-row"><span class="scenario">Search index falls behind</span><span class="mitigation">Search indexing is async (Kafka-backed). If indexing lags, recently pushed code isn't searchable yet — but existing search works. Backlog clears as indexers catch up. Users see "results may not include very recent changes."</span></div>
+    <div class="failure-row"><span class="scenario">Actions runner pool exhausted</span><span class="mitigation">Jobs queue (not dropped). Auto-scaling spins up more VMs. Free-tier jobs deprioritized behind paid. Users see "Queued — waiting for a runner." Self-hosted runners unaffected (customer's own capacity).</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Git's scaling challenge is unique: repositories vary from 1KB to 100GB+ (monorepos). The &quot;git clone&quot; hot path must serve packfiles efficiently — Spokes replication ensures any of 3 replicas can serve a read, and a proxy layer routes to the least-loaded replica. For the web UI, Memcached absorbs the read amplification: a single repo page triggers dozens of queries (files, commits, contributors, README render), all cached. MySQL sharding uses Vitess with repo_id as shard key — this means all data for a single repo (issues, PRs, commits) is co-located on the same shard. The write scaling challenge is &quot;git push&quot; — it's a single-writer operation per repo (Spokes designates one primary), which is fine because concurrent pushes to the same repo are rare and serialized by git itself. GitHub Actions is the fastest-growing workload: ephemeral VMs spin up per workflow, which is a cluster scheduling problem (similar to k8s) rather than a database scaling problem.</div>
+
+    <div class="sub">Webhooks & Event Bus</div>
+    <ul class="items">
+      <li><strong>Every push, PR, issue change fires webhooks</strong> to configured URLs. At scale: ~10M webhook deliveries/day.</li>
+      <li><strong>Internal event bus (Kafka):</strong> All state changes published as events. Consumed by: search indexer, notification system, Actions dispatcher, analytics, audit log.</li>
+      <li><strong>Webhook delivery:</strong> At-least-once delivery with exponential backoff retries. If endpoint is down, retry for up to 3 days. Event payload includes a delivery ID for deduplication.</li>
+      <li><strong>Fan-out for notifications:</strong> A push to a popular repo (10K watchers) generates 10K notifications. Fan-out handled asynchronously via the event bus. Notifications delivered via email, web UI badge, and mobile push.</li>
+    </ul>
+
+    <div class="sub">Security</div>
+    <ul class="items">
+      <li><strong>Authentication:</strong> SSH public keys (mapped to users), personal access tokens, OAuth apps, GitHub Apps (per-repo scoped). Two-factor authentication.</li>
+      <li><strong>Authorization:</strong> Role-based: owner, admin, write, triage, read. Per-repo, per-org, per-team. Checked on EVERY Git operation and API call.</li>
+      <li><strong>Branch protection:</strong> Server-side enforcement. Cannot be bypassed by client. Checks: required reviews, required status checks, prevent force-push, require signed commits.</li>
+      <li><strong>Secret scanning:</strong> Every push is scanned for accidentally committed secrets (API keys, tokens). If found, the secret provider is notified for revocation.</li>
+      <li><strong>Audit log:</strong> Enterprise feature — every action logged: who pushed what, who changed permissions, who accessed what repo.</li>
+    </ul>
+
+    <div class="sub">Caching Strategy</div>
+    <table>
+      <thead><tr><th>What</th><th>Cache Layer</th><th>Invalidation</th></tr></thead>
+      <tbody>
+        <tr><td>Repo metadata (stars, description)</td><td>Memcached (TTL 60s)</td><td>Cache-aside, TTL-based</td></tr>
+        <tr><td>File tree rendering</td><td>Memcached (keyed by tree SHA)</td><td>Never — SHAs are immutable</td></tr>
+        <tr><td>README render (markdown→HTML)</td><td>Memcached (keyed by blob SHA)</td><td>Never — SHAs are immutable</td></tr>
+        <tr><td>Diff computation</td><td>Dedicated diff cache (keyed by base_sha+head_sha)</td><td>Never — SHAs are immutable</td></tr>
+        <tr><td>Spokes routing table</td><td>In-memory (Git Backend)</td><td>Event-driven on repo move</td></tr>
+        <tr><td>User permissions</td><td>Redis (TTL 30s)</td><td>Event-driven on permission change</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Git's content-addressing is a caching superpower.</strong> Because objects and trees are identified by SHA, any rendering keyed by SHA is eternally valid. This eliminates the hardest caching problem (invalidation) for the majority of GitHub's read traffic. The ONLY mutable state is refs (branch pointers), and those are small/fast to re-read.</div>
+  </div>
+</div>
+
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>Monitoring &amp; SLOs.</strong> GitHub publishes a public status page (githubstatus.com) with per-service availability. Internal SLOs: git operations (clone/push) p99 &lt;5s, web page load p95 &lt;500ms, Actions workflow queue time p95 &lt;30s. Monitoring stack uses a combination of internal tools and Datadog. Every git operation emits a structured log with timing breakdown (DNS, TLS, pack negotiation, transfer). Spokes health is monitored via replication lag — if a replica falls &gt;10 seconds behind, it's removed from the read pool. The deploy system (using feature flags) includes automatic rollback: if error rate increases &gt;0.1% within 5 minutes of a deploy, it auto-reverts. Incident management uses a well-documented process with public post-mortems — GitHub's engineering blog publishes detailed breakdowns of major incidents.</div>
+
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: GitHub's architecture splits into two traffic paths — Git protocol (I/O-heavy, streaming packfiles) and Web/API (metadata + rendered views). The heart of the system is Spokes, a custom replication layer that stores 3 copies of every repository on independent servers using a three-phase commit protocol for write consistency. Reads are load-balanced across replicas (50:1 read:write ratio), while writes are serialized through a distributed lock. Git's content-addressed object model is a massive architectural advantage: objects identified by SHA are immutable, making caching trivial (key by SHA = no invalidation ever). The Pull Request workflow layers collaboration semantics on top of Git operations, with diffs cached by SHA pairs and mergeability checked asynchronously. Code search uses a custom trigram index across 3B+ files, updated near-real-time via an async indexing pipeline. Actions/CI runs in ephemeral VMs for security isolation, triggered by the same event bus that drives webhooks and notifications."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Copilot / AI Code Review</td><td>LLM inference pipeline triggered on PR events. Needs access to diff + full codebase context. Adds latency-sensitive AI inference to the PR workflow. Model serving infrastructure separate from Git storage.</td></tr>
+        <tr><td>Codespaces (Cloud IDE)</td><td>Persistent dev containers linked to repos. Requires compute orchestration (Kubernetes), persistent volumes, and low-latency Git access from the container to Spokes. Different scaling model — long-running stateful workloads vs. short request-response.</td></tr>
+        <tr><td>Multi-region Spokes</td><td>Geo-replicate repos across data centers for lower latency. Writes still go to primary DC (consistency). Reads served from nearest geo-replica. Cross-DC replication adds latency to the three-phase commit — must optimize for WAN.</td></tr>
+        <tr><td>Git LFS at Scale</td><td>Large files (videos, datasets) stored in object storage (S3), not in Git objects. LFS pointer files in the repo reference blobs in S3. Separate storage path, separate CDN delivery, separate billing.</td></tr>
+        <tr><td>Merge Queue Improvements</td><td>For monorepos with 100+ PRs/day: speculative merging (test multiple PRs combined), bisection on failure (find which PR broke the build), priority ordering.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> GitHub is defined by ONE foundational property of Git itself: content-addressing via SHA hashes. This cascades through everything: objects are immutable (caching is trivial), repositories are self-contained DAGs (sharding is natural), replicas can be verified by comparing checksums (consistency is checkable), and forks share objects (deduplication is free). Spokes leverages ALL of these properties — it's not a generic distributed storage system, it's a Git-aware replication layer that speaks Git's own protocol. The architecture is simple precisely because Git's data model is so well-suited to distributed storage. The complexity lives in the collaboration layer (PRs, reviews, Actions) built ON TOP of this foundation.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does Spokes replication work and why not just use database replication?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Git is a filesystem-level data structure, not a database. A git repository is a directed acyclic graph of objects (blobs, trees, commits) stored as files on disk. Database replication doesn't understand this structure. Spokes replication works at the git level: when a user pushes to a repository, the primary Spokes server receives the packfile, writes it to local disk, then replicates the packfile to 2 other servers. The replication is synchronous — the push isn't acknowledged until all 3 copies confirm. Each replica is a full, independent git repository that can serve reads directly. The key advantage over filesystem-level replication (like DRBD): Spokes understands git semantics, so it can optimize — for example, if two pushes happen in quick succession, it can send just the delta rather than re-syncing the entire repository. It also handles split-brain correctly by using the primary as the source of truth for write ordering.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What happens during a &quot;git push&quot; to a repository with thousands of CI workflows?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The push itself is synchronous and fast: git objects are written to the primary Spokes server and replicated. But the push ALSO triggers a cascade of asynchronous events via Kafka: (1) a `push` webhook event is published, (2) the Actions scheduler evaluates all workflow files in `.github/workflows/` against the push event (branch, path filters), (3) matching workflows are queued as jobs. With thousands of workflows, the scheduler might queue hundreds of CI jobs simultaneously. Each job needs an ephemeral VM — this is where the real scaling happens. The Actions infrastructure maintains pools of pre-warmed VMs by runner type (ubuntu-latest, windows-latest). Jobs are assigned to VMs via a scheduler that considers: queue priority (paid plans get priority), runner availability, and geographic locality. If the pool is exhausted, jobs wait in queue. The push author doesn't wait for any of this — they get their push acknowledgment in seconds. CI status updates flow back via the Checks API.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How would you design the code search feature to handle regex across 200M repositories?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is actually one of GitHub's hardest problems. Naive approach: Elasticsearch with full-text indexing — works for keyword search but can't handle regex. GitHub's solution (Blackbird) uses a trigram index: every 3-character sequence in every file is indexed. A regex like `func.*Handler` is decomposed into trigrams: &quot;fun&quot;, &quot;unc&quot;, &quot;Han&quot;, &quot;and&quot;, &quot;ndl&quot;, &quot;dle&quot;, &quot;ler&quot; — the index finds files containing ALL these trigrams (fast intersection), then the actual regex is applied to only those candidate files (slow but on a small set). The index is sharded by repository and built incrementally: on each push, only changed files are re-indexed. For 200M repos, the index is ~100TB. Search queries are scatter-gathered across shards with a timeout — if some shards are slow, we return partial results. The UX shows &quot;Results from X repositories&quot; and allows filtering by language, org, or repo. The key insight: the trigram index reduces the search space by 99.99%, making regex tractable at scale.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

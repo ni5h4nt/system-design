@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Facebook — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b22;
+    --surface-raised: #1c2129;
+    --border: #2d333b;
+    --border-light: #373e47;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #d29922;
+    --accent-red: #f85149;
+    --accent-purple: #bc8cff;
+    --accent-cyan: #39d2c0;
+    --accent-yellow: #e3b341;
+    --phase1: #58a6ff;
+    --phase2: #d29922;
+    --phase3: #3fb950;
+    --phase4: #f85149;
+    --phase5: #bc8cff;
+    --phase6: #39d2c0;
+    --nav-width: 270px;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Fraunces', Georgia, serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+
+  nav {
+    position: fixed; top: 0; left: 0; width: var(--nav-width); height: 100vh;
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 24px 0; overflow-y: auto; z-index: 100; display: flex; flex-direction: column;
+  }
+  nav .logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  nav .logo h1 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; line-height: 1.3; }
+  nav .logo span { display: block; font-family: var(--font-body); font-size: 11px; color: var(--text-dim); margin-top: 4px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.08em; }
+  .nav-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); padding: 12px 20px 6px; }
+  nav a { display: flex; align-items: center; gap: 10px; padding: 7px 20px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.15s; border-left: 2px solid transparent; }
+  nav a:hover { color: var(--text); background: var(--surface-raised); }
+  nav a.active { color: var(--text); border-left-color: var(--accent-blue); background: rgba(88,166,255,0.06); }
+  .nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .nav-time { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); background: var(--surface-raised); padding: 1px 6px; border-radius: 3px; }
+
+  main { margin-left: var(--nav-width); padding: 32px 48px 120px; max-width: 960px; }
+
+  .phase { margin-bottom: 40px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .phase-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .phase-header:hover { background: var(--surface-raised); }
+  .phase-number { font-family: var(--font-mono); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; color: var(--bg); flex-shrink: 0; }
+  .phase-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; flex: 1; }
+  .phase-time { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+  .phase-chevron { width: 20px; height: 20px; color: var(--text-dim); transition: transform 0.25s ease; flex-shrink: 0; }
+  .phase.collapsed .phase-chevron { transform: rotate(-90deg); }
+  .phase.collapsed .phase-body { display: none; }
+  .phase-body { padding: 0 20px 20px; border-top: 1px solid var(--border); }
+
+  .callout { margin: 14px 0; padding: 12px 16px; border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.6; }
+  .callout.goal { background: rgba(88,166,255,0.05); border-left: 3px solid var(--accent-blue); color: var(--text-muted); }
+  .callout.goal strong { color: var(--accent-blue); }
+  .callout.say { background: rgba(63,185,80,0.06); border-left: 3px solid var(--accent-green); color: var(--text-muted); }
+  .callout.say::before { content: '🗣️ '; }
+  .callout.tip { background: rgba(210,153,34,0.06); border-left: 3px solid var(--accent-orange); color: var(--text-muted); }
+  .callout.tip::before { content: '💡 '; }
+  .callout.decision { background: rgba(248,81,73,0.05); border-left: 3px solid var(--accent-red); color: var(--text-muted); }
+  .callout.decision::before { content: '⚖️ '; }
+  .callout code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 12px; }
+
+  .sub { font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin: 20px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+  .items { list-style: none; margin: 10px 0; }
+  .items li { position: relative; padding: 5px 0 5px 22px; font-size: 13.5px; line-height: 1.55; color: var(--text-muted); }
+  .items li::before { content: '→'; position: absolute; left: 2px; color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; }
+  .items li strong { color: var(--text); font-weight: 600; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 12px 0; }
+  thead th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); padding: 8px 10px; border-bottom: 1px solid var(--border-light); font-weight: 600; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; color: var(--text-muted); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td:first-child { font-weight: 600; color: var(--text); font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap; }
+
+  .est-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+  .est-card { padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); }
+  .est-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 4px; }
+  .est-card .value { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--accent-yellow); }
+  .est-card .detail { font-size: 11.5px; color: var(--text-dim); margin-top: 4px; line-height: 1.4; }
+
+  .schema { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 12px 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.7; color: var(--text-muted); overflow-x: auto; white-space: pre; }
+  .schema .table-name { color: var(--accent-cyan); font-weight: 600; }
+  .schema .pk { color: var(--accent-yellow); }
+  .schema .fk { color: var(--accent-purple); }
+  .schema .type { color: var(--text-dim); }
+  .schema .comment { color: var(--text-dim); font-style: italic; }
+
+  .api-block { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; overflow: hidden; }
+  .api-method { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; font-family: var(--font-mono); font-size: 12px; width: 100%; border-bottom: 1px solid var(--border); }
+  .api-method .verb { padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 10px; text-transform: uppercase; }
+  .api-method .verb.post { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+  .api-method .verb.get { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+  .api-method .verb.put { background: rgba(210,153,34,0.15); color: var(--accent-orange); }
+  .api-method .verb.del { background: rgba(248,81,73,0.15); color: var(--accent-red); }
+  .api-method .path { color: var(--text); }
+  .api-method .desc { margin-left: auto; color: var(--text-dim); font-size: 11px; font-family: var(--font-body); }
+  .api-body { padding: 10px 14px; font-size: 12px; color: var(--text-dim); line-height: 1.55; }
+
+  .flow-diagram { background: var(--surface-raised); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 14px 0; font-family: var(--font-mono); font-size: 12px; line-height: 2; color: var(--text-muted); overflow-x: auto; white-space: pre; text-align: center; }
+  .flow-diagram .highlight { color: var(--accent-cyan); font-weight: 600; }
+  .flow-diagram .arrow { color: var(--text-dim); }
+  .flow-diagram .label { color: var(--accent-orange); font-size: 10px; }
+
+  .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .comp-card { padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); }
+  .comp-card h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .comp-card h4 .tag { font-family: var(--font-mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+  .comp-card ul { list-style: none; font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .comp-card ul li::before { content: '• '; color: var(--text-dim); }
+
+  .failure-row { display: flex; gap: 8px; margin: 6px 0; font-size: 12.5px; align-items: flex-start; }
+  .failure-row .scenario { color: var(--accent-red); font-weight: 600; min-width: 200px; flex-shrink: 0; }
+  .failure-row .mitigation { color: var(--text-muted); }
+
+  .divider { text-align: center; margin: 48px 0 32px; position: relative; }
+  .divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); }
+  .divider span { position: relative; background: var(--bg); padding: 0 16px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); }
+
+  .fanout-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  .fanout-box { padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-raised); }
+  .fanout-box h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .fanout-box.write h4 { color: var(--accent-green); }
+  .fanout-box.read h4 { color: var(--accent-blue); }
+  .fanout-box ul { list-style: none; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .fanout-box ul li { margin: 3px 0; }
+  .fanout-box .verdict { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11.5px; font-weight: 600; }
+  .fanout-box.write .verdict { color: var(--accent-green); }
+  .fanout-box.read .verdict { color: var(--accent-blue); }
+
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 20px 16px 80px; }
+    .est-grid, .comp-grid, .fanout-compare { grid-template-columns: 1fr; }
+  }
+  @media print {
+    nav { display: none; }
+    main { margin-left: 0; max-width: 100%; }
+    .phase.collapsed .phase-body { display: block; }
+  }
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Facebook</h1>
+    <span>Worked Example · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-feed">News Feed Generation</a>
+  <a href="#dd-social">Social Graph</a>
+  <a href="#dd-post">Post & Media Pipeline</a>
+  <a href="#dd-data">Data Model & Storage</a>
+
+  <div class="nav-section-label">Reference</div>
+  <a href="#apis">API Design</a>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#evolution">Evolution</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span>
+    <span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Let me restate the problem. We're designing a social network like Facebook — users create profiles, connect as friends, publish posts with text and media, and consume a personalized news feed of content from their connections. Let me scope this down."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome is the product optimizing for?</strong> <em>→ "Meaningful social interactions" (MSI) — not raw engagement time. After 2018, Facebook shifted from maximizing time-on-site to prioritizing interactions between friends over passive content consumption. This shapes feed ranking: a friend's post with 2 comments outranks a viral video with 10K views. The architecture must support re-ranking by interaction quality, not just click-through rate.</em></li>
+      <li><strong>Core features?</strong> Profiles, friend connections, posting, news feed? Or also groups, pages, marketplace, stories, events? <em>→ Focus on the core social graph + news feed. Mention others as extensions.</em></li>
+      <li><strong>Feed type?</strong> Chronological or ranked/algorithmic? <em>→ Ranked feed is more interesting to design. Chrono as fallback.</em></li>
+      <li><strong>Content types?</strong> Text, photos, videos, links? <em>→ Text + photos in scope. Video as extension (different pipeline).</em></li>
+      <li><strong>Notifications?</strong> In scope? <em>→ Acknowledge but keep out of deep dive. Similar pattern to feed fanout.</em></li>
+      <li><strong>Scale?</strong> <em>→ ~2 billion registered users, ~500M DAU. Average user has ~300 friends.</em></li>
+      <li><strong>Geography?</strong> <em>→ Global. Multi-region is in scope for discussion.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>User profiles & auth</td><td>Messenger / real-time chat</td></tr>
+        <tr><td>Social graph (friends)</td><td>Groups & pages</td></tr>
+        <tr><td>Create posts (text + photos)</td><td>Video upload & streaming</td></tr>
+        <tr><td>News feed (ranked)</td><td>Stories, Reels</td></tr>
+        <tr><td>Likes & comments</td><td>Marketplace, Events, Ads</td></tr>
+        <tr><td>Media storage & serving</td><td>Search (beyond friend lookup)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases (ranked)</div>
+    <ul class="items">
+      <li><strong>UC1:</strong> User opens app → sees personalized, ranked news feed of posts from friends</li>
+      <li><strong>UC2:</strong> User creates a post (text + optional photos) → post appears in friends' feeds</li>
+      <li><strong>UC3:</strong> User likes or comments on a post → visible to post author and other viewers</li>
+      <li><strong>UC4:</strong> User sends/accepts friend request → bidirectional connection established</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Feed latency</strong> — &lt;500ms to render first screen of feed. Stale content (seconds old) is acceptable.</li>
+      <li><strong>Availability > consistency for feed</strong> — it's better to show a slightly stale feed than to show nothing.</li>
+      <li><strong>Post creation must be durable</strong> — once a user hits "Post," we must not lose it. Strongly consistent write.</li>
+      <li><strong>Social graph must be strongly consistent</strong> — if I unfriend someone, they should not see my posts. Eventual is not acceptable here.</li>
+      <li><strong>Read-heavy</strong> — feed reads vastly outnumber post writes. Most users consume, few produce.</li>
+      <li><strong>Global</strong> — users everywhere. Latency-sensitive reads need to be served from nearby regions.</li>
+    </ul>
+
+    <div class="callout tip">Notice the asymmetry: most users are readers, not writers. The average user might create 1 post/week but scroll through their feed 10+ times/day. This read-heavy pattern is THE defining constraint.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span>
+    <span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Let me work out the numbers that will drive the design."</div>
+
+    <div class="est-grid">
+      <div class="est-card">
+        <div class="label">Daily Active Users</div>
+        <div class="value">500M</div>
+        <div class="detail">2B registered, ~25% DAU</div>
+      </div>
+      <div class="est-card">
+        <div class="label">New Posts / Day</div>
+        <div class="value">~300M</div>
+        <div class="detail">~60% of DAU post at least once. ~3.5K posts/sec avg, ~10K peak.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Feed Reads / Day</div>
+        <div class="value">~5B</div>
+        <div class="detail">500M users × ~10 feed loads/day. ~58K reads/sec avg, ~150K peak.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Read:Write Ratio</div>
+        <div class="value">~17:1</div>
+        <div class="detail">5B reads / 300M writes. System is massively read-heavy.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Photo Storage / Day</div>
+        <div class="value">~150 TB</div>
+        <div class="detail">~50% of posts have photos. 150M × 2 photos × 500KB avg (multiple sizes).</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Social Graph Edges</div>
+        <div class="value">~300B</div>
+        <div class="detail">2B users × avg 300 friends ÷ 2 (bidirectional). In-memory: ~2.4TB at 8 bytes/edge pair.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Fanout on Write</div>
+        <div class="value">~90B feed inserts/day</div>
+        <div class="detail">300M posts × avg 300 friends. ~1M inserts/sec into feed caches.</div>
+      </div>
+      <div class="est-card">
+        <div class="label">Feed Cache Size</div>
+        <div class="value">~25 TB</div>
+        <div class="detail">500M active users × ~500 post IDs cached × 100 bytes per entry</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> 150K feed reads/sec at peak is the hottest path. Feeds MUST be precomputed or cached — assembling them at read time from scratch (query friends → fetch their posts → rank → return) would be catastrophically slow.</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> Fanout on write generates ~1M feed cache inserts/sec. This is feasible but expensive. Celebrity users with millions of followers would cause write amplification. This drives us toward a HYBRID fanout strategy.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> 150TB/day of photos means media storage and serving is a first-class concern. CDN is essential.</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span>
+    <span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"Let me draw the major components. I'll walk through two flows: publishing a post, and loading the news feed."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Feed reads at 150K QPS, &lt;500ms</td><td style="color:var(--accent-cyan);font-weight:500">Hybrid fanout (write for normal, read for celebrities)</td><td>Fanout-on-write for 500 friends = 500 Redis writes. For 50M followers, write storm is unacceptable → pull at read time.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Posts must never be lost</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL for posts (ACID)</td><td>User-generated content is irreplaceable. Redis cache is reconstructable; posts are not.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>Social graph at millions of QPS</td><td style="color:var(--accent-cyan);font-weight:500">PostgreSQL + Memcached (not Neo4j)</td><td>Adjacency list handles complex queries. Memcached absorbs 95% of reads. Neo4j doesn't scale horizontally.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      <tr><td>Media at petabyte scale</td><td style="color:var(--accent-cyan);font-weight:500">S3 + CDN (not database BLOBs)</td><td>Blobs don't belong in relational DBs. S3 = infinite scale, CDN = edge caching. 95% of media reads served from CDN.</td><td>—</td></tr>
+      <tr><td>Async fanout, notifications, analytics</td><td style="color:var(--accent-cyan);font-weight:500">Kafka (not synchronous calls)</td><td>Post.created event consumed independently by fanout, notification, and analytics services. Decoupled failure domains.</td><td>—</td></tr>
+      <tr><td>Feed staleness &lt; 30s acceptable</td><td style="color:var(--accent-cyan);font-weight:500">Eventual consistency for feed reads</td><td>Showing a 30-second-stale feed is infinitely better than showing nothing during a partition.</td><td style="color:var(--accent-green);font-weight:600">AP</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_4854" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_4854h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(188,140,255,.02)" stroke="rgba(188,140,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#bc8cff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">MESSAGE QUEUE / ASYNC</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="390" y1="94" x2="333" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="390" y1="94" x2="447" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <text x="422" y="122" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">static</text>
+    <line x1="333" y1="194" x2="105" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="333" y1="194" x2="219" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="105" y1="294" x2="390" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="390" y1="454" x2="333" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="390" y1="454" x2="675" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="219" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="219" y1="254" x2="447" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="447" y1="294" x2="447" y2="354" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_4854)" opacity=".6"/>
+    <line x1="561" y1="294" x2="447" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="105" y1="294" x2="333" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_4854)" opacity=".5"/>
+    <line x1="333" y1="294" x2="333" y2="354" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_4854)" opacity=".6"/>
+    <text x="341" y="324" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">write cache</text>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">📱 Client Apps</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">iOS · Android · Web</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="333" y="178" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway + LB</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="447" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌍 CDN</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">images · video · static</text>
+    <rect class="svg-node" x="55" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="105" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📝 Post Service</text>
+    <text x="105" y="284" fill="#6e7681" font-size="8" text-anchor="middle">write path</text>
+    <rect class="svg-node" x="169" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="219" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📰 Feed Service</text>
+    <text x="219" y="284" fill="#6e7681" font-size="8" text-anchor="middle">hot path · fanout-on-read</text>
+    <rect class="svg-node" x="283" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="333" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📢 Fanout Service</text>
+    <text x="333" y="284" fill="#6e7681" font-size="8" text-anchor="middle">async write</text>
+    <rect class="svg-node" x="397" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="447" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">👥 Social Graph</text>
+    <text x="447" y="284" fill="#6e7681" font-size="8" text-anchor="middle">friends · followers</text>
+    <rect class="svg-node" x="511" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="561" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🖼️ Media Service</text>
+    <text x="561" y="284" fill="#6e7681" font-size="8" text-anchor="middle">upload · resize</text>
+    <rect class="svg-node" x="625" y="254" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="675" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔔 Notifications</text>
+    <text x="675" y="284" fill="#6e7681" font-size="8" text-anchor="middle">push · email</text>
+    <rect class="svg-node" x="283" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="333" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="333" y="384" fill="#6e7681" font-size="8" text-anchor="middle">feed cache · sessions</text>
+    <rect class="svg-node" x="397" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="447" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">💨 Memcached</text>
+    <text x="447" y="384" fill="#6e7681" font-size="8" text-anchor="middle">social graph lookups</text>
+    <rect class="svg-node" x="340" y="454" width="100" height="40" rx="6" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="390" y="471" fill="#bc8cff" font-size="10" font-weight="600" text-anchor="middle">📨 Kafka</text>
+    <text x="390" y="484" fill="#6e7681" font-size="8" text-anchor="middle">post.created · fanout events</text>
+    <rect class="svg-node" x="283" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="333" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL</text>
+    <text x="333" y="584" fill="#6e7681" font-size="8" text-anchor="middle">posts · users · graph</text>
+    <rect class="svg-node" x="397" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="447" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">📦 S3</text>
+    <text x="447" y="584" fill="#6e7681" font-size="8" text-anchor="middle">images · video · media</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>📱 Client Apps <span class="tag" style="background:rgba(88,166,255,0.15);color:var(--accent-blue)">CLIENT</span></h4>
+        <ul>
+          <li>Web, iOS, Android</li>
+          <li>REST API for CRUD, polling/long-poll for feed refresh</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🌐 API Gateway + LB <span class="tag" style="background:rgba(210,153,34,0.15);color:var(--accent-orange)">EDGE</span></h4>
+        <ul>
+          <li>AuthN (JWT), rate limiting, routing</li>
+          <li>SSL termination, geographic routing</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📝 Post Service <span class="tag" style="background:rgba(63,185,80,0.15);color:var(--accent-green)">WRITE PATH</span></h4>
+        <ul>
+          <li>Create / edit / delete posts</li>
+          <li>Store in Posts DB, publish event to fanout</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📰 Feed Service <span class="tag" style="background:rgba(248,81,73,0.15);color:var(--accent-red)">HOT PATH</span></h4>
+        <ul>
+          <li>Serve precomputed feed from cache</li>
+          <li>Merge with celebrity posts at read time</li>
+          <li>Apply ranking model</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📢 Fanout Service <span class="tag" style="background:rgba(188,140,255,0.15);color:var(--accent-purple)">ASYNC</span></h4>
+        <ul>
+          <li>On new post → push post ID into friends' feed caches</li>
+          <li>Hybrid: fanout-on-write for normal users, skip for celebrities</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>👥 Social Graph Service <span class="tag" style="background:rgba(57,210,192,0.15);color:var(--accent-cyan)">CORE</span></h4>
+        <ul>
+          <li>Friend requests, accept/reject, unfriend</li>
+          <li>"Get friends of user X" — used by fanout</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🖼️ Media Service <span class="tag" style="background:rgba(227,179,65,0.15);color:var(--accent-yellow)">MEDIA</span></h4>
+        <ul>
+          <li>Upload photos → S3/blob store</li>
+          <li>Async resize/compress → multiple sizes</li>
+          <li>Serve via CDN</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔔 Notification Service <span class="tag" style="background:rgba(210,153,34,0.15);color:var(--accent-orange)">ASYNC</span></h4>
+        <ul>
+          <li>Consumes events: likes, comments, friend accepts</li>
+          <li>Push notifications, in-app badge counts</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: User Creates a Post</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 636" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a8896" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <line x1="280" y1="168" x2="280" y2="254" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. write post to Posts DB</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. upload photos → Media Service → S3</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. publish event: post.created</text>
+    <rect class="svg-node" x="122" y="256" width="316" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="284" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Post Service</text>
+    <line x1="280" y1="300" x2="280" y2="338" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <rect class="svg-node" x="133" y="340" width="295" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="358" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Kafka</text>
+    <text x="280" y="374" fill="#6e7681" font-size="9" text-anchor="middle">post.created</text>
+    <line x1="280" y1="384" x2="280" y2="422" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <rect class="svg-node" x="119" y="424" width="322" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="452" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Fanout Service</text>
+    <line x1="280" y1="468" x2="280" y2="570" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a8896)"/>
+    <text x="296" y="484" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">query Social Graph for friends</text>
+    <text x="296" y="500" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">for each friend: push post_id</text>
+    <text x="296" y="516" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">into their Feed Cache (Redis)</text>
+    <text x="296" y="532" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">SKIP fanout for celebrity users</text>
+    <rect class="svg-node" x="110" y="572" width="340" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="600" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">Notification Service</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: User Loads News Feed</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: User Loads News Feed</span>
+  <svg viewBox="0 0 560 436" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9856" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9856)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <line x1="280" y1="168" x2="280" y2="270" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9856)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. fetch precomputed post IDs from Feed Cache (Redis)</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. fetch celebrity friend list (from Social Graph)</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. fetch recent posts from celebrities (from Posts DB)</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">4. merge both lists</text>
+    <rect class="svg-node" x="122" y="272" width="316" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="300" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Feed Service</text>
+    <line x1="280" y1="316" x2="280" y2="370" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9856)"/>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">renders feed, photos load from CDN</text>
+    <rect class="svg-node" x="131" y="372" width="298" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="400" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 3: Like / Comment</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 3: Like / Comment</span>
+  <svg viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9664" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="131" y="40" width="298" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="68" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9664)"/>
+    <rect class="svg-node" x="124" y="124" width="313" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="152" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">API Gateway</text>
+    <line x1="280" y1="168" x2="280" y2="254" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9664)"/>
+    <text x="296" y="184" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. increment like count (counter cache)</text>
+    <text x="296" y="200" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. write like record to DB</text>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. publish event: post.liked</text>
+    <rect class="svg-node" x="122" y="256" width="316" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="284" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Post Service</text>
+    <line x1="280" y1="300" x2="280" y2="354" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9664)"/>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">notify post author</text>
+    <rect class="svg-node" x="110" y="356" width="340" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="384" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Notification Service</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The most architecturally interesting piece is the feed generation — specifically the fanout strategy. That's what I'd like to deep-dive first. The second most interesting is the social graph at this scale. Sound good?"</div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4: DEEP DIVES ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span>
+    <span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- ── DD1: News Feed ── -->
+    <div id="dd-feed">
+    <div class="sub">Deep Dive 1: News Feed Generation (~12 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Serve a personalized, ranked feed to 500M DAU at 150K reads/sec with &lt;500ms latency. The fundamental tradeoff is WHEN you do the work: at write time (fanout-on-write) or at read time (fanout-on-read).</div>
+
+    <div class="fanout-compare">
+      <div class="fanout-box write">
+        <h4>Fanout-on-Write (Push Model)</h4>
+        <ul>
+          <li>When user posts → immediately push post_id into every friend's feed cache</li>
+          <li>✅ Feed reads are instant — just fetch from precomputed cache</li>
+          <li>✅ Read latency: ~10ms (cache hit)</li>
+          <li>❌ Write amplification: 1 post → 300 cache writes (avg)</li>
+          <li>❌ Celebrity problem: 1 post from a user with 10M friends → 10M cache writes</li>
+          <li>❌ Wasted work: pushing to inactive users who never read</li>
+        </ul>
+        <div class="verdict">Best for: normal users (≤10K friends)</div>
+      </div>
+      <div class="fanout-box read">
+        <h4>Fanout-on-Read (Pull Model)</h4>
+        <ul>
+          <li>When user loads feed → query all friends' recent posts, merge, rank, return</li>
+          <li>✅ No write amplification — posts stored once</li>
+          <li>✅ No wasted work — only computed when user actually opens feed</li>
+          <li>❌ Slow reads: must query 300+ friends' posts, merge, rank at request time</li>
+          <li>❌ At 150K reads/sec, this creates enormous DB load</li>
+        </ul>
+        <div class="verdict">Best for: celebrity users (>10K friends)</div>
+      </div>
+    </div>
+
+    <div class="callout decision"><strong>Hybrid approach — the principal-level answer.</strong> Use fanout-on-write for normal users (the vast majority) and fanout-on-read for celebrity users. At read time, merge the precomputed cache with a small number of celebrity pull queries. This gives us O(1) reads for 99% of content and limits write amplification for the top 0.1% of users.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Feed Cache Architecture</strong></p>
+
+    <div class="schema"><span class="comment">── Redis: Per-user Feed Cache ──</span>
+<span class="table-name">SORTED SET</span>  key: <span class="pk">feed:{user_id}</span>
+              member: post_id
+              score: timestamp (or ranking score)
+              max size: ~500 entries (capped with ZREMRANGEBYRANK)
+
+<span class="comment">── When user opens feed ──</span>
+1. ZREVRANGE feed:{user_id} 0 19        <span class="comment">// top 20 post IDs from cache</span>
+2. Query celebrity_friends of user        <span class="comment">// small set, ~5-20 celebrities</span>
+3. Fetch recent posts from each celebrity <span class="comment">// from Posts cache or DB</span>
+4. Merge both lists by score
+5. Hydrate: MGET post:{post_id} ...      <span class="comment">// fetch full post objects</span>
+6. Apply ranking model
+7. Return top 20</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Fanout Service Design</strong></p>
+    <ul class="items">
+      <li><strong>Triggered by:</strong> Kafka event <code>post.created</code></li>
+      <li><strong>Step 1:</strong> Check author's friend count. If &gt;10K → mark as celebrity, skip fanout, add author to <code>celebrity_users</code> set.</li>
+      <li><strong>Step 2:</strong> Query Social Graph for author's friend list.</li>
+      <li><strong>Step 3:</strong> Filter to only active users (logged in within 30 days) — don't waste writes on dormant accounts.</li>
+      <li><strong>Step 4:</strong> For each active friend, ZADD post_id to their <code>feed:{friend_id}</code> sorted set in Redis.</li>
+      <li><strong>Step 5:</strong> Batch the writes. Process in chunks of 1000 friends with pipelining.</li>
+      <li><strong>Throughput:</strong> With 300M posts/day and avg 200 active friends (after filtering), that's ~60B feed inserts/day or ~700K/sec. A Redis cluster with 20-30 shards handles this.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why threshold at 10K friends?</strong> At 300 friends, fanout cost is trivial (300 Redis writes). At 10K, it's still manageable. At 1M+, a single post causes 1M writes — this dominates the pipeline. The 10K threshold means we push-model for ~99.9% of users and pull-model for ~0.1%. The tradeoff is slightly higher read latency for users who follow many celebrities (extra pull queries), but that's bounded by the number of celebrities they follow (typically &lt;20).</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Feed Ranking</strong></p>
+    <ul class="items">
+      <li><strong>Lightweight ranking model</strong> applied at read time after merging. Not a full ML inference per request (too slow at 150K/sec).</li>
+      <li><strong>Pre-computed features stored on each post:</strong> engagement_score (likes + comments + shares, decayed by time), author_affinity_score (how much the reader interacts with this author), content_type_weight (photos rank higher than text-only).</li>
+      <li><strong>Ranking formula:</strong> <code>score = engagement × affinity × recency_decay × content_weight</code></li>
+      <li><strong>Affinity scores</strong> are precomputed offline (batch job) and cached per user-pair. Updated daily.</li>
+    </ul>
+
+    <div class="callout tip"><strong>Pagination:</strong> Cursor-based, not offset. The cursor is the score of the last item returned. Client sends <code>?cursor=1707890400&limit=20</code>. This is stable even as new posts are inserted (unlike offset which shifts).</div>
+    </div>
+
+    <!-- ── DD2: Social Graph ── -->
+    <div id="dd-social">
+    <div class="sub">Deep Dive 2: Social Graph (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Store 300B edges (friendships), support "get all friends of X" queries for fanout, handle friend/unfriend with strong consistency, and answer "are X and Y friends?" in &lt;10ms.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Storage Choice</strong></p>
+
+    <div class="callout decision"><strong>Why not a graph database (Neo4j)?</strong> Graph DBs excel at multi-hop traversals (friends-of-friends, shortest path). But our primary queries are single-hop: "get friends of X" and "are X and Y friends?" These are efficiently served by a simple adjacency list. Neo4j would add operational complexity without benefit for our access pattern. Tradeoff: if we later need 2-hop queries (friend recommendations), we'd build a separate service rather than migrate the whole graph.</div>
+
+    <div class="callout decision"><strong>Choice: MySQL (or PostgreSQL) with an adjacency list table, plus Redis cache for hot reads.</strong> Facebook famously uses MySQL + TAO (their custom graph cache). The write volume for friendship changes is low (~millions/day, not billions), so a relational DB handles it. The read volume is high (fanout queries) but is served from cache.</div>
+
+    <div class="schema"><span class="comment">── MySQL: Friendships (adjacency list) ──</span>
+<span class="table-name">friendships</span>
+  <span class="pk">user_id_1</span>     <span class="type">BIGINT</span>     <span class="comment">// always the smaller ID (canonical ordering)</span>
+  <span class="pk">user_id_2</span>     <span class="type">BIGINT</span>     <span class="comment">// always the larger ID</span>
+  status         <span class="type">ENUM (pending, accepted, blocked)</span>
+  created_at     <span class="type">TIMESTAMP</span>
+  <span class="comment">PRIMARY KEY (user_id_1, user_id_2)</span>
+
+<span class="comment">── For "get all friends of X" we need BOTH directions ──</span>
+<span class="comment">INDEX (user_id_1, status)  → finds friends where X is user_id_1</span>
+<span class="comment">INDEX (user_id_2, status)  → finds friends where X is user_id_2</span>
+<span class="comment">── OR: store two rows per friendship (one per direction) for simpler queries</span>
+
+<span class="comment">── Redis: Friend List Cache ──</span>
+<span class="table-name">SET</span>  key: <span class="pk">friends:{user_id}</span>
+     members: [friend_id_1, friend_id_2, ...]
+     <span class="comment">// Invalidated on friend/unfriend</span>
+
+<span class="table-name">STRING</span>  key: <span class="pk">friendship:{min_id}:{max_id}</span>
+        value: <span class="type">"accepted" | "pending" | "blocked" | null</span>
+        <span class="comment">// For "are X and Y friends?" checks — O(1) lookup</span></div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Sharding Strategy</strong></p>
+    <ul class="items">
+      <li><strong>Shard by user_id</strong> — all of a user's friendships live on the same shard. This makes "get all friends of X" a single-shard query.</li>
+      <li><strong>Dual-write approach:</strong> Store two rows per friendship (A→B and B→A), each on its respective user's shard. This means "get all friends of X" only hits X's shard.</li>
+      <li><strong>Tradeoff:</strong> Friendship creation/deletion requires a distributed write (two shards). We use a two-phase approach: write to both shards, if one fails → retry from a dead-letter queue. Brief inconsistency window (ms) is acceptable for friend list display but we must ensure the unfriend path is strongly consistent for privacy.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why dual-write over single-row + two indexes?</strong> With a single row, "get friends of X" requires querying TWO indexes (where user_id_1=X OR user_id_2=X) which could span two different shards. Dual-write doubles storage but guarantees single-shard reads, which matters at 700K friend-list lookups/sec from the fanout service.</div>
+    </div>
+
+    <!-- ── DD3: Post & Media Pipeline ── -->
+    <div id="dd-post">
+    <div class="sub">Deep Dive 3: Post Creation & Media Pipeline (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Durably store 300M posts/day. Handle photo uploads (150TB/day) without blocking the write path. Serve images globally with low latency.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Post Write Path</strong></p>
+    <ul class="items">
+      <li><strong>Step 1:</strong> Client uploads photo(s) directly to Media Service via presigned S3 URL → returns <code>media_id</code>. This decouples large file upload from the post creation API.</li>
+      <li><strong>Step 2:</strong> Client sends <code>POST /posts</code> with text + <code>[media_ids]</code>. Post Service writes to Posts DB (PostgreSQL).</li>
+      <li><strong>Step 3:</strong> Post Service publishes <code>post.created</code> event to Kafka.</li>
+      <li><strong>Step 4:</strong> Async consumers: Fanout Service (feed), Media Processing (resize/compress), Notification Service.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why presigned upload, not proxy through API?</strong> At 150TB/day, proxying through our API servers would consume enormous bandwidth and CPU. Presigned URLs let clients upload directly to S3, then we just store the reference. Tradeoff: slightly more complex client logic, but massive reduction in server load.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Media Processing Pipeline</strong></p>
+    <ul class="items">
+      <li><strong>Trigger:</strong> Kafka event <code>media.uploaded</code></li>
+      <li><strong>Processing:</strong> Generate 4 sizes (thumbnail 150px, small 320px, medium 720px, large 1080px). Strip EXIF for privacy. Apply content moderation (async ML scan).</li>
+      <li><strong>Storage:</strong> All sizes to S3. CDN pulls from S3 origin.</li>
+      <li><strong>Serving:</strong> Client receives CDN URL pattern: <code>cdn.fb.com/{media_id}/{size}.jpg</code>. Client picks size based on viewport.</li>
+    </ul>
+
+    <div class="schema"><span class="comment">── Posts DB (PostgreSQL, sharded by user_id) ──</span>
+<span class="table-name">posts</span>
+  <span class="pk">id</span>            <span class="type">UUID PK</span>
+  <span class="fk">author_id</span>     <span class="type">BIGINT FK → users (shard key)</span>
+  content        <span class="type">TEXT (max 63,206 chars)</span>
+  media_ids      <span class="type">UUID[] (references to media objects)</span>
+  like_count     <span class="type">INT (denormalized counter)</span>
+  comment_count  <span class="type">INT (denormalized counter)</span>
+  visibility     <span class="type">ENUM (public, friends, only_me)</span>
+  created_at     <span class="type">TIMESTAMP</span>
+  updated_at     <span class="type">TIMESTAMP</span>
+
+<span class="comment">-- Index: (author_id, created_at DESC) for profile page</span>
+<span class="comment">-- Posts are also cached in Redis: post:{post_id} → serialized post</span>
+
+<span class="table-name">media</span>
+  <span class="pk">id</span>            <span class="type">UUID PK</span>
+  <span class="fk">uploader_id</span>   <span class="type">BIGINT</span>
+  s3_key         <span class="type">VARCHAR</span>
+  content_type   <span class="type">VARCHAR (image/jpeg, image/png)</span>
+  sizes          <span class="type">JSONB ({thumbnail: "...", small: "...", ...})</span>
+  status         <span class="type">ENUM (processing, ready, flagged)</span>
+  created_at     <span class="type">TIMESTAMP</span>
+
+<span class="table-name">likes</span>
+  <span class="pk">post_id</span>       <span class="type">UUID</span>
+  <span class="pk">user_id</span>       <span class="type">BIGINT</span>
+  created_at     <span class="type">TIMESTAMP</span>
+  <span class="comment">PRIMARY KEY (post_id, user_id)  — prevents double-likes</span>
+
+<span class="table-name">comments</span>
+  <span class="pk">id</span>            <span class="type">UUID PK</span>
+  <span class="fk">post_id</span>       <span class="type">UUID FK → posts</span>
+  <span class="fk">author_id</span>     <span class="type">BIGINT</span>
+  content        <span class="type">TEXT</span>
+  created_at     <span class="type">TIMESTAMP</span>
+  <span class="comment">-- Index: (post_id, created_at) for loading comments</span></div>
+
+    <div class="callout tip"><strong>Like/Comment counts:</strong> Denormalized on the post record (updated via Redis counter cache, periodically flushed to DB). Don't COUNT(*) from the likes table for every feed render — at 150K reads/sec that would be catastrophic. Accept slight count inaccuracy (few seconds stale) for read performance.</div>
+    </div>
+
+    <!-- ── DD4: Storage Summary ── -->
+    <div id="dd-data">
+    <div class="sub">Deep Dive 4: Data Model & Storage Summary (~5 min)</div>
+
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Access Pattern</th><th>Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>User Profiles</td><td>PostgreSQL + Redis cache</td><td>Read by user_id, low write freq</td><td>Strong</td></tr>
+        <tr><td>Social Graph</td><td>MySQL (sharded) + Redis cache</td><td>Get friends, check friendship. 700K reads/sec from fanout</td><td>Strong for unfriend, eventual for display</td></tr>
+        <tr><td>Posts</td><td>PostgreSQL (sharded by author_id)</td><td>Write ~3.5K/sec, read by post_id (cache-backed)</td><td>Strong writes, eventual reads from cache</td></tr>
+        <tr><td>Feed Cache</td><td>Redis Cluster (~25TB)</td><td>Sorted set per user. 700K writes/sec (fanout), 150K reads/sec</td><td>Eventual (best-effort)</td></tr>
+        <tr><td>Post Cache</td><td>Redis / Memcached</td><td>Hydrate feed: MGET 20 posts per feed load</td><td>Eventual (TTL: 5 min)</td></tr>
+        <tr><td>Like/Comment Counts</td><td>Redis (counter cache) → flush to Postgres</td><td>Increment on action, read on feed render</td><td>Eventual (seconds stale)</td></tr>
+        <tr><td>Photos / Media</td><td>S3 + CDN</td><td>Write 150TB/day. Read from CDN edge.</td><td>Eventual (CDN TTL)</td></tr>
+        <tr><td>Events</td><td>Kafka</td><td>post.created, post.liked, friend.accepted, etc.</td><td>Ordered per partition</td></tr>
+        <tr><td>Affinity Scores</td><td>Precomputed (Spark) → Redis</td><td>Read at feed ranking time. Batch updated daily.</td><td>Stale by design (daily batch)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why this many stores?</strong> Same rationale as Uber: access patterns are radically different. Feed cache needs 700K sorted-set writes/sec — only Redis handles this. Posts need ACID — Redis doesn't. Photos are blobs — S3's sweet spot. Social graph needs strong consistency for privacy — relational DB with a cache layer. Each store is matched to its access pattern and consistency requirement.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ APIs ═══════════ -->
+<div class="phase" id="apis">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">📡</span>
+    <span class="phase-title">API Design</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Feed</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/feed?cursor={score}&limit=20</span><span class="desc">Load personalized news feed</span></div>
+      <div class="api-body">Response: <code>{posts: [{id, author, content, media_urls, like_count, comment_count, created_at}], next_cursor}</code></div>
+    </div>
+
+    <div class="sub">Posts</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/posts</span><span class="desc">Create a new post</span></div>
+      <div class="api-body">Request: <code>{content, media_ids[], visibility}</code><br>Response: <code>{post_id, created_at}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/users/{user_id}/posts?cursor&limit</span><span class="desc">User's profile / timeline</span></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb del">DEL</span><span class="path">/v1/posts/{post_id}</span><span class="desc">Delete a post (soft delete)</span></div>
+    </div>
+
+    <div class="sub">Interactions</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/posts/{post_id}/likes</span><span class="desc">Like a post (idempotent)</span></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb del">DEL</span><span class="path">/v1/posts/{post_id}/likes</span><span class="desc">Unlike a post</span></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/posts/{post_id}/comments</span><span class="desc">Add a comment</span></div>
+      <div class="api-body">Request: <code>{content}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/posts/{post_id}/comments?cursor&limit</span><span class="desc">Load comments (paginated)</span></div>
+    </div>
+
+    <div class="sub">Social Graph</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/friends/requests</span><span class="desc">Send friend request</span></div>
+      <div class="api-body">Request: <code>{target_user_id}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb put">PUT</span><span class="path">/v1/friends/requests/{request_id}</span><span class="desc">Accept / reject friend request</span></div>
+      <div class="api-body">Request: <code>{action: "accept" | "reject"}</code></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb del">DEL</span><span class="path">/v1/friends/{user_id}</span><span class="desc">Unfriend</span></div>
+    </div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb get">GET</span><span class="path">/v1/users/{user_id}/friends?cursor&limit</span><span class="desc">Get friend list (paginated)</span></div>
+    </div>
+
+    <div class="sub">Media</div>
+    <div class="api-block">
+      <div class="api-method"><span class="verb post">POST</span><span class="path">/v1/media/upload-url</span><span class="desc">Get presigned S3 upload URL</span></div>
+      <div class="api-body">Request: <code>{content_type, file_size}</code><br>Response: <code>{upload_url, media_id}</code> — client PUTs file directly to S3</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span>
+    <span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Posts &amp; comments</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL (sharded)</td>
+        <td>Sharded by user_id. Post creation requires ACID. Write-once, read-many. Eventual consistency acceptable for reads.</td>
+      </tr>
+      <tr>
+        <td>Social graph</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL + Memcached</td>
+        <td>Adjacency list in DB, heavily cached. &quot;Friends of X&quot; is the hottest query. Graph traversal uses TAO-like cache layer.</td>
+      </tr>
+      <tr>
+        <td>News feed cache</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>Precomputed feed per user (fanout-on-write for normal users). List of post_ids, ~500 entries. TTL-based invalidation.</td>
+      </tr>
+      <tr>
+        <td>Media (images/video)</td>
+        <td style="color:var(--accent-cyan)">S3 + CDN</td>
+        <td>Original → S3. Resized variants generated async. CDN serves 95%+ of media requests. Origin fallback for cold content.</td>
+      </tr>
+      <tr>
+        <td>Session &amp; auth tokens</td>
+        <td style="color:var(--accent-cyan)">Redis</td>
+        <td>Short-lived tokens with TTL. Distributed across regions. Invalidated on password change.</td>
+      </tr>
+      <tr>
+        <td>Event stream</td>
+        <td style="color:var(--accent-cyan)">Kafka</td>
+        <td>post.created, post.liked, comment.added. Consumed by fanout service, notifications, analytics, ad targeting.</td>
+      </tr>
+      </tbody>
+    </table>
+
+
+    <div id="failures" class="sub">Failure Scenarios & Mitigation</div>
+    <div class="failure-row"><span class="scenario">Feed cache (Redis) node dies</span><span class="mitigation">Redis Cluster auto-failover to replica. User sees slightly stale feed or triggers a cold rebuild (fanout-on-read fallback for that user). Feed is non-critical — degraded experience, not data loss.</span></div>
+    <div class="failure-row"><span class="scenario">Fanout Service backlog</span><span class="mitigation">Posts are still stored in Posts DB (durable). Feed caches are stale but functional. Fanout consumers catch up from Kafka. New posts appear in feeds with delay, not lost.</span></div>
+    <div class="failure-row"><span class="scenario">Posts DB shard down</span><span class="mitigation">Primary-replica failover. Writes to that shard's users are blocked briefly. Reads served from cache. If cache miss, return partial feed (skip posts from affected shard).</span></div>
+    <div class="failure-row"><span class="scenario">S3 / CDN outage</span><span class="mitigation">Text posts still render. Photos show placeholder. Multi-region S3 with cross-region replication. CDN has multiple origins configured for failover.</span></div>
+    <div class="failure-row"><span class="scenario">Celebrity posts missing from feed</span><span class="mitigation">Pull-at-read model means celebrity posts are fetched live. If Posts cache is cold, user sees slightly older celebrity content until cache warms. Can fall back to showing cached celebrity post IDs from a separate precomputed list.</span></div>
+    <div class="failure-row"><span class="scenario">Kafka partition leader down</span><span class="mitigation">Kafka auto-elects new partition leader. Producers retry. Fanout briefly pauses and resumes. Events are durable (replication factor 3).</span></div>
+
+    <div class="sub">Scalability Bottlenecks</div>
+    <table>
+      <thead><tr><th>At Scale</th><th>What Breaks</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>10× (5B DAU)</td><td>Feed cache size explodes (~250TB Redis). Fanout throughput needs 7M/sec writes. Social graph DB shards become hot.</td><td>Tiered caching: only cache feeds for active users (opened app in 7 days). Shard Redis by user_id hash. Move social graph to TAO-like custom cache layer.</td></tr>
+        <tr><td>100× current</td><td>Single Kafka cluster can't handle event volume. Ranking model inference becomes bottleneck. Cross-region latency for global users.</td><td>Regional Kafka clusters. Pre-score posts during fanout (embed ranking features on write). Full multi-region deployment with independent feed services per region.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Consistency Model Summary</div>
+    <table>
+      <thead><tr><th>Data</th><th>Model</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>Post creation</td><td>Strong</td><td>User expects to see their own post immediately. Read-your-writes consistency.</td></tr>
+        <tr><td>Feed content</td><td>Eventual (seconds)</td><td>Slightly stale feed is invisible to users. Availability > freshness.</td></tr>
+        <tr><td>Friendship state</td><td>Strong for unfriend/block</td><td>Privacy: unfriended user must not see new posts. Eventual for display (friend list).</td></tr>
+        <tr><td>Like/comment counts</td><td>Eventual (seconds)</td><td>Approximate counts are fine. Denormalized counters flushed periodically.</td></tr>
+        <tr><td>Celebrity feed merge</td><td>Eventual (minutes)</td><td>Pull-at-read caches celebrity posts for 1-2 min TTL.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Observability</div>
+    <ul class="items">
+      <li><strong>Golden signals per service:</strong> Feed Service p99 latency, Fanout lag (time from post.created to last feed cache write), Post write success rate.</li>
+      <li><strong>Business metrics:</strong> Feed engagement rate (likes/impressions), feed freshness (age of newest post at load time), fanout completion rate within 5s.</li>
+      <li><strong>Distributed tracing:</strong> Trace from post creation → Kafka → fanout → feed cache write. Trace from feed load → cache read → hydration → ranking → response.</li>
+      <li><strong>Alerting:</strong> Fanout lag > 30s, feed p99 > 1s, Post DB replication lag > 2s, CDN hit ratio drops below 95%.</li>
+    </ul>
+
+    <div class="sub">Security & Privacy</div>
+    <ul class="items">
+      <li><strong>Visibility enforcement:</strong> Feed Service checks post visibility (public/friends/only_me) against the viewer's relationship to the author. This check happens AFTER hydration, before returning to client.</li>
+      <li><strong>Unfriend/block is synchronous:</strong> On unfriend, immediately invalidate the ex-friend's feed cache entries from this user. On block, add to a block list checked at feed render time.</li>
+      <li><strong>Photo privacy:</strong> EXIF stripping on upload. Photo URLs are not guessable (UUID-based paths). Can add signed URLs with expiration for extra protection.</li>
+      <li><strong>Rate limiting:</strong> Post creation: 50/day per user. Likes: 500/hour. Friend requests: 100/day. Prevents spam and abuse.</li>
+    </ul>
+
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span>
+    <span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="callout say">"To summarize: the system is built around a hybrid fanout strategy for the news feed — push-on-write for the 99.9% of normal users, pull-on-read for celebrities — giving us O(1) feed reads for the vast majority of traffic. Posts are durably stored in sharded PostgreSQL with ACID guarantees, while the feed itself is a precomputed sorted set in Redis that trades freshness for read performance. The social graph uses a dual-write adjacency list in MySQL with Redis caching, prioritizing strong consistency on the unfriend/block path for privacy. Media flows through presigned S3 uploads with async processing and CDN serving to handle 150TB/day without burdening the API tier."</div>
+
+    <div id="evolution" class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Why It Matters</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Groups & Pages</td><td>Content beyond friend graph</td><td>New entity types in feed. Group membership is a separate graph. Fanout becomes topic-based (group subscribers), not just friend-based.</td></tr>
+        <tr><td>Video</td><td>Highest engagement content</td><td>Completely separate pipeline: transcoding (FFmpeg farm), adaptive bitrate (HLS/DASH), dedicated video CDN. Much more expensive than photos.</td></tr>
+        <tr><td>Stories</td><td>Ephemeral, high-engagement format</td><td>Separate from feed. TTL-based storage (24h auto-delete). Ring-based UI means different access pattern than infinite scroll feed.</td></tr>
+        <tr><td>Real-Time Notifications</td><td>Engagement & retention driver</td><td>WebSocket/SSE connection layer. Fan-out similar to feed but smaller (notify post author, not all friends). Priority queue for different notification types.</td></tr>
+        <tr><td>Full ML Ranking</td><td>Dramatically improves feed quality</td><td>Feature store (precomputed user/post features). Lightweight model served at read time. A/B testing infrastructure to measure engagement impact.</td></tr>
+        <tr><td>Content Moderation</td><td>Policy compliance, safety</td><td>Async ML pipeline on post.created events. Flag/remove before fanout completes. Separate review queue for borderline content.</td></tr>
+        <tr><td>Multi-Region</td><td>Global latency</td><td>Regional feed caches and CDN. Cross-region replication for social graph. Posts replicated async. User routed to nearest region.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This design is centered on ONE key insight — the read:write asymmetry (17:1). Everything follows from that: precomputing feeds on write, caching aggressively, denormalizing counters, and using a hybrid fanout to handle the celebrity edge case. The architecture is optimized for the 99% case (normal users consuming feed) while gracefully handling the 1% (celebrity posts, cache misses, cold starts).</div>
+
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why fanout-on-write for regular users but fanout-on-read for celebrities?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">It's a cost tradeoff driven by follower count. When a regular user with 500 friends posts, fanout-on-write means we push that post_id into 500 feed caches — 500 Redis writes, done in &lt;100ms via pipeline. The reader path is trivial: read their precomputed feed from Redis. But when a celebrity with 50M followers posts, fanout-on-write would mean 50M Redis writes — that could take minutes and create a massive write spike. So for celebrities, we don't write to anyone's feed. Instead, when a user loads their feed, the Feed Service merges their precomputed feed (from regular friends) with a real-time pull of recent posts from celebrities they follow. The threshold (say, &gt;500K followers) is tunable. This hybrid approach means 99% of users get instant feed reads, and the 0.01% who are celebrities don't cause write storms.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How would you handle a post that goes viral — 10M likes in an hour?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The like counter is the bottleneck, not the like event itself. If we increment a counter in PostgreSQL for every like, that single row becomes a write hotspot. The solution is multi-layered: (1) likes are published to Kafka immediately — the event is durably captured, (2) a counter service aggregates likes in Redis using INCR (which is atomic and handles thousands of increments/sec), (3) periodically (every 30s), the Redis counter is flushed back to PostgreSQL as a batch update. The user sees a &quot;fuzzy&quot; count that's accurate within 30 seconds — which is fine because Facebook already shows &quot;10M&quot; not &quot;10,247,391.&quot; For the post author's notification, we don't send 10M individual notifications — we batch: &quot;Your post received 1M new likes&quot; every hour. The Kafka stream also feeds the ranking algorithm to boost the post's visibility.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What's your strategy for cache invalidation on the social graph?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is one of the hardest problems. The social graph cache is a TAO-like layer where &quot;friends of user X&quot; is cached in Memcached. Invalidation happens on writes: when user A unfriends user B, we invalidate both A's and B's friend lists. The tricky case is transitivity: if A's privacy settings say &quot;friends of friends can see my posts,&quot; then unfriending B potentially changes visibility for all of B's friends — but we do NOT eagerly invalidate all of those. Instead, we use a short TTL (5 minutes) on graph cache entries and accept that for up to 5 minutes, someone might see a post they technically shouldn't. This is a deliberate consistency tradeoff: real-time graph consistency at scale would require invalidating millions of cache entries on every friend/unfriend action, which happens thousands of times per second globally. The 5-minute staleness window is acceptable for the social use case.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you prevent a single user's data from being spread across too many shards?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">We shard by user_id, which means ALL of a user's data (posts, friends, settings) lives on the same shard. This is critical because the most common query pattern is &quot;load user X's profile and recent posts&quot; — a single-shard query. The risk is hot shards: a celebrity's shard handles more reads. We mitigate this with: (1) read replicas per shard — the celebrity's shard might have 5 replicas while a quiet shard has 2, (2) the Memcached layer absorbs most reads so the DB only sees cache misses, and (3) we can split a hot shard by moving ranges of user_ids to a new shard (this is a background operation). What we explicitly avoid is cross-shard queries — things like &quot;find all posts mentioning keyword X&quot; go through a separate search index (Elasticsearch), not a scatter query across all user shards.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">If you had to choose between losing a post and showing a duplicate post, which and why?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Show the duplicate. The user can scroll past a duplicate, but a lost post (especially one with sentimental value — a birth announcement, a memorial) is unrecoverable. This is why post creation uses write-ahead logging to Kafka before acknowledging to the user — even if the database write fails, the event is in Kafka and can be replayed. The duplicate scenario happens when the client retries after a timeout: the post was actually written, but the acknowledgment was lost. We use client-generated idempotency keys (UUID per post attempt) to detect and suppress duplicates at the API layer. If the dedup check fails (Redis with the idempotency key is down), we accept the duplicate and rely on a background dedup job that scans for identical content from the same user within a 60-second window. Availability and durability over perfect consistency.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('[id]').forEach(s => { if (document.querySelector(`nav a[href="#${s.id}"]`)) observer.observe(s); });
+</script>
+
+</body>
+</html>

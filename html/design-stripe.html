@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Stripe — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Stripe</h1>
+    <span>Payment Processing · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-payment-flow">PaymentIntent State Machine</a>
+  <a href="#dd-idempotency">Idempotency &amp; Exactly-Once</a>
+  <a href="#dd-ledger">Double-Entry Ledger</a>
+  <a href="#dd-fraud">Fraud Detection (Radar)</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#data-model">Data Model</a>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing Stripe — a global payment processing platform. The core job: accept a credit card number from a merchant's customer, move money from the customer's bank to the merchant's bank, and make the entire process feel like seven lines of code. Under the hood: tokenization vaults, card network orchestration, double-entry ledgers, real-time fraud detection, idempotent APIs, and multi-currency settlement across 40+ countries."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What's the core payment flow?</strong> <em>→ PaymentIntent API: merchant creates a PaymentIntent with amount + currency, client-side collects card details and confirms, Stripe authorizes with card network, then captures. Two-step (auth + capture) or one-step (immediate charge).</em></li>
+      <li><strong>Which payment methods?</strong> <em>→ Cards (Visa, Mastercard, Amex), bank debits (ACH, SEPA), wallets (Apple Pay, Google Pay), BNPL (Klarna, Affirm). Cards are the primary flow.</em></li>
+      <li><strong>PCI compliance?</strong> <em>→ Critical. Raw card numbers (PAN) never touch merchant servers. Stripe.js collects card details client-side, tokenizes directly with Stripe's PCI-certified vault. Merchants only see tokens.</em></li>
+      <li><strong>Settlement?</strong> <em>→ Stripe holds funds after capture, batches payouts to merchant bank accounts (T+2 standard). Multi-currency: accept in EUR, settle in USD with FX conversion.</em></li>
+      <li><strong>Fraud detection?</strong> <em>→ Stripe Radar: ML model scoring every transaction in real-time. Rules engine for merchant-specific policies. 3D Secure for high-risk transactions (SCA/PSD2 in Europe).</em></li>
+      <li><strong>Exactly-once semantics?</strong> <em>→ Idempotency keys on every mutating API call. Client retries with same key → server returns cached result. No double charges, ever.</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>PaymentIntent lifecycle: create → confirm → authorize → capture</td><td>Stripe Connect (marketplace payouts)</td></tr>
+        <tr><td>Tokenization vault (PCI-DSS Level 1)</td><td>Stripe Billing / Subscriptions engine</td></tr>
+        <tr><td>Double-entry ledger &amp; settlement</td><td>Stripe Terminal (in-person POS)</td></tr>
+        <tr><td>Fraud detection (Radar ML + rules)</td><td>Issuing (Stripe-issued cards)</td></tr>
+        <tr><td>Idempotency &amp; exactly-once processing</td><td>Treasury / Banking-as-a-service</td></tr>
+        <tr><td>Webhook delivery for async events</td><td>Tax calculation engine</td></tr>
+        <tr><td>Multi-currency with FX conversion</td><td>Identity verification (Stripe Identity)</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1: One-time card payment</strong> — Customer buys a $49.99 item. Merchant creates PaymentIntent, customer enters card in Stripe Elements, Stripe authorizes + captures. Merchant receives webhook <code>payment_intent.succeeded</code>. Funds settle T+2.</li>
+      <li><strong>UC2: Auth + capture (hotel/rental)</strong> — Hotel authorizes $500 at check-in. At checkout, captures actual amount $420. Difference released. Auth expires after 7 days.</li>
+      <li><strong>UC3: Refund</strong> — Merchant issues full or partial refund. Stripe reverses ledger entry, submits refund to card network, customer's bank credits 5-10 business days.</li>
+      <li><strong>UC4: 3D Secure</strong> — European payment triggers SCA. Customer redirected to bank's 3DS page, authenticates, payment completes. On failure, PaymentIntent enters <code>requires_action</code>.</li>
+      <li><strong>UC5: Failed payment with retry</strong> — Card declined. PaymentIntent moves to <code>requires_payment_method</code>. Customer retries with different card.</li>
+    </ul>
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Correctness above all:</strong> Money cannot be lost, duplicated, or misattributed. Financial invariant: total debits = total credits at all times. A missing cent triggers an audit failure.</li>
+      <li><strong>Idempotency:</strong> Every mutating API call safely retriable. Timeout during $10,000 charge must never result in two charges. Keys retained 24 hours.</li>
+      <li><strong>Low latency:</strong> Authorization in &lt;2 seconds (customer waiting at checkout). Card network round-trip + fraud check + Stripe overhead.</li>
+      <li><strong>High availability:</strong> 99.999% for the payment path. Downtime = lost revenue for every merchant. Multi-region active-active.</li>
+      <li><strong>PCI-DSS Level 1:</strong> Raw card data only in isolated tokenization vault. Own network segment, separate access controls, annual audit.</li>
+      <li><strong>Multi-tenancy:</strong> Millions of merchants on shared infrastructure. One merchant's traffic spike must not degrade others.</li>
+    </ul>
+    <div class="callout tip">The defining tension in payment systems: <strong>correctness vs. availability</strong>. A social media post can be eventually consistent — a payment cannot. If the authorization succeeded at the card network but your database write fails, you've charged the customer without recording it. The entire architecture is built around making financial state transitions atomic and recoverable.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Total Payment Volume</div><div class="value">~$1T/year</div><div class="detail">~$2.7B/day. Average transaction ~$65. Millions of businesses globally.</div></div>
+      <div class="est-card"><div class="label">Transactions per Day</div><div class="value">~40M</div><div class="detail">$2.7B ÷ $65 avg ≈ 40M. ~460 TPS avg, ~5K TPS peak (Black Friday).</div></div>
+      <div class="est-card"><div class="label">API Requests per Day</div><div class="value">~500M</div><div class="detail">Each payment triggers ~5-10 API calls. Plus non-payment APIs (customers, subscriptions).</div></div>
+      <div class="est-card"><div class="label">Authorization Latency</div><div class="value">&lt;2 seconds</div><div class="detail">Card network: 500-1000ms. Fraud: 50-200ms. Stripe: &lt;100ms. Total &lt;2s.</div></div>
+      <div class="est-card"><div class="label">Merchants</div><div class="value">~4M+</div><div class="detail">Solo devs to Fortune 500. Shared infra with per-merchant isolation.</div></div>
+      <div class="est-card"><div class="label">Idempotency Store</div><div class="value">~500M keys</div><div class="detail">24h TTL. Key + cached response ~100 bytes. ~50GB in Redis.</div></div>
+    </div>
+    <div class="callout decision"><strong>Key insight #1:</strong> Payment processing is not a throughput problem — 5K TPS peak is modest. The hard part is correctness under failure. Every transaction must be exactly-once, auditable, and consistent across distributed systems.</div>
+    <div class="callout decision"><strong>Key insight #2:</strong> Latency is dominated by the card network round-trip (500-1000ms). Stripe's internal processing must be fast (&lt;100ms) to stay within 2 seconds. Fraud check: real-time. Ledger writes: async. Tokenization: sub-50ms.</div>
+    <div class="callout decision"><strong>Key insight #3:</strong> Money flows are asymmetric in time. Authorization is instant (customer waiting). Settlement is batch (T+2 days). Hot path (auth): low-latency, high availability. Cold path (settlement): batch overnight. Two different system profiles.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Key Architecture Decisions</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>Card data security (PCI-DSS L1)</td><td style="color:var(--accent-cyan);font-weight:500">Isolated tokenization vault</td><td>Raw PANs in separate hardened service with own network segment. All other systems use opaque tokens. Reduces PCI scope from entire platform to one service.</td><td>CP</td></tr>
+        <tr><td>No double charges on retry</td><td style="color:var(--accent-cyan);font-weight:500">Idempotency keys (24h TTL in Redis)</td><td>Client sends unique key per request. Server checks before processing, returns cached result on duplicate. Without: timeout → retry → double charge.</td><td>CP</td></tr>
+        <tr><td>Financial correctness</td><td style="color:var(--accent-cyan);font-weight:500">Double-entry ledger (PostgreSQL)</td><td>Every movement: debit + credit. Invariant: sum debits = sum credits. Enables point-in-time reconstruction. Simple balance updates lose audit trail.</td><td>CP (ACID)</td></tr>
+        <tr><td>Real-time fraud scoring</td><td style="color:var(--accent-cyan);font-weight:500">ML pipeline (Radar) inline on auth</td><td>Must complete in &lt;200ms within auth latency budget. Cross-merchant signals. Async detection lets fraudulent charges through.</td><td>—</td></tr>
+        <tr><td>Complex payment lifecycle</td><td style="color:var(--accent-cyan);font-weight:500">PaymentIntent state machine</td><td>Explicit states (created → processing → succeeded). Each transition atomic. Recoverable after crashes. Ad-hoc flags create inconsistent states.</td><td>CP</td></tr>
+        <tr><td>Async merchant notification</td><td style="color:var(--accent-cyan);font-weight:500">Webhooks (at-least-once, 72h retry)</td><td>Merchants need to know when payments succeed/fail/dispute. Retry with exponential backoff. Polling wastes API calls and delays.</td><td>Eventual</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Architecture Topology</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Stripe Architecture</span>
+      <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="arrr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#f85149" stroke-width="1"/></marker>
+        </defs>
+        <!-- Client tier -->
+        <text x="20" y="18" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">CLIENTS</text>
+        <rect x="20" y="26" width="110" height="38" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="75" y="42" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Stripe.js</text><text x="75" y="54" fill="#6e7681" font-size="7" text-anchor="middle">Card tokenization</text>
+        <rect x="145" y="26" width="110" height="38" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="200" y="42" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">Merchant Server</text><text x="200" y="54" fill="#6e7681" font-size="7" text-anchor="middle">API key + SDK</text>
+        <!-- Gateway -->
+        <rect x="300" y="24" width="180" height="42" rx="8" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/><text x="390" y="42" fill="#58a6ff" font-size="11" text-anchor="middle" font-weight="600">API Gateway</text><text x="390" y="55" fill="#6e7681" font-size="8" text-anchor="middle">Auth · rate limit · idempotency · routing</text>
+        <line x1="130" y1="45" x2="145" y2="45" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="255" y1="45" x2="300" y2="45" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <!-- Core services -->
+        <text x="20" y="90" fill="#3fb950" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">CORE SERVICES (HOT PATH)</text>
+        <rect x="20" y="100" width="148" height="46" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="94" y="118" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Payment Service</text><text x="94" y="132" fill="#6e7681" font-size="7" text-anchor="middle">PaymentIntent state machine</text>
+        <rect x="182" y="100" width="148" height="46" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="256" y="118" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Fraud Engine (Radar)</text><text x="256" y="132" fill="#6e7681" font-size="7" text-anchor="middle">ML score + rules &lt;200ms</text>
+        <rect x="344" y="100" width="148" height="46" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="1.2"/><text x="418" y="118" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Network Gateway</text><text x="418" y="132" fill="#6e7681" font-size="7" text-anchor="middle">Visa / MC / Amex routing</text>
+        <!-- PCI vault -->
+        <rect x="520" y="88" width="260" height="72" rx="8" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.25)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <text x="534" y="106" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".08em" opacity=".7">PCI VAULT (ISOLATED NETWORK)</text>
+        <rect x="538" y="116" width="110" height="32" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="593" y="136" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">Token Vault</text>
+        <rect x="660" y="116" width="106" height="32" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.2"/><text x="713" y="136" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">HSM</text>
+        <!-- Card networks -->
+        <text x="520" y="184" fill="#bc8cff" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">CARD NETWORKS</text>
+        <rect x="520" y="194" width="65" height="28" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/><text x="552" y="211" fill="#bc8cff" font-size="9" text-anchor="middle">Visa</text>
+        <rect x="595" y="194" width="65" height="28" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/><text x="627" y="211" fill="#bc8cff" font-size="9" text-anchor="middle">MC</text>
+        <rect x="670" y="194" width="65" height="28" rx="5" fill="#161b22" stroke="#bc8cff" stroke-width="1"/><text x="702" y="211" fill="#bc8cff" font-size="9" text-anchor="middle">Amex</text>
+        <!-- Data stores -->
+        <text x="20" y="172" fill="#39d2c0" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">DATA STORES</text>
+        <rect x="20" y="182" width="100" height="40" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="70" y="198" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Ledger DB</text><text x="70" y="210" fill="#6e7681" font-size="7" text-anchor="middle">PostgreSQL ACID</text>
+        <rect x="130" y="182" width="100" height="40" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="180" y="198" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Idempotency</text><text x="180" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Redis 24h TTL</text>
+        <rect x="240" y="182" width="100" height="40" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="290" y="198" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Payment DB</text><text x="290" y="210" fill="#6e7681" font-size="7" text-anchor="middle">PG sharded</text>
+        <rect x="350" y="182" width="100" height="40" rx="6" fill="#161b22" stroke="#39d2c0" stroke-width="1.2"/><text x="400" y="198" fill="#39d2c0" font-size="10" text-anchor="middle" font-weight="600">Event Bus</text><text x="400" y="210" fill="#6e7681" font-size="7" text-anchor="middle">Kafka</text>
+        <!-- Async -->
+        <text x="20" y="248" fill="#d29922" font-size="9" font-weight="600" letter-spacing=".08em" opacity=".7">ASYNC / COLD PATH</text>
+        <rect x="20" y="258" width="115" height="38" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="77" y="274" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Webhook Delivery</text><text x="77" y="286" fill="#6e7681" font-size="7" text-anchor="middle">At-least-once 72h</text>
+        <rect x="148" y="258" width="115" height="38" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="205" y="274" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Settlement</text><text x="205" y="286" fill="#6e7681" font-size="7" text-anchor="middle">T+2 batch payouts</text>
+        <rect x="276" y="258" width="115" height="38" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="333" y="274" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Reconciliation</text><text x="333" y="286" fill="#6e7681" font-size="7" text-anchor="middle">Nightly ledger audit</text>
+        <rect x="404" y="258" width="115" height="38" rx="6" fill="#161b22" stroke="#d29922" stroke-width="1.2"/><text x="461" y="274" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">Dispute Handler</text><text x="461" y="286" fill="#6e7681" font-size="7" text-anchor="middle">Chargeback workflow</text>
+        <!-- Connections -->
+        <line x1="390" y1="66" x2="94" y2="100" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="168" y1="123" x2="182" y2="123" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="330" y1="123" x2="344" y2="123" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="492" y1="123" x2="520" y2="123" stroke="#f85149" stroke-width="1.2" marker-end="url(#arrr)"/>
+        <line x1="492" y1="130" x2="520" y2="208" stroke="#bc8cff" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="94" y1="146" x2="70" y2="182" stroke="#6e7681" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="400" y1="222" x2="77" y2="258" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+        <line x1="400" y1="222" x2="205" y2="258" stroke="#6e7681" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+      </svg>
+    </div>
+    <div class="sub">Flow: Card Payment (Happy Path)</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Payment Intent Lifecycle</span>
+      <svg viewBox="0 0 780 560" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="s1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Merchant -->
+        <rect x="40" y="10" width="700" height="42" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="54" y="28" fill="#58a6ff" font-size="9" font-weight="600">Merchant</text>
+        <text x="130" y="28" fill="#6e7681" font-size="8">→ POST /v1/payment_intents {amount: 4999, currency: "usd"}</text>
+        <rect x="500" y="18" width="226" height="18" rx="3" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.2)" stroke-width=".6"/>
+        <text x="613" y="30" fill="#d29922" font-size="7" text-anchor="middle" font-weight="600">Idempotency-Key: "order_abc123"</text>
+
+        <line x1="390" y1="52" x2="390" y2="70" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- API Gateway -->
+        <rect x="140" y="70" width="500" height="34" rx="5" fill="#161b22" stroke="#d29922" stroke-width="1.2"/>
+        <text x="160" y="91" fill="#d29922" font-size="9" font-weight="600">API Gateway</text>
+        <text x="300" y="91" fill="#6e7681" font-size="8">→ Auth, rate limit, idempotency check (Redis: NOT FOUND → proceed)</text>
+
+        <line x1="390" y1="104" x2="390" y2="120" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Payment Service: create -->
+        <rect x="140" y="120" width="500" height="34" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+        <text x="160" y="141" fill="#3fb950" font-size="9" font-weight="600">Payment Service</text>
+        <text x="300" y="141" fill="#6e7681" font-size="8">→ Create PaymentIntent (state:</text>
+        <text x="554" y="141" fill="#d29922" font-size="8" font-weight="600">"requires_payment_method"</text>
+        <text x="638" y="141" fill="#6e7681" font-size="8">)</text>
+
+        <line x1="390" y1="154" x2="390" y2="170" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Customer Browser -->
+        <rect x="140" y="170" width="500" height="34" rx="5" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="160" y="191" fill="#58a6ff" font-size="9" font-weight="600">Customer Browser (Stripe.js)</text>
+        <text x="380" y="191" fill="#6e7681" font-size="8">→ Collects card → POST to Stripe directly</text>
+
+        <line x1="390" y1="204" x2="390" y2="220" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Tokenization Vault -->
+        <rect x="140" y="220" width="500" height="42" rx="5" fill="#161b22" stroke="#f85149" stroke-width="1.2"/>
+        <text x="160" y="240" fill="#f85149" font-size="9" font-weight="600">Tokenization Vault</text>
+        <text x="310" y="240" fill="#6e7681" font-size="8">→ Encrypt PAN via HSM → return tok_visa_xxx</text>
+        <rect x="160" y="246" width="200" height="12" rx="2" fill="rgba(248,81,73,.06)"/>
+        <text x="260" y="255" fill="#f85149" font-size="7" text-anchor="middle">Raw PAN never leaves vault</text>
+
+        <line x1="390" y1="262" x2="390" y2="278" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Payment Service: processing -->
+        <rect x="140" y="278" width="500" height="30" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1"/>
+        <text x="160" y="297" fill="#3fb950" font-size="9" font-weight="600">Payment Service</text>
+        <text x="300" y="297" fill="#6e7681" font-size="8">→ Merchant confirms → state:</text>
+        <text x="526" y="297" fill="#d29922" font-size="8" font-weight="600">"processing"</text>
+
+        <line x1="390" y1="308" x2="390" y2="322" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Radar -->
+        <rect x="140" y="322" width="500" height="30" rx="5" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="160" y="341" fill="#bc8cff" font-size="9" font-weight="600">Fraud Engine (Radar)</text>
+        <text x="330" y="341" fill="#6e7681" font-size="8">→ 200 features → ML score: 0.03 →</text>
+        <text x="570" y="341" fill="#3fb950" font-size="8" font-weight="600">ALLOW</text>
+
+        <line x1="390" y1="352" x2="390" y2="368" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Network Gateway -->
+        <rect x="140" y="368" width="500" height="42" rx="5" fill="#161b22" stroke="#d29922" stroke-width="1.2"/>
+        <text x="160" y="387" fill="#d29922" font-size="9" font-weight="600">Network Gateway</text>
+        <text x="310" y="387" fill="#6e7681" font-size="8">→ Detokenize → ISO 8583 auth → Visa → Issuing bank</text>
+        <text x="310" y="401" fill="#6e7681" font-size="8">Response:</text>
+        <text x="380" y="401" fill="#3fb950" font-size="8" font-weight="600">APPROVED</text>
+        <text x="450" y="401" fill="#6e7681" font-size="8">(auth code: A12345, ~700ms)</text>
+
+        <line x1="390" y1="410" x2="390" y2="426" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Payment Service: succeeded -->
+        <rect x="140" y="426" width="500" height="52" rx="5" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.2)" stroke-width="1.2"/>
+        <text x="160" y="444" fill="#3fb950" font-size="9" font-weight="600">Payment Service → state: "succeeded"</text>
+        <text x="160" y="460" fill="#6e7681" font-size="8">Ledger: debit customer, credit merchant holding</text>
+        <text x="160" y="472" fill="#6e7681" font-size="8">Kafka event: "payment_intent.succeeded" · Cache idempotency key (24h TTL)</text>
+
+        <line x1="390" y1="478" x2="390" y2="496" stroke="#6e7681" stroke-width="1" marker-end="url(#s1)"/>
+
+        <!-- Webhook -->
+        <rect x="140" y="496" width="500" height="34" rx="5" fill="#161b22" stroke="#58a6ff" stroke-width="1.2"/>
+        <text x="160" y="515" fill="#58a6ff" font-size="9" font-weight="600">Webhook</text>
+        <text x="230" y="515" fill="#6e7681" font-size="8">→ POST to merchant: {type: "payment_intent.succeeded"} · Retry up to 72h</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4);color:var(--bg)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub" id="dd-payment-flow">Deep Dive 1: PaymentIntent State Machine (~8 min)</div>
+    <div class="callout goal"><strong>PaymentIntent is Stripe's central abstraction.</strong> It represents the lifecycle of a single payment from creation through authorization, capture, and settlement. The state machine makes the complex lifecycle explicit, recoverable, and auditable.</div>
+    <table>
+      <thead><tr><th>State</th><th>Meaning</th><th>Transitions</th></tr></thead>
+      <tbody>
+        <tr><td>requires_payment_method</td><td>Created, waiting for card/bank details</td><td>→ requires_confirmation</td></tr>
+        <tr><td>requires_confirmation</td><td>Method attached, awaiting merchant confirm</td><td>→ requires_action | processing</td></tr>
+        <tr><td>requires_action</td><td>Customer must complete 3DS/redirect</td><td>→ processing | requires_payment_method</td></tr>
+        <tr><td>processing</td><td>Authorizing with card network</td><td>→ requires_capture | succeeded</td></tr>
+        <tr><td>requires_capture</td><td>Auth approved, funds held. Must capture.</td><td>→ succeeded | canceled</td></tr>
+        <tr><td>succeeded</td><td>Payment complete. Funds captured.</td><td>(terminal)</td></tr>
+        <tr><td>canceled</td><td>Canceled by merchant or system</td><td>(terminal)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout decision"><strong>Why a state machine instead of status flags?</strong> (1) Recoverability: if system crashes mid-transition, the persisted state tells you exactly where to resume. "Processing" = auth sent to card network — check for response. (2) Concurrency safety: you can't capture in "requires_action" state. Invalid operations are structurally impossible. (3) API clarity: the state IS the instruction. "requires_action" → redirect to 3DS. "requires_capture" → call capture. The next step is always unambiguous.</div>
+    <div class="callout decision"><strong>Why separate auth and capture?</strong> Hotels, car rentals, restaurants authorize first (hold funds) then capture later (actual amount). Auth expires after 7 days. Two-step also enables fraud review before capture. One-step (auto-capture) is default for most e-commerce.</div>
+
+    <div class="sub" id="dd-idempotency">Deep Dive 2: Idempotency &amp; Exactly-Once (~8 min)</div>
+    <div class="callout goal"><strong>The most important correctness guarantee: no double charges.</strong> Network failures are inevitable. Clients must retry safely. Idempotency keys ensure retrying produces the same result — never processing the same payment twice.</div>
+    <div class="svg-diagram">
+      <span class="dia-title">Idempotency Key Behavior</span>
+      <svg viewBox="0 0 780 310" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="si1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Scenario 1: First Request -->
+        <rect x="40" y="10" width="700" height="80" rx="6" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="54" y="28" fill="#3fb950" font-size="9" font-weight="600">FIRST REQUEST</text>
+        <text x="54" y="46" fill="#6e7681" font-size="8">Client → POST /v1/charges {Idempotency-Key: "idem_abc", amount: 4999}</text>
+        <text x="54" y="62" fill="#6e7681" font-size="8">→ Redis: GET idem_abc →</text>
+        <text x="232" y="62" fill="#d29922" font-size="8" font-weight="600">NOT FOUND</text>
+        <text x="320" y="62" fill="#6e7681" font-size="8">→ Process → Visa auth → SUCCESS</text>
+        <text x="54" y="78" fill="#6e7681" font-size="8">→ Redis: SET idem_abc = {status:200, body:{charge:ch_xxx}} EX 86400 → Return</text>
+        <text x="572" y="78" fill="#3fb950" font-size="8" font-weight="600">200 {charge: ch_xxx}</text>
+
+        <!-- Scenario 2: Retry same params -->
+        <rect x="40" y="104" width="700" height="80" rx="6" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="54" y="122" fill="#58a6ff" font-size="9" font-weight="600">RETRY (same key, same params)</text>
+        <text x="54" y="140" fill="#6e7681" font-size="8">Client → POST /v1/charges {Idempotency-Key: "idem_abc", amount: 4999}</text>
+        <text x="54" y="156" fill="#6e7681" font-size="8">→ Redis: GET idem_abc →</text>
+        <text x="232" y="156" fill="#3fb950" font-size="8" font-weight="600">FOUND, params match</text>
+        <text x="54" y="172" fill="#6e7681" font-size="8">→ Return cached</text>
+        <text x="160" y="172" fill="#3fb950" font-size="8" font-weight="600">200 {charge: ch_xxx}</text>
+        <rect x="420" y="146" width="160" height="20" rx="10" fill="rgba(63,185,80,.08)" stroke="#3fb950" stroke-width=".8"/>
+        <text x="500" y="160" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">← No second charge!</text>
+
+        <!-- Scenario 3: Retry different params -->
+        <rect x="40" y="198" width="700" height="80" rx="6" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.15)" stroke-width="1"/>
+        <text x="54" y="216" fill="#f85149" font-size="9" font-weight="600">RETRY (same key, DIFFERENT params)</text>
+        <text x="54" y="234" fill="#6e7681" font-size="8">Client → POST /v1/charges {Idempotency-Key: "idem_abc", amount: 9999}</text>
+        <text x="54" y="250" fill="#6e7681" font-size="8">→ Redis: GET idem_abc → FOUND,</text>
+        <text x="286" y="250" fill="#f85149" font-size="8" font-weight="600">params MISMATCH</text>
+        <text x="54" y="266" fill="#6e7681" font-size="8">→ Return</text>
+        <text x="112" y="266" fill="#f85149" font-size="8" font-weight="600">400 "Key reused with different params"</text>
+      </svg>
+    </div>
+    <div class="callout decision"><strong>Why 24h TTL?</strong> Long enough for extended outages and retries. Short enough to bound storage (~50GB). After 24h the key is pruned — but the original transaction is already settled.</div>
+    <div class="callout decision"><strong>Concurrent requests?</strong> Two identical requests arrive simultaneously. First acquires Redis lock (SET NX), processes, stores result. Second sees lock, waits briefly, returns stored result. Lock is ~30s — covers card network round-trip.</div>
+    <div class="callout decision"><strong>Defense in depth:</strong> Redis is the fast path. DB-level unique constraint on (merchant_id, idempotency_key) is the safety net. If Redis fails, fall back to DB check (slower but correct). Both layers enforce uniqueness.</div>
+
+    <div class="sub" id="dd-ledger">Deep Dive 3: Double-Entry Ledger (~7 min)</div>
+    <div class="callout goal"><strong>Financial invariant: total debits = total credits, always.</strong> Every money movement creates two immutable ledger entries. The backbone of correctness — enabling audits, reconciliation, and regulatory compliance.</div>
+    <div class="schema"><span class="comment">// Customer pays $49.99 to Merchant</span>
+
+<span class="table-name">Entry 1 (DEBIT)</span>  — Customer's card charged
+  account: <span class="fk">acct_customer_card</span>   amount: <span class="pk">-4999</span>   txn: <span class="pk">txn_abc</span>
+
+<span class="table-name">Entry 2 (CREDIT)</span> — Stripe holds funds
+  account: <span class="fk">acct_stripe_holding</span>   amount: <span class="pk">+4999</span>   txn: <span class="pk">txn_abc</span>
+
+<span class="comment">// Settlement (T+2): Stripe pays merchant</span>
+
+<span class="table-name">Entry 3 (DEBIT)</span>  — Stripe releases funds
+  account: <span class="fk">acct_stripe_holding</span>   amount: <span class="pk">-4854</span>   <span class="comment">// $49.99 - $1.45 fee</span>
+
+<span class="table-name">Entry 4 (CREDIT)</span> — Merchant receives
+  account: <span class="fk">acct_merchant_balance</span>  amount: <span class="pk">+4854</span>
+
+<span class="table-name">Entry 5 (CREDIT)</span> — Stripe revenue
+  account: <span class="fk">acct_stripe_revenue</span>    amount: <span class="pk">+145</span>    <span class="comment">// 2.9% + $0.30</span>
+
+<span class="comment">// INVARIANT: -4999 + 4999 - 4854 + 4854 + 145 - 145 = 0 ✓</span></div>
+    <div class="callout decision"><strong>Why immutable append-only?</strong> (1) Audit trail: regulators require reconstructing any balance at any point. Mutable balances lose history. (2) Error detection: sum-of-all-entries = 0 verified with one query. Mutable balances drift silently. (3) Concurrency: append-only writes don't conflict. Two charges to same merchant create independent entries — no lock contention on a balance row.</div>
+
+    <div class="sub" id="dd-fraud">Deep Dive 4: Fraud Detection — Radar (~7 min)</div>
+    <div class="callout goal"><strong>Every transaction scored in real-time.</strong> ML model (trained on billions of transactions across all merchants) + rules engine. Must complete in &lt;200ms — inline on the authorization path.</div>
+    <table>
+      <thead><tr><th>Component</th><th>What</th><th>Latency</th></tr></thead>
+      <tbody>
+        <tr><td>Features</td><td>~200 signals: card fingerprint, IP, velocity, device, cross-merchant patterns</td><td>~20ms</td></tr>
+        <tr><td>ML Model</td><td>Gradient-boosted tree on billions of historical transactions. Outputs risk 0.0→1.0. Retrained daily.</td><td>~30ms</td></tr>
+        <tr><td>Rules</td><td>Merchant-defined: "Block if amount &gt;$5K and country!=US." Override or supplement ML.</td><td>~10ms</td></tr>
+        <tr><td>3DS Decision</td><td>Medium risk (0.3-0.75): trigger 3D Secure. Shifts liability to issuing bank. Required by PSD2/SCA.</td><td>~5ms</td></tr>
+        <tr><td>Verdict</td><td>ALLOW (&lt;0.3) · BLOCK (&gt;0.75) · REVIEW (0.3-0.75: 3DS or queue)</td><td>~5ms</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><strong>Stripe's unfair advantage:</strong> Radar sees transactions across millions of merchants. A stolen card used at Merchant A can be blocked at Merchant B in real-time — before B sees the charge. This cross-merchant signal is the most powerful fraud feature. Individual merchants can't replicate it. More merchants → better model → lower fraud → more merchants. Network effect flywheel.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5);color:var(--bg)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub" id="data-model">Data Model &amp; Storage</div>
+    <table>
+      <thead><tr><th>Store</th><th>Technology</th><th>What &amp; Why</th></tr></thead>
+      <tbody>
+        <tr><td>Ledger</td><td>PostgreSQL (ACID)</td><td>Double-entry records. ACID non-negotiable. Sharded by merchant_id.</td></tr>
+        <tr><td>Payment DB</td><td>PostgreSQL (sharded)</td><td>PaymentIntents, Charges, Refunds, Customers. Sharded by merchant_id.</td></tr>
+        <tr><td>Token Vault</td><td>Isolated PG + HSM</td><td>Encrypted PANs. Separate network, access controls, annual PCI audit.</td></tr>
+        <tr><td>Idempotency</td><td>Redis Cluster</td><td>Keys → cached responses. 24h TTL. ~50GB. Sub-ms lookup.</td></tr>
+        <tr><td>Event Bus</td><td>Kafka</td><td>State transitions as events. Consumers: webhooks, settlement, analytics.</td></tr>
+        <tr><td>Fraud Features</td><td>Redis + feature store</td><td>Pre-computed fraud signals. Real-time updates from transaction stream.</td></tr>
+      </tbody>
+    </table>
+    <div class="schema"><span class="table-name">PaymentIntent</span>
+  id: <span class="pk">pi_3MtweE2eZvKYlo2C0</span>   amount: 4999   currency: "usd"
+  status: "succeeded"   payment_method: <span class="fk">pm_card_visa</span>  <span class="comment">// token, not PAN</span>
+  customer: <span class="fk">cus_Nx9Xu...</span>   merchant_id: <span class="fk">acct_1Mt...</span>  <span class="comment">// shard key</span>
+  idempotency_key: "order_abc123"   metadata: {"order_id": "12345"}
+
+<span class="table-name">LedgerEntry</span>
+  id: <span class="pk">le_uuid</span>   transaction_id: <span class="fk">txn_abc</span>   account_id: <span class="fk">acct_xxx</span>
+  type: DEBIT|CREDIT   amount: <span class="pk">-4999</span>   currency: "usd"  <span class="comment">// immutable</span>
+
+<span class="table-name">WebhookEvent</span>
+  id: <span class="pk">evt_1Mt...</span>   type: "payment_intent.succeeded"
+  merchant_id: <span class="fk">acct_1Mt...</span>   delivery_status: delivered|pending|failed</div>
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Card network timeout</span><span class="mitigation">PaymentIntent stays "processing." Stripe queries card network for auth result (status inquiry). If approved: proceed. If no response after retries: move to "requires_payment_method." Idempotency key ensures card network auth is also idempotent.</span></div>
+    <div class="failure-row"><span class="scenario">DB write fails after auth</span><span class="mitigation">Scariest scenario: card charged but unrecorded. Defense: (1) WAL/Kafka log before auth request. (2) Nightly reconciliation vs card network settlement files. (3) Attempt void if DB write fails immediately. Every step has a recovery mechanism.</span></div>
+    <div class="failure-row"><span class="scenario">Double charge (Redis miss)</span><span class="mitigation">If Redis down, idempotency check skipped. Defense in depth: DB unique constraint on (merchant_id, idempotency_key). Slower but correct. Both Redis AND DB enforce uniqueness.</span></div>
+    <div class="failure-row"><span class="scenario">Webhook delivery failure</span><span class="mitigation">Retry exponential backoff: 1min, 5min, 30min... up to 72h. After exhaustion: "failed." Merchants fetch missed events via Events API. Webhooks are at-least-once — merchants must handle duplicates.</span></div>
+    <div class="failure-row"><span class="scenario">Hot merchant shard</span><span class="mitigation">Large merchant overwhelms shard. Virtual sharding (sub-partition keys). Dedicated infra for enterprise tier. Per-merchant rate limits protect shared tenants.</span></div>
+    <div class="failure-row"><span class="scenario">Fraud false positive</span><span class="mitigation">Legit payment blocked → lost revenue. 3DS fallback (authenticate instead of block). Merchant rule overrides. Model retrained when FP rate exceeds threshold. Revenue from FP often exceeds fraud losses.</span></div>
+
+    <div class="sub">Security &amp; Compliance</div>
+    <div class="callout tip"><strong>PCI-DSS.</strong> Vault is the PCI boundary. Stripe.js → vault directly, never merchant server. Vault: separate VPC, separate DB, HSM keys, independent audit. Reduces PCI scope to one service.</div>
+    <div class="callout tip"><strong>Multi-tenancy.</strong> All queries filter by merchant_id. Shard key = merchant_id. API keys scoped per merchant. Rate limits per merchant. Hot tenant can't degrade the platform.</div>
+
+    <div class="sub">Monitoring &amp; SLOs</div>
+    <div class="callout tip"><strong>SLOs:</strong> Auth latency p99 &lt;2s · API availability 99.999% · Webhook delivery p95 &lt;30s · Settlement accuracy 100%. <strong>Alerts:</strong> Auth success &lt;95% (network issue) · Ledger imbalance (critical page) · Redis latency &gt;10ms · Webhook backlog &gt;100K events.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">What I'd Build Next</div>
+    <ul class="items">
+      <li><strong>Intelligent payment routing:</strong> ML-predicted approval rate per route (network + processor + region). 1% approval improvement = billions in recovered revenue across the platform.</li>
+      <li><strong>Instant Payouts:</strong> Push funds to merchant debit card in minutes via RTP/Visa Direct instead of T+2. Premium feature.</li>
+      <li><strong>Adaptive 3DS:</strong> Dynamically trigger 3DS based on issuer behavior and risk. Maximize conversion while meeting SCA requirements.</li>
+      <li><strong>Network tokenization:</strong> Card-network-issued tokens (Visa Token Service). Higher approval rates, survives card reissuance.</li>
+      <li><strong>Multi-processor failover:</strong> Auto-route to secondary processor on primary outage. Increases auth path availability to 99.999%+.</li>
+      <li><strong>AI dispute management:</strong> Auto-generate chargeback evidence packages. ML predicts win probability and recommends strategy.</li>
+    </ul>
+    <div class="callout say">"Stripe's architecture is built around one principle: financial correctness is non-negotiable. The tokenization vault isolates PCI scope. PaymentIntent state machine makes the lifecycle explicit and recoverable. Idempotency keys guarantee exactly-once. Double-entry ledger accounts for every cent. Radar's real-time ML leverages cross-merchant signals. Hot path (auth) optimized for latency; cold path (settlement) runs as batch. What feels like seven lines of code to the merchant is backed by one of the most sophisticated distributed financial systems on the internet."</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7 ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div style="margin:8px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span><p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What happens if the card network approves but Stripe's DB write fails?</p></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span><p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The most dangerous failure in payments. Three defenses: (1) Write-ahead log: before sending auth to the card network, log a "pending auth" to Kafka/WAL. If DB fails, recovery reads the log. (2) Nightly reconciliation: card networks send settlement files listing all approved transactions. A reconciliation job compares against the ledger. Any mismatch triggers an alert and correction entry. (3) Void on failure: if DB write fails immediately, attempt to void the auth (release the hold). If void also fails, fall back to reconciliation. This is why payments engineers obsess about operation ordering: log first, authorize second, persist third. Every step has a recovery path.</p></div>
+    </div>
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span><p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does tokenization work? What's in the vault?</p></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span><p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Stripe.js runs in the customer's browser and sends card details directly to the vault — never touching the merchant's server. The vault encrypts the PAN using HSM-managed keys, stores the encrypted PAN, and returns an opaque token (pm_card_visa). The token has no mathematical relationship to the PAN — you cannot reverse it. When Stripe needs the actual PAN for authorization, the Network Gateway calls the vault's internal API, authenticates, receives the decrypted PAN for that specific transaction, uses it for the card network call, and immediately discards it from memory — never written to logs. The vault is physically isolated: separate network segment, separate databases, separate access control lists, independently audited annually for PCI-DSS Level 1. This reduces PCI scope from the entire platform to one service.</p></div>
+    </div>
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span><p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you handle Black Friday — 10x normal volume?</p></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span><p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">5K TPS peak isn't a throughput challenge — it's correctness-under-load. (1) Horizontal scaling of stateless services: API Gateway, Payment Service, Fraud Engine scale behind load balancers. (2) Pre-provisioned capacity based on historical patterns and merchant forecasts. (3) Per-merchant rate limiting: one merchant's flash sale doesn't degrade others. (4) Async offloading: only auth is latency-critical. Webhooks, settlement, analytics go through Kafka at their own pace — Kafka absorbs the write spike. (5) The real bottleneck is the card networks. Visa handles 65K TPS globally. If every processor spikes simultaneously, networks constrain. Stripe can queue and retry, but card network latency may increase under global peak load.</p></div>
+    </div>
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span><p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why double-entry bookkeeping instead of just updating balances?</p></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span><p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Three non-negotiable reasons: (1) Auditability: regulators require reconstructing any balance at any point in time. Mutable balances only show current state. Double-entry replays from zero and proves every cent. Legally required. (2) Error detection: the invariant sum(debits) = sum(credits) is verified with a single query. Off by one cent? Something is broken. Mutable balances drift silently until a merchant complains. (3) Concurrency: balance-update requires locking the balance row — contention. Double-entry appends independent entries — no shared row, no lock contention on the hot path. The tradeoff: computing current balance requires summing entries (or maintaining a materialized view updated asynchronously). Worth it for correctness.</p></div>
+    </div>
+    <div style="margin:18px 0">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q5</span><p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">Why is cross-merchant fraud detection Stripe's competitive moat?</p></div>
+      <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span><p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Radar sees every transaction across millions of merchants. A stolen card flagged at Merchant A can be blocked at Merchant B in real-time — before B ever sees the charge. Standalone fraud tools only see one merchant's data. Stripe sees the global transaction graph: which cards appear at which merchants, velocity across the network, device fingerprints at multiple merchants, emails linked to past fraud. This compounds: more merchants → more data → better model → lower fraud → attracts more merchants. A new merchant on Day 1 gets protection trained on billions of historical transactions. They'd need years of solo data to match that. This is why Radar's false positive rate is dramatically lower than standalone tools — more data means more precision in distinguishing fraud from legitimate edge cases.</p></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</body>
+</html>

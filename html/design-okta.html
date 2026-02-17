@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Okta — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em}.nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}nav a.active{color:var(--text);border-left-color:var(--accent-blue);background:rgba(88,166,255,.06)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+.phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+.callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+.sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+.est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+.flow-diagram{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:20px;margin:14px 0;font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--text-muted);overflow-x:auto;white-space:pre;text-align:center}.flow-diagram .highlight{color:var(--accent-cyan);font-weight:600}.flow-diagram .arrow{color:var(--text-dim)}.flow-diagram .label{color:var(--accent-orange);font-size:10px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.comp-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.comp-card h4{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}.comp-card h4 .tag{font-family:var(--font-mono);font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}.comp-card ul{list-style:none;font-size:12px;color:var(--text-muted);line-height:1.55}.comp-card ul li::before{content:'• ';color:var(--text-dim)}
+.failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:220px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+@media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid,.comp-grid{grid-template-columns:1fr}}
+
+/* SVG Diagram Styles */
+.svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}
+.svg-diagram svg{display:block;width:100%;height:auto}
+.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+.svg-node{transition:filter .2s ease}.svg-node:hover{filter:brightness(1.25)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.svg-diagram[data-anim] .svg-node{animation:fadeInUp .4s ease both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><h1>Design Okta</h1><span>Identity & Access Management · 75 min</span></div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify & Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-authn">Authentication Pipeline</a>
+  <a href="#dd-tenant">Multi-Tenant Isolation</a>
+  <a href="#dd-sso">SSO & Federation Protocols</a>
+  <a href="#dd-directory">Directory Integration & Sync</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+<main>
+
+<!-- P1 -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem & Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing a cloud Identity-as-a-Service (IDaaS) platform like Okta. Okta is fundamentally different from every other system we've designed: it is a TRUST PLATFORM. When Okta says 'this user is who they claim to be,' thousands of downstream applications grant access based on that assertion. A false positive (authenticating an attacker) is a catastrophic security breach affecting EVERY connected application. A false negative (locking out a legitimate user) blocks that person from ALL their work tools. And downtime means nobody at thousands of companies can log in to ANYTHING. The system sits on the critical path of every employee at every customer — it's the front door to the modern enterprise."</div>
+
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+            <li><strong>What outcome are we optimizing for?</strong> <em>→ Legitimate-user auth success rate (authorized users can log in, every time, fast) WHILE maintaining zero unauthorized access. These are competing: tighter security → more friction → more legitimate failures. Secondary: time-to-productivity for new employees (onboarding speed) and time-to-lockout for departing employees (deprovisioning speed). This shapes the policy engine — it must be expressive enough to distinguish "unusual but legitimate" from "compromised account" without blocking real users.</em></li>
+      <li><strong>Core capabilities?</strong> <em>→ Single Sign-On (SSO), Multi-Factor Authentication (MFA), Universal Directory (user/group management), Lifecycle Management (provisioning/deprovisioning), API Access Management (OAuth2/OIDC tokens).</em></li>
+      <li><strong>Who are the tenants?</strong> <em>→ ~19,000+ customer organizations, from 50-person startups to Fortune 500 enterprises. Each tenant is completely isolated. Tenant data MUST NEVER cross boundaries.</em></li>
+      <li><strong>Federation protocols?</strong> <em>→ SAML 2.0 (still dominant for enterprise), OpenID Connect/OAuth 2.0 (modern apps), WS-Federation (Microsoft legacy), SCIM (user provisioning).</em></li>
+      <li><strong>Integration catalog?</strong> <em>→ Okta Integration Network (OIN): 7,500+ pre-built integrations (Salesforce, Slack, AWS, Office 365, etc.) with SSO and provisioning.</em></li>
+      <li><strong>On-prem connectivity?</strong> <em>→ Okta AD Agent: lightweight agent installed in customer's network that bridges on-prem Active Directory / LDAP to cloud Okta. Outbound-only connections (no inbound firewall holes).</em></li>
+      <li><strong>Scale?</strong> <em>→ Hundreds of millions of authentications per day across all tenants. Sub-200ms auth latency. 99.99% availability SLA.</em></li>
+    </ul>
+
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>Authentication pipeline (login flow)</td><td>Okta Privileged Access (PAM)</td></tr>
+        <tr><td>SSO (SAML + OIDC) federation</td><td>Identity Governance & Admin (IGA)</td></tr>
+        <tr><td>Multi-factor authentication (MFA)</td><td>Advanced Threat Detection analytics</td></tr>
+        <tr><td>Multi-tenant data isolation</td><td>Customer Identity (CIAM) specifics</td></tr>
+        <tr><td>Universal Directory & user store</td><td>Passwordless / FIDO2 protocol details</td></tr>
+        <tr><td>Directory sync (AD/LDAP agents)</td><td>Admin console UI</td></tr>
+        <tr><td>Token issuance (OAuth2/OIDC)</td><td>Pricing / billing system</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1 (Employee SSO Login):</strong> Employee at Acme Corp opens Salesforce → redirected to Okta (acme.okta.com) → enters username/password → Okta verifies credentials → MFA challenge (push to Okta Verify app) → user approves → Okta issues SAML assertion → Salesforce grants access. Total: &lt;5 seconds including MFA.</li>
+      <li><strong>UC2 (Session-based SSO):</strong> Same employee, 10 minutes later, opens Slack → redirected to Okta → Okta recognizes EXISTING session (cookie) → no password prompt → issues SAML assertion for Slack → Slack grants access. Total: &lt;1 second (transparent redirect).</li>
+      <li><strong>UC3 (New Employee Onboarding):</strong> HR creates user in Workday → SCIM provisioning triggers in Okta → Okta creates user, assigns to groups based on department → auto-provisions accounts in Salesforce, Slack, GitHub, AWS (each via SCIM or API) → employee has access to all apps from day one.</li>
+      <li><strong>UC4 (Employee Offboarding):</strong> HR deactivates user in Workday → Okta deactivates user → IMMEDIATELY revokes all active sessions → deprovisions from all connected apps → within minutes, employee is locked out of EVERYTHING. This is the most security-critical lifecycle event.</li>
+      <li><strong>UC5 (Suspicious Login):</strong> Login attempt from unusual location (user normally in NYC, attempt from Eastern Europe) → Okta's adaptive MFA policy triggers additional factor → user can't produce the factor → access denied → security event logged → admin alerted.</li>
+    </ul>
+
+    <div class="sub">Non-Functional Requirements</div>
+    <ul class="items">
+      <li><strong>Availability: 99.99% (52 min downtime/year max):</strong> If Okta is down, employees at 19,000+ companies can't log in to ANY of their applications. Okta downtime = enterprise-wide work stoppage for customers.</li>
+      <li><strong>Latency: &lt;200ms for auth decisions:</strong> Authentication sits on the critical path of every login. A slow Okta makes every SaaS app feel slow. Users blame the app, not the identity provider.</li>
+      <li><strong>Security: zero data leakage between tenants:</strong> Acme Corp's user directory must NEVER be visible to Beta Corp. This is contractual, regulatory, and existential — a cross-tenant leak would destroy trust in the platform.</li>
+      <li><strong>Auditability:</strong> Every authentication, MFA challenge, token issuance, provisioning action, admin change logged with immutable audit trail per tenant. Required for SOC 2, FedRAMP, HIPAA compliance.</li>
+      <li><strong>Consistency:</strong> Strong consistency for auth decisions. If a user is deactivated at T=0, no authentication should succeed at T=0+1ms. Stale reads here = security vulnerability.</li>
+    </ul>
+
+    <div class="callout tip">The defining tension: ABSOLUTE SECURITY with MAXIMUM AVAILABILITY. Most systems can trade security for availability or vice versa. Okta cannot. Wrongly authenticating an attacker is a breach. Failing to authenticate a legitimate user is a business disruption. Downtime is a disruption for ALL customers. The system must be secure AND available AND fast AND consistent — simultaneously. This is why identity platforms are among the hardest systems to build and why there are only a few major providers.</div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">Customer Tenants</div><div class="value">~19,000+</div><div class="detail">Each tenant: own user directory, own policies, own app integrations. Complete isolation.</div></div>
+      <div class="est-card"><div class="label">Managed Identities</div><div class="value">~hundreds of millions</div><div class="detail">Workforce + customer identities across all tenants. Largest tenants: millions of users each.</div></div>
+      <div class="est-card"><div class="label">Authentications / Day</div><div class="value">~hundreds of millions</div><div class="detail">Peak: Monday 9 AM across US time zones. Every employee logging into work = auth spike.</div></div>
+      <div class="est-card"><div class="label">Auth Latency Target</div><div class="value">&lt;200ms</div><div class="detail">Credential verification + policy evaluation + token issuance. Excluding MFA user interaction time.</div></div>
+      <div class="est-card"><div class="label">OIN Integrations</div><div class="value">7,500+</div><div class="detail">Pre-built SSO + provisioning connectors. Each with SAML/OIDC metadata and SCIM endpoints.</div></div>
+      <div class="est-card"><div class="label">Token Issuance Rate</div><div class="value">~50K+ / sec peak</div><div class="detail">Each SSO redirect = token/assertion issuance. Crypto operations (sign JWT/SAML) on every request.</div></div>
+      <div class="est-card"><div class="label">Active Sessions</div><div class="value">tens of millions</div><div class="detail">Each authenticated user has an active Okta session. Session state must be queryable in &lt;5ms.</div></div>
+      <div class="est-card"><div class="label">Audit Events / Day</div><div class="value">~billions</div><div class="detail">Every login, MFA challenge, token issue, admin action, provisioning event. Immutable. 1-year retention minimum.</div></div>
+    </div>
+
+    <div class="callout decision"><strong>Key insight #1 — Authentication is CRYPTO-INTENSIVE:</strong> Every SAML assertion must be XML-signed (RSA-2048). Every JWT/OIDC token must be signed (RS256 or ES256). Every password must be verified (bcrypt/scrypt, deliberately slow: ~100ms per hash). At 50K tokens/sec peak, this is a massive crypto workload. Dedicated signing infrastructure (HSMs or crypto-optimized nodes) is required.</div>
+
+    <div class="callout decision"><strong>Key insight #2 — The "Monday 9 AM" problem:</strong> Traffic is extremely spiky. At 9 AM Eastern, millions of US workers log in to start their day. By 9:05, traffic normalizes. This 5-minute spike can be 5-10× the steady-state load. The system must handle this without pre-warming or auto-scaling delays — capacity must be PRE-PROVISIONED for the Monday morning peak.</div>
+
+    <div class="callout decision"><strong>Key insight #3 — Tenant size varies by 10,000×:</strong> A 50-person startup and a 500,000-employee enterprise share the same platform. The enterprise generates 10,000× more auth traffic. The architecture must prevent a "noisy neighbor" — one large tenant's traffic spike must not degrade authentication for smaller tenants. This requires per-tenant rate limiting and resource isolation.</div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3);color:var(--bg)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"I'll organize Okta's architecture around the AUTHENTICATION PIPELINE — the sequence of steps that happen when a user tries to log in. This is the hot path that must be fast, secure, and always available. Around this pipeline sit the supporting systems: the Universal Directory (user store), the Policy Engine (who can access what, and what factors are required), the Token Service (issuing SAML/OIDC assertions), and the Provisioning Engine (lifecycle management)."</div>
+
+    
+    <div class="sub">Key Architecture Decisions</div>
+    <div class="callout say">"Here's WHY I chose each technology — mapping requirements to tradeoffs. Every choice has a rejected alternative and a consequence."</div>
+    <table>
+      <thead><tr><th style="width:22%">Requirement</th><th style="width:20%">Decision</th><th style="width:42%">Why (and what was rejected)</th><th style="width:16%">Consistency</th></tr></thead>
+      <tbody>
+      <tr><td>99.99% availability — downtime = enterprise work stoppage</td><td style="color:var(--accent-cyan);font-weight:500">Multi-region active-active</td><td>Each region independently serves auth requests. If one region fails, others absorb traffic. Single-region = 53 min downtime/year max.</td><td style="color:var(--accent-orange);font-weight:600">AP for routing, CP for auth decisions</td></tr>
+      <tr><td>Auth decisions must be consistent (deprovisioned = blocked)</td><td style="color:var(--accent-cyan);font-weight:500">Strong consistency for sessions + auth</td><td>A deprovisioned user must be blocked within 30 seconds globally. Eventual consistency could allow fired employees to access systems.</td><td style="color:var(--accent-red);font-weight:600">CP</td></tr>
+      <tr><td>19,000 tenants, strict data isolation</td><td style="color:var(--accent-cyan);font-weight:500">Shared DB sharded by org_id (not DB-per-tenant)</td><td>19K databases = 19K to patch, back up, monitor. Shared DB + mandatory org_id filter + Row-Level Security. Tradeoff: isolation depends on app correctness.</td><td>—</td></tr>
+      <tr><td>&lt;200ms auth latency including MFA</td><td style="color:var(--accent-cyan);font-weight:500">Redis for session tokens (not DB lookup)</td><td>Session validation is the hottest path. Redis &lt;1ms vs PostgreSQL 5-20ms. 10x latency reduction on every authenticated request.</td><td>—</td></tr>
+      <tr><td>SAML/OIDC tokens must be cryptographically signed</td><td style="color:var(--accent-cyan);font-weight:500">Per-tenant signing keys in HSM</td><td>Hardware Security Module: private keys never leave the HSM. Even Okta engineers can't extract them. Required for enterprise trust.</td><td>—</td></tr>
+      <tr><td>Federated with 200+ SaaS apps</td><td style="color:var(--accent-cyan);font-weight:500">Standard protocols (SAML, OIDC, SCIM) not custom APIs</td><td>Standards mean any compliant SP works without custom integration. Custom APIs would require per-SP adapters — doesn't scale to 200+ apps.</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Major Components</div>
+    <div class="svg-diagram" data-anim>
+  <span class="dia-title">High-Level Architecture</span>
+  <svg viewBox="0 0 780 656" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs>
+      <marker id="topo_3690" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+      <marker id="topo_3690h" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#39d2c0" stroke-width="1"/></marker>
+    </defs>
+    <rect x="28" y="28" width="724" height="84" rx="8" fill="rgba(88,166,255,.02)" stroke="rgba(88,166,255,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="41" fill="#58a6ff" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CLIENTS</text>
+    <rect x="28" y="128" width="724" height="84" rx="8" fill="rgba(210,153,34,.02)" stroke="rgba(210,153,34,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="141" fill="#d29922" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EDGE / LOAD BALANCING</text>
+    <rect x="28" y="228" width="724" height="84" rx="8" fill="rgba(57,210,192,.02)" stroke="rgba(57,210,192,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="241" fill="#39d2c0" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">APPLICATION SERVICES</text>
+    <rect x="28" y="328" width="724" height="84" rx="8" fill="rgba(227,179,65,.02)" stroke="rgba(227,179,65,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="341" fill="#e3b341" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">CACHING</text>
+    <rect x="28" y="428" width="724" height="84" rx="8" fill="rgba(247,120,186,.02)" stroke="rgba(247,120,186,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="441" fill="#f778ba" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">EXTERNAL</text>
+    <rect x="28" y="528" width="724" height="84" rx="8" fill="rgba(248,81,73,.02)" stroke="rgba(248,81,73,.12)" stroke-dasharray="4 2"/>
+    <text x="40" y="541" fill="#f85149" font-size="8" font-weight="600" letter-spacing=".1em" opacity=".7">DATA STORES</text>
+    <line x1="333" y1="94" x2="390" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="447" y1="94" x2="390" y2="154" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="390" y1="194" x2="100" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="390" y1="194" x2="448" y2="254" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="100" y1="294" x2="333" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <text x="220" y="372" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">SAML/OIDC</text>
+    <line x1="100" y1="294" x2="390" y2="354" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="100" y1="254" x2="216" y2="294" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="332" y1="294" x2="333" y2="454" stroke="#6e7681" stroke-width="1.2" marker-end="url(#topo_3690)" opacity=".6"/>
+    <text x="340" y="374" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">SCIM</text>
+    <line x1="332" y1="294" x2="447" y2="454" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <text x="393" y="372" fill="#6e7681" font-size="7" font-family="'JetBrains Mono',monospace" opacity=".7">sync</text>
+    <line x1="448" y1="294" x2="390" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <line x1="680" y1="294" x2="390" y2="554" stroke="#6e7681" stroke-width="1" marker-end="url(#topo_3690)" opacity=".5"/>
+    <rect class="svg-node" x="283" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="333" y="78" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">👤 Employee / User</text>
+    <rect class="svg-node" x="397" y="54" width="100" height="40" rx="6" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="447" y="78" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">⚙️ IT Admin</text>
+    <rect class="svg-node" x="340" y="154" width="100" height="40" rx="6" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="390" y="171" fill="#d29922" font-size="10" font-weight="600" text-anchor="middle">🌐 API Gateway / CDN</text>
+    <text x="390" y="184" fill="#6e7681" font-size="8" text-anchor="middle">rate limit · geo routing</text>
+    <rect class="svg-node" x="49" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="100" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔐 AuthN Engine</text>
+    <text x="100" y="284" fill="#6e7681" font-size="8" text-anchor="middle">SAML · OIDC · MFA</text>
+    <rect class="svg-node" x="165" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="216" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🛡️ AuthZ / Policy</text>
+    <text x="216" y="284" fill="#6e7681" font-size="8" text-anchor="middle">RBAC · ABAC</text>
+    <rect class="svg-node" x="281" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="332" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">🔄 Provisioning</text>
+    <text x="332" y="284" fill="#6e7681" font-size="8" text-anchor="middle">SCIM · lifecycle</text>
+    <rect class="svg-node" x="397" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="448" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📒 Universal Directo…</text>
+    <text x="448" y="284" fill="#6e7681" font-size="8" text-anchor="middle">identity store</text>
+    <rect class="svg-node" x="513" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="564" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">⚡ Workflows</text>
+    <text x="564" y="284" fill="#6e7681" font-size="8" text-anchor="middle">no-code automation</text>
+    <rect class="svg-node" x="629" y="254" width="102" height="40" rx="6" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="680" y="271" fill="#39d2c0" font-size="10" font-weight="600" text-anchor="middle">📊 System Log</text>
+    <text x="680" y="284" fill="#6e7681" font-size="8" text-anchor="middle">audit trail</text>
+    <rect class="svg-node" x="340" y="354" width="100" height="40" rx="6" fill="rgba(227,179,65,.06)" stroke="rgba(227,179,65,.3)"/>
+    <text x="390" y="371" fill="#e3b341" font-size="10" font-weight="600" text-anchor="middle">⚡ Redis</text>
+    <text x="390" y="384" fill="#6e7681" font-size="8" text-anchor="middle">sessions · token cache</text>
+    <rect class="svg-node" x="283" y="454" width="100" height="40" rx="6" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="333" y="471" fill="#f778ba" font-size="10" font-weight="600" text-anchor="middle">🏢 SaaS Apps (SPs)</text>
+    <text x="333" y="484" fill="#6e7681" font-size="8" text-anchor="middle">Salesforce · Slack · AWS</text>
+    <rect class="svg-node" x="397" y="454" width="100" height="40" rx="6" fill="rgba(247,120,186,.06)" stroke="rgba(247,120,186,.3)"/>
+    <text x="447" y="471" fill="#f778ba" font-size="10" font-weight="600" text-anchor="middle">📂 AD / LDAP</text>
+    <text x="447" y="484" fill="#6e7681" font-size="8" text-anchor="middle">on-prem directories</text>
+    <rect class="svg-node" x="340" y="554" width="100" height="40" rx="6" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="390" y="571" fill="#f85149" font-size="10" font-weight="600" text-anchor="middle">🐘 PostgreSQL</text>
+    <text x="390" y="584" fill="#6e7681" font-size="8" text-anchor="middle">identity · policy · logs</text>
+  </svg>
+</div>
+
+    <div class="comp-grid">
+      <div class="comp-card">
+        <h4>🔐 Authentication Pipeline <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">HOT PATH</span></h4>
+        <ul>
+          <li>Credential verification (password, delegated auth)</li>
+          <li>MFA orchestration (push, TOTP, SMS, WebAuthn)</li>
+          <li>Adaptive risk scoring (location, device, behavior)</li>
+          <li>Session creation and management</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📋 Universal Directory <span class="tag" style="background:rgba(88,166,255,.15);color:var(--accent-blue)">STORE</span></h4>
+        <ul>
+          <li>User profiles, credentials, group memberships</li>
+          <li>Per-tenant isolated data store</li>
+          <li>Custom attributes / schema per tenant</li>
+          <li>Mastered by: Okta, AD, LDAP, HR system, or SCIM</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>⚙️ Policy Engine <span class="tag" style="background:rgba(210,153,34,.15);color:var(--accent-orange)">RULES</span></h4>
+        <ul>
+          <li>Sign-on policies (which factors, when)</li>
+          <li>App-level access policies</li>
+          <li>Network zones (trusted IPs / VPN)</li>
+          <li>Adaptive MFA rules (risk-based)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🎫 Token / Assertion Service <span class="tag" style="background:rgba(188,140,255,.15);color:var(--accent-purple)">CRYPTO</span></h4>
+        <ul>
+          <li>SAML 2.0 assertion generation & signing</li>
+          <li>OAuth2 / OIDC token issuance (access, ID, refresh)</li>
+          <li>Per-tenant signing keys (RSA/EC key pairs)</li>
+          <li>Token introspection & revocation</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🔄 Provisioning Engine <span class="tag" style="background:rgba(63,185,80,.15);color:var(--accent-green)">LIFECYCLE</span></h4>
+        <ul>
+          <li>User create/update/deactivate across apps</li>
+          <li>SCIM 2.0 protocol for app provisioning</li>
+          <li>Group push (Okta group → app role)</li>
+          <li>Import from HR systems (Workday, BambooHR)</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🌉 Agent Gateway <span class="tag" style="background:rgba(57,210,192,.15);color:var(--accent-cyan)">HYBRID</span></h4>
+        <ul>
+          <li>Connects on-prem AD/LDAP to cloud Okta</li>
+          <li>Outbound-only (no inbound firewall rules)</li>
+          <li>Delegated auth: Okta forwards to AD via agent</li>
+          <li>Real-time sync: AD changes → Okta within minutes</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>📊 Audit & System Log <span class="tag" style="background:rgba(227,179,65,.15);color:var(--accent-yellow)">AUDIT</span></h4>
+        <ul>
+          <li>Every auth event, admin action, provisioning event</li>
+          <li>Immutable append-only log per tenant</li>
+          <li>Streaming to customer SIEM (Splunk, etc.)</li>
+          <li>SOC 2, FedRAMP, HIPAA compliance</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4>🛡️ Threat Detection <span class="tag" style="background:rgba(248,81,73,.15);color:var(--accent-red)">GUARD</span></h4>
+        <ul>
+          <li>Credential stuffing detection</li>
+          <li>Bot detection (CAPTCHAs, device fingerprint)</li>
+          <li>Impossible travel detection</li>
+          <li>Brute-force rate limiting per user & IP</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">Flow 1: SP-Initiated SSO (Employee opens Salesforce)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Questions I'd Ask</span>
+  <svg viewBox="0 0 560 468" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9430" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="128" y="40" width="304" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">Employee</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">navigates to salesforce.com</text>
+    <line x1="280" y1="84" x2="280" y2="154" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9430)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Salesforce generates SAML AuthnRequest</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Redirects browser to: https://acme.okta.com/app/salesforce/sso/sa</text>
+    <rect class="svg-node" x="118" y="156" width="325" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="174" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Salesforce (SP)</text>
+    <text x="280" y="190" fill="#6e7681" font-size="9" text-anchor="middle">user has no active Salesforce session</text>
+    <line x1="280" y1="200" x2="280" y2="302" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9430)"/>
+    <text x="296" y="216" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 1: TENANT RESOLUTION</text>
+    <text x="296" y="232" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">URL subdomain "acme" → tenant_id=12345</text>
+    <text x="296" y="248" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Load tenant config: policies, signing keys, directory config</text>
+    <text x="296" y="264" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 2: SESSION CHECK</text>
+    <rect class="svg-node" x="125" y="304" width="310" height="44" rx="7" fill="rgba(88,166,255,.06)" stroke="rgba(88,166,255,.3)"/>
+    <text x="280" y="322" fill="#58a6ff" font-size="12" font-weight="600" text-anchor="middle">Okta (IdP)</text>
+    <text x="280" y="338" fill="#6e7681" font-size="9" text-anchor="middle">receives SAML AuthnRequest</text>
+    <line x1="280" y1="348" x2="280" y2="402" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9430)"/>
+    <text x="296" y="364" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">AUDIT: Log event {tenant, user, app, factors_used, result, IP, de</text>
+    <rect class="svg-node" x="125" y="404" width="310" height="44" rx="7" fill="rgba(210,153,34,.06)" stroke="rgba(210,153,34,.3)"/>
+    <text x="280" y="422" fill="#d29922" font-size="12" font-weight="600" text-anchor="middle">Salesforce</text>
+    <text x="280" y="438" fill="#6e7681" font-size="9" text-anchor="middle">validates SAML signature → creates session → </text>
+  </svg>
+</div>
+
+    <div class="sub">Flow 2: User Deprovisioning (Employee Fired)</div>
+<div class="svg-diagram" data-anim>
+  <span class="dia-title">Flow 2: User Deprovisioning (Employee Fired)</span>
+  <svg viewBox="0 0 560 252" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+    <defs><marker id="a9536" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#6e7681" stroke-width="1.2"/></marker></defs>
+    <rect class="svg-node" x="137" y="40" width="286" height="44" rx="7" fill="rgba(248,81,73,.06)" stroke="rgba(248,81,73,.3)"/>
+    <text x="280" y="58" fill="#f85149" font-size="12" font-weight="600" text-anchor="middle">HR</text>
+    <text x="280" y="74" fill="#6e7681" font-size="9" text-anchor="middle">deactivates employee in Workday</text>
+    <line x1="280" y1="84" x2="280" y2="186" stroke="#6e7681" stroke-width="1.3" marker-end="url(#a9536)"/>
+    <text x="296" y="100" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 1: DEACTIVATE USER in Universal Directory</text>
+    <text x="296" y="116" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">user.status = DEACTIVATED (immediate, strongly consistent)</text>
+    <text x="296" y="132" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Step 2: REVOKE ALL SESSIONS (immediate)</text>
+    <text x="296" y="148" fill="#d29922" font-size="9" font-family="'JetBrains Mono',monospace">Delete all active session tokens for this user</text>
+    <rect class="svg-node" x="104" y="188" width="352" height="44" rx="7" fill="rgba(57,210,192,.06)" stroke="rgba(57,210,192,.3)"/>
+    <text x="280" y="216" fill="#39d2c0" font-size="12" font-weight="600" text-anchor="middle">Okta Provisioning Engine</text>
+  </svg>
+</div>
+
+    <div class="callout say">"Deep dives: (1) The authentication pipeline — how every login is processed with credential verification, MFA, policy evaluation, and token issuance. (2) Multi-tenant isolation — the hardest architecture problem: ensuring absolute data separation while sharing infrastructure. (3) SSO federation protocols — how SAML and OIDC actually work at the protocol level. (4) Directory integration — how the AD Agent bridges on-prem directories to the cloud."</div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1 -->
+    <div id="dd-authn">
+    <div class="sub">Deep Dive 1: Authentication Pipeline (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Every login traverses a pipeline: tenant resolution → credential verification → MFA orchestration → policy evaluation → token issuance. Each step has different performance characteristics (bcrypt is deliberately slow, policy evaluation must be fast, SAML signing is CPU-intensive). The pipeline must complete in &lt;200ms (excluding user interaction time for MFA) while being absolutely secure — a bug in any step can expose every customer's data.</div>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Credential Verification Modes</strong></p>
+    <table>
+      <thead><tr><th>Mode</th><th>How It Works</th><th>Latency</th><th>When Used</th></tr></thead>
+      <tbody>
+        <tr><td>Okta-mastered</td><td>User's password hash stored in Okta's directory. Bcrypt comparison on login.</td><td>50-150ms (bcrypt is deliberately slow to resist brute-force)</td><td>Cloud-native orgs with no on-prem AD</td></tr>
+        <tr><td>Delegated to AD</td><td>Okta forwards credentials to on-prem AD Agent → agent authenticates against AD → returns result.</td><td>200-500ms (network round-trip to customer's data center)</td><td>Enterprises with existing AD infrastructure</td></tr>
+        <tr><td>Delegated to LDAP</td><td>Similar to AD but via LDAP bind.</td><td>200-500ms</td><td>Non-Microsoft directory environments</td></tr>
+        <tr><td>Social / External IdP</td><td>Redirect to Google/Azure AD/etc. They verify credentials. Okta receives assertion.</td><td>1-3 seconds (browser redirects)</td><td>Customer identity (CIAM), B2B federation</td></tr>
+        <tr><td>Passwordless</td><td>Email magic link, Okta Verify biometric, or FIDO2 WebAuthn. No password involved.</td><td>Varies (user interaction)</td><td>Modern security-conscious orgs</td></tr>
+      </tbody>
+    </table>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">MFA Orchestration</strong></p>
+    <div class="schema"><span class="comment">── MFA Factor Challenge Flow ──</span>
+
+<span class="pk">Policy determines WHICH factors and WHEN:</span>
+  "Always require MFA for Salesforce"
+  "Require MFA only from untrusted networks"
+  "Require hardware key for AWS Console access"
+
+<span class="pk">Factor selection (if multiple enrolled):</span>
+  Prefer: Okta Verify Push > WebAuthn > TOTP > SMS
+  (ranked by security strength, not user preference)
+  User can choose a different enrolled factor.
+
+<span class="pk">Factor challenge flows:</span>
+
+  <span class="fk">Okta Verify Push (most common):</span>
+    Okta → push notification to user's phone app
+    User sees: "Login to Salesforce from Chrome on Windows"
+    User taps "Approve" → app sends signed approval to Okta
+    Timeout: 60 seconds. If no response → fall back to TOTP.
+    Anti-phishing: Number matching ("Enter the number shown: 42")
+
+  <span class="fk">TOTP (Google Authenticator, etc.):</span>
+    User opens authenticator app → reads 6-digit code → enters it
+    Okta validates: HMAC-SHA1(shared_secret, floor(time/30))
+    Clock skew tolerance: ±1 window (±30 seconds)
+
+  <span class="fk">WebAuthn / FIDO2:</span>
+    Browser prompts: "Touch your security key" or "Use fingerprint"
+    Public key cryptography: challenge signed by device's private key
+    Phishing-resistant: origin (domain) is bound into the signature
+
+  <span class="fk">SMS / Voice (lowest security, regulatory fallback):</span>
+    Okta sends 6-digit code via SMS/voice to registered phone
+    Known vulnerabilities: SIM swapping, SS7 interception
+    Many orgs are disabling SMS MFA in favor of push/WebAuthn</span>
+
+    <p style="color:var(--text-muted);margin:12px 0;font-size:13.5px;line-height:1.6;"><strong style="color:var(--text)">Session Management</strong></p>
+    <ul class="items">
+      <li><strong>Okta session:</strong> After successful authentication, Okta creates a session identified by a secure cookie (<code>sid</code>) on the <code>acme.okta.com</code> domain. Subsequent SSO redirects check this cookie — if valid session exists, no re-authentication needed.</li>
+      <li><strong>Session lifetime:</strong> Configured per tenant policy: "Session expires after 12 hours" or "Session expires after 30 minutes of inactivity." Admins balance security (short sessions) vs. UX (fewer re-auth prompts).</li>
+      <li><strong>Session storage:</strong> Distributed cache (Redis cluster) for &lt;5ms lookup. Session data: user_id, tenant_id, auth_time, factors_used, device_info. Must be strongly consistent — session revocation must propagate immediately.</li>
+      <li><strong>Global session revocation:</strong> When user is deactivated → delete ALL session records for that user → ANY subsequent SSO redirect finds no session → re-auth required → credentials invalid → access denied. This must happen in milliseconds, not minutes.</li>
+    </ul>
+
+    <div class="callout decision"><strong>Why strong consistency for sessions but not for user profiles?</strong> User profile updates (changing a phone number, updating a name) can tolerate seconds of propagation delay — it's a minor UX glitch. But session state must be IMMEDIATELY consistent: if an admin revokes a session, the very next request MUST see the revocation. Otherwise, a terminated employee retains access for the replication lag duration. This is a security requirement, not a performance optimization. We use a strongly consistent session store (single-leader or consensus-based) even though it's more expensive than an eventually consistent cache.</div>
+    </div>
+
+    <!-- DD2 -->
+    <div id="dd-tenant">
+    <div class="sub">Deep Dive 2: Multi-Tenant Isolation (~8 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> 19,000+ tenants share the same physical infrastructure. Each tenant's data (users, credentials, policies, audit logs) must be COMPLETELY invisible to every other tenant. A bug, query error, or vulnerability must never allow cross-tenant data access. This is the #1 architectural concern — a cross-tenant breach would be an extinction-level event for an identity provider.</div>
+
+    <div class="schema"><span class="comment">── Multi-Tenant Data Isolation Strategy ──</span>
+
+<span class="pk">Approach: Shared infrastructure, logically isolated data</span>
+
+  NOT: one database per tenant (operational nightmare at 19K tenants)
+  NOT: one cluster per tenant (too expensive, slow provisioning)
+  YES: shared database clusters with tenant_id on EVERY table/query
+
+<span class="pk">Data Layer Isolation:</span>
+
+  <span class="fk">Level 1: Schema-level isolation</span>
+    Every table has tenant_id as a REQUIRED column.
+    Every query includes WHERE tenant_id = ? as a MANDATORY filter.
+    Database-level row security policies enforce this (PostgreSQL RLS).
+    
+    <span class="table-name">users</span>
+      <span class="pk">tenant_id</span>    <span class="type">BIGINT NOT NULL  ← ALWAYS first in composite PK</span>
+      <span class="pk">user_id</span>      <span class="type">BIGINT NOT NULL</span>
+      email          <span class="type">VARCHAR</span>
+      password_hash  <span class="type">VARCHAR</span>
+      status         <span class="type">ENUM (active, deactivated, suspended)</span>
+      ...
+
+    All indexes are prefixed with tenant_id:
+      INDEX (tenant_id, email)       ← user lookup
+      INDEX (tenant_id, user_id)     ← primary access
+      INDEX (tenant_id, status)      ← lifecycle queries
+
+  <span class="fk">Level 2: Application-level enforcement</span>
+    Every API call includes tenant context (from URL subdomain or token).
+    Middleware extracts tenant_id and INJECTS it into every DB query.
+    IMPOSSIBLE for application code to accidentally omit tenant filter.
+    Code review rule: any raw SQL without tenant_id filter is rejected.
+
+  <span class="fk">Level 3: Crypto isolation</span>
+    Each tenant has its OWN signing key pair (RSA-2048 or EC P-256).
+    Tenant A's SAML assertions are signed with Tenant A's key.
+    Even if assertion data leaked, it can't be used against Tenant B
+    (signature won't validate with Tenant B's public key).
+    Keys stored in HSM (Hardware Security Module), never exported.
+
+  <span class="fk">Level 4: Network isolation</span>
+    Tenant admin APIs are authenticated with tenant-scoped API tokens.
+    OAuth tokens include tenant_id in the audience claim.
+    Rate limiting is per-tenant (not global).
+
+<span class="pk">Sharding for large tenants:</span>
+  Most tenants: co-located in shared database shards.
+  Largest tenants (500K+ users): dedicated database shard(s).
+  Shard mapping: tenant_id → shard_id (cached in routing layer).
+  Prevents noisy-neighbor: large tenant's query load doesn't slow small tenants.</span>
+
+    <div class="callout decision"><strong>Why not a database-per-tenant model?</strong> At 19,000 tenants, database-per-tenant means 19,000 databases to manage: patch, back up, monitor, scale individually. Operational cost is prohibitive. Shared databases with tenant_id isolation offer: (1) efficient resource utilization (small tenants share database pages), (2) uniform operations (one schema migration updates all tenants), (3) fast tenant provisioning (insert config rows, not create databases). The tradeoff: isolation depends on APPLICATION correctness (never forgetting the tenant filter) rather than DATABASE boundaries. Mitigated by: mandatory framework-level tenant injection (middleware that ALWAYS appends tenant_id), PostgreSQL Row-Level Security as a second layer, and extensive testing with multi-tenant test scenarios.</div>
+
+    <ul class="items">
+      <li><strong>Tenant provisioning:</strong> New customer signs up → create tenant_id, insert into config table, generate signing key pair, create admin user. Total time: &lt;30 seconds. No database creation needed.</li>
+      <li><strong>Tenant deletion (rare):</strong> Cascade-delete all rows with matching tenant_id across all tables. Revoke all signing keys. Purge from all caches. This is a dangerous operation — double-confirmed, audit-logged, and irreversible.</li>
+      <li><strong>Compliance isolation:</strong> Some tenants (government, healthcare) require data residency guarantees. These tenants are assigned to region-specific database shards (e.g., US-only, EU-only). The routing layer ensures their data never leaves the designated region.</li>
+    </ul>
+    </div>
+
+    <!-- DD3 -->
+    <div id="dd-sso">
+    <div class="sub">Deep Dive 3: SSO & Federation Protocols (~6 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Okta must speak EVERY identity protocol because it connects to EVERY enterprise application. SAML 2.0 (XML-based, 2005-era but still dominant in enterprise), OIDC/OAuth 2.0 (JSON-based, modern apps), WS-Federation (Microsoft legacy), and SWA (form-fill for apps with no federation support). Each protocol has different security properties, different token formats, and different vulnerability surfaces.</div>
+
+    <table>
+      <thead><tr><th>Protocol</th><th>Token Format</th><th>When Used</th><th>Key Security Property</th></tr></thead>
+      <tbody>
+        <tr><td>SAML 2.0</td><td>XML, RSA-signed</td><td>Enterprise SaaS (Salesforce, Workday, ServiceNow)</td><td>Assertion signed with tenant's private key. SP verifies with Okta's public cert. Replay protection via NotOnOrAfter + InResponseTo.</td></tr>
+        <tr><td>OIDC</td><td>JWT (JSON), RS256-signed</td><td>Modern apps, SPAs, mobile apps</td><td>ID token is a signed JWT. Access token for API access. Refresh token for long-lived sessions. PKCE for public clients.</td></tr>
+        <tr><td>OAuth 2.0</td><td>Opaque or JWT access token</td><td>API authorization (machine-to-machine)</td><td>Scoped access (read:users vs. write:users). Short-lived access tokens (1 hour). Client credentials for service accounts.</td></tr>
+        <tr><td>WS-Fed</td><td>XML / SAML-like</td><td>Microsoft ecosystem (older O365, ADFS)</td><td>Being deprecated in favor of OIDC. Still needed for legacy Windows environments.</td></tr>
+        <tr><td>SWA</td><td>N/A (form fill)</td><td>Legacy apps with no federation</td><td>Okta browser plugin auto-fills username/password. Least secure but only option for non-federated apps.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="schema"><span class="comment">── SAML 2.0 Assertion Structure (what Okta generates) ──</span>
+
+&lt;saml:Assertion&gt;
+  &lt;saml:Issuer&gt;https://acme.okta.com&lt;/saml:Issuer&gt;
+
+  &lt;ds:Signature&gt;
+    <span class="comment">// RSA-SHA256 signature over the assertion</span>
+    <span class="comment">// Signed with Okta's private key for tenant "acme"</span>
+    <span class="comment">// Salesforce verifies with Okta's public certificate</span>
+  &lt;/ds:Signature&gt;
+
+  &lt;saml:Subject&gt;
+    &lt;saml:NameID&gt;<span class="pk"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ef858b808aaf8e8c828ac18c8082">[email&#160;protected]</a></span>&lt;/saml:NameID&gt;
+    &lt;SubjectConfirmation&gt;
+      <span class="fk">Recipient</span>="https://login.salesforce.com/saml/SSO"
+      <span class="fk">NotOnOrAfter</span>="2026-02-14T10:05:00Z"  <span class="comment">// 5 min validity</span>
+      <span class="fk">InResponseTo</span>="_abc123"  <span class="comment">// ties to original AuthnRequest</span>
+    &lt;/SubjectConfirmation&gt;
+  &lt;/saml:Subject&gt;
+
+  &lt;saml:Conditions&gt;
+    <span class="fk">NotBefore</span>="2026-02-14T10:00:00Z"
+    <span class="fk">NotOnOrAfter</span>="2026-02-14T10:05:00Z"
+    &lt;AudienceRestriction&gt;
+      &lt;Audience&gt;https://salesforce.com&lt;/Audience&gt;
+    &lt;/AudienceRestriction&gt;
+  &lt;/saml:Conditions&gt;
+
+  &lt;saml:AttributeStatement&gt;
+    <span class="comment">// Custom attributes mapped per-app-per-tenant</span>
+    firstName = "John"
+    lastName  = "Doe"
+    groups    = ["Sales", "US-West"]
+    role      = "Standard User"
+  &lt;/saml:AttributeStatement&gt;
+&lt;/saml:Assertion&gt;
+
+<span class="comment">Security guarantees:</span>
+<span class="comment">  1. Signature: assertion hasn't been tampered with</span>
+<span class="comment">  2. NotOnOrAfter: can't be replayed after 5 minutes</span>
+<span class="comment">  3. InResponseTo: can't be used out of context</span>
+<span class="comment">  4. Audience: can't be forwarded to a different SP</span></div>
+
+    <div class="callout decision"><strong>Why does Okta need per-tenant signing keys?</strong> If all tenants shared ONE signing key: a compromise of that key would let an attacker forge assertions for EVERY tenant — catastrophic. Per-tenant keys mean: a key compromise affects only one tenant. Key rotation affects only one tenant. Each tenant can have independent key lifecycle (rotate every 90 days, emergency rotation after incident). Keys are generated and stored in HSMs — the private key never leaves the hardware. Even Okta operators cannot extract the private keys.</div>
+    </div>
+
+    <!-- DD4 -->
+    <div id="dd-directory">
+    <div class="sub">Deep Dive 4: Directory Integration & Sync (~5 min)</div>
+
+    <div class="callout goal"><strong>The core challenge:</strong> Most enterprises have Active Directory (AD) as their on-prem source of truth for employee identities. Okta must: (1) import users from AD into Okta's Universal Directory, (2) keep them synchronized in near-real-time (employee changes in AD → reflected in Okta within minutes), and (3) optionally delegate authentication TO AD (Okta forwards the password to AD for verification). All of this without requiring the customer to open inbound firewall ports.</div>
+
+    <div class="schema"><span class="comment">── Okta AD Agent Architecture ──</span>
+
+<span class="pk">The Problem:</span>
+  Active Directory sits inside the corporate firewall.
+  Okta is in the cloud.
+  Enterprises will NOT open inbound firewall ports (security policy).
+  So Okta can't directly query or connect to AD.
+
+<span class="pk">Solution: Outbound-only agent</span>
+
+  ┌─────────────────────────────────┐
+  │  Customer's Corporate Network    │
+  │                                  │
+  │  ┌───────────┐   ┌──────────┐  │
+  │  │ Active    │   │ Okta AD  │  │
+  │  │ Directory │◄──│ Agent    │  │
+  │  └───────────┘   └────┬─────┘  │
+  │                       │         │
+  │  (LDAP queries)       │ OUTBOUND ONLY (HTTPS)
+  │                       │         │
+  └───────────────────────┼─────────┘
+                          │ (no inbound firewall rules needed)
+                          ▼
+  ┌─────────────────────────────────┐
+  │  Okta Cloud                      │
+  │                                  │
+  │  ┌──────────────┐               │
+  │  │ Agent Gateway │               │
+  │  │ Service       │               │
+  │  └──────┬───────┘               │
+  │         │                        │
+  │         ▼                        │
+  │  ┌──────────────┐               │
+  │  │ Universal    │               │
+  │  │ Directory    │               │
+  │  └──────────────┘               │
+  └─────────────────────────────────┘
+
+<span class="pk">Agent responsibilities:</span>
+
+  <span class="fk">1. User Import (scheduled, every 30-60 min)</span>
+     Agent queries AD for all users in configured OUs.
+     Compares with last sync state.
+     Sends new/changed/deleted users to Okta via HTTPS.
+     Okta creates/updates/deactivates corresponding users.
+
+  <span class="fk">2. Real-Time Sync (event-driven)</span>
+     Agent registers for AD change notifications (DirSync control).
+     When a user is created/modified/disabled in AD:
+     Agent detects change → pushes to Okta within ~2-5 minutes.
+     Critical for: immediate deactivation when AD account disabled.
+
+  <span class="fk">3. Delegated Authentication</span>
+     User logs into Okta → enters password.
+     Okta does NOT store the user's AD password.
+     Instead: Okta sends (encrypted) credential to AD Agent.
+     Agent performs LDAP bind against AD with the credential.
+     Result (success/failure) returned to Okta.
+     Latency: ~200-500ms (round trip to customer's DC).
+
+  <span class="fk">4. Agent Clustering (high availability)</span>
+     Install 2+ agents on different servers.
+     Okta distributes commands round-robin across agents.
+     If one agent goes offline → auto-removed from rotation.
+     Agent reconnects with exponential backoff (capped at 1 min).</span>
+
+    <div class="callout decision"><strong>Why outbound-only architecture instead of VPN or direct connect?</strong> VPN/direct-connect creates a persistent network path FROM Okta's cloud INTO the customer's network — a massive security surface area. If Okta is compromised, the attacker has a tunnel into every customer's AD. Outbound-only architecture inverts this: the agent initiates connections TO Okta. The customer's firewall only allows outbound HTTPS (port 443), which is already universally permitted. There is no inbound path. Even if Okta's cloud is compromised, the attacker cannot initiate connections to customer networks — they can only respond to requests the agent makes. This is a fundamental security architecture choice that makes Okta safer for enterprises to adopt.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    
+    <div class="sub">Storage Architecture Summary</div>
+    <div class="callout goal"><strong>What goes where and why.</strong> Each data store is chosen for its access pattern — not by default. The question isn't "which database?" but "what are the read/write patterns, consistency requirements, and scale characteristics?"</div>
+    <table>
+      <thead><tr><th>Data</th><th>Store</th><th>Why This Store</th></tr></thead>
+      <tbody>
+      <tr>
+        <td>Identity records</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL (sharded)</td>
+        <td>User profiles, credentials, group memberships. Sharded by org_id for tenant isolation. Encrypted at rest.</td>
+      </tr>
+      <tr>
+        <td>Policy rules</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Authentication policies, MFA rules, conditional access. Read-heavy — cached aggressively. Versioned for audit.</td>
+      </tr>
+      <tr>
+        <td>Session tokens</td>
+        <td style="color:var(--accent-cyan)">Redis (clustered)</td>
+        <td>Active SSO sessions. TTL-based expiration. Distributed across regions for low-latency validation.</td>
+      </tr>
+      <tr>
+        <td>Audit logs</td>
+        <td style="color:var(--accent-cyan)">Append-only store</td>
+        <td>Every authentication event, admin action, policy change. Immutable. 90-day online retention, 7-year archive.</td>
+      </tr>
+      <tr>
+        <td>SAML/OIDC metadata</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL + cache</td>
+        <td>SP certificates, redirect URIs, signing keys. Cached per-org. Invalidated on admin changes.</td>
+      </tr>
+      <tr>
+        <td>Directory sync state</td>
+        <td style="color:var(--accent-cyan)">PostgreSQL</td>
+        <td>Last sync cursor per AD/LDAP connection. Conflict resolution for bidirectional sync.</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="sub">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">Okta experiences full outage</span><span class="mitigation">THIS IS THE NIGHTMARE SCENARIO. Nobody at 19,000+ companies can log in to anything. Mitigations: (1) Multi-region active-active deployment with automatic failover. (2) DNS-based routing to healthy region. (3) Session cache replication — users with existing sessions can continue working even if the auth pipeline is degraded. (4) Many SPs cache their own sessions (Salesforce session survives Okta outage if already logged in). (5) Emergency break-glass procedures: enterprises have local admin accounts that bypass SSO.</span></div>
+    <div class="failure-row"><span class="scenario">AD Agent goes offline (customer's DC issue)</span><span class="mitigation">Delegated authentication to AD fails. Fallback: (1) If Okta has cached the user's password hash from a previous successful auth (opt-in feature), authenticate against cached hash. (2) If no cached credentials: user cannot log in with password, but can use passwordless MFA (WebAuthn, Okta Verify). (3) Alert tenant admin that AD agent is unreachable. Multiple agents in a cluster provide HA — single agent failure is seamless.</span></div>
+    <div class="failure-row"><span class="scenario">Credential stuffing attack (millions of login attempts)</span><span class="mitigation">Attacker tries breached username/password pairs from other services. Mitigations: (1) Per-IP rate limiting (progressive: CAPTCHA → block). (2) Per-user lockout after N failures (configurable per tenant). (3) Bot detection: device fingerprinting, impossible speed patterns. (4) Breached password detection: compare submitted passwords against known breach databases (HaveIBeenPwned-style). (5) Notify tenant admins of anomalous failure rates.</span></div>
+    <div class="failure-row"><span class="scenario">Signing key compromise (tenant's private key leaked)</span><span class="mitigation">Attacker can forge SAML assertions for that tenant's applications. Response: (1) Emergency key rotation — generate new key pair, publish new certificate to all SPs. (2) Revoke old key immediately. (3) All existing assertions signed with old key become invalid. (4) Per-tenant isolation means: ONLY this tenant is affected, not others. (5) Incident response: audit log review, determine scope of compromise.</span></div>
+    <div class="failure-row"><span class="scenario">Cross-tenant data leak (bug exposes Tenant B's data to Tenant A)</span><span class="mitigation">Existential threat. Mitigations: (1) Row-Level Security in database as defense-in-depth. (2) Framework-level mandatory tenant_id injection. (3) Automated tests: every API endpoint tested with cross-tenant access attempts. (4) Penetration testing by third parties. (5) Bug bounty program. (6) If detected: immediate incident response, affected tenant notification, regulatory disclosure. This scenario is why multi-tenant isolation is the #1 architectural concern.</span></div>
+    <div class="failure-row"><span class="scenario">Monday 9 AM traffic spike (5-10× normal)</span><span class="mitigation">Pre-provisioned capacity for 10× steady state — NO auto-scaling on the auth hot path (too slow to react). Auth pipeline is stateless and horizontally scaled behind load balancers. Session cache is the bottleneck — pre-warmed Redis cluster with sufficient memory for peak active sessions. Crypto operations (SAML signing) distributed across multiple nodes with pre-loaded keys.</span></div>
+
+    
+    <div class="sub">Scalability</div>
+    <div class="callout tip"><strong>Scalability.</strong> Okta's scaling challenge is unique: authentication is a latency-sensitive, globally distributed, multi-tenant service where downtime means 19,000+ companies can't log in to anything. The architecture is sharded by org_id (customer), so each customer's identity data is co-located. Auth requests are routed to the nearest region via GeoDNS. Within a region, the auth pipeline is stateless — any server can handle any org's request by reading from the org's shard. Session tokens are validated against Redis, not the database, for sub-ms checks. The scaling bottleneck is token validation during &quot;Monday morning login storms&quot; when entire enterprises authenticate simultaneously. This is handled by: (1) session persistence — users don't re-authenticate if they have a valid session, (2) Redis cluster scales reads linearly, (3) the most expensive operation (password hash verification via bcrypt) is CPU-bound and scales with server count. For enterprise SSO, the bottleneck shifts to the SP side — Okta processes the SAML assertion in &lt;50ms, but the SP might take seconds to create its local session.</div>
+
+    <div class="sub">Security Architecture</div>
+    <ul class="items">
+      <li><strong>Defense in depth:</strong> Every layer independently enforces tenant isolation. Even if the application layer has a bug, database RLS prevents cross-tenant reads. Even if the database is compromised, per-tenant encryption keys limit blast radius.</li>
+      <li><strong>HSM for signing keys:</strong> Tenant signing keys stored in FIPS 140-2 Level 3 Hardware Security Modules. Private keys never leave the HSM — signing operations are performed INSIDE the HSM. Even Okta engineers cannot extract key material.</li>
+      <li><strong>Password storage:</strong> Bcrypt with cost factor 12 (or scrypt/argon2). Never stored in plaintext, never logged, never transmitted except to the hashing function. Database compromise reveals only hashes — each hash requires ~100ms to brute-force ONE guess.</li>
+      <li><strong>Zero standing access:</strong> Okta engineers don't have permanent access to production systems or customer data. Access is granted just-in-time via approval workflow, time-limited, and fully audit-logged. Access to customer data requires customer consent.</li>
+      <li><strong>SOC 2 Type II, FedRAMP, ISO 27001:</strong> Regular third-party audits of security controls. Audit reports available to customers. Certifications are a contractual requirement for enterprise sales.</li>
+    </ul>
+
+    <div class="sub">Observability</div>
+    <ul class="items">
+      <li><strong>Per-tenant metrics:</strong> Auth success rate, auth latency (p50/p95/p99), MFA challenge rate, factor success rate. A sudden drop in auth success rate for one tenant = possible attack or configuration error.</li>
+      <li><strong>Global metrics:</strong> Total auth/sec, session count, token issuance rate, agent connectivity status. These drive capacity planning and incident detection.</li>
+      <li><strong>System Log (per tenant):</strong> Every event: login success/failure, MFA challenge, token issuance, admin change, provisioning action. Structured JSON, queryable via API, streamable to customer's SIEM. Retention: 90 days in Okta, longer via SIEM integration.</li>
+      <li><strong>Status page:</strong> Public status page (status.okta.com) with per-service health. Enterprise customers subscribe to real-time incident notifications. Transparency in outages builds trust — hiding issues destroys it.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- P6 -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6);color:var(--bg)">06</span>
+    <span class="phase-title">Wrap-Up & Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"To summarize: Okta is a TRUST PLATFORM where every architectural decision is filtered through the question 'what happens if this is wrong and an attacker gets through?' The AUTHENTICATION PIPELINE processes every login through: tenant resolution (URL subdomain → tenant config), credential verification (Okta-mastered bcrypt or delegated to on-prem AD via outbound-only agents), MFA orchestration (push, TOTP, WebAuthn — policy-driven), policy evaluation (app access rules, network zones, device trust), and token/assertion issuance (SAML/OIDC signed with per-tenant keys stored in HSMs). MULTI-TENANT ISOLATION is enforced at four layers: schema-level (tenant_id on every table + row-level security), application-level (mandatory middleware injection), crypto-level (per-tenant signing keys), and network-level (tenant-scoped API tokens and rate limits). The OUTBOUND-ONLY AGENT ARCHITECTURE is a fundamental security design: Okta cannot initiate connections into customer networks, eliminating an entire class of supply-chain attack vectors. Sessions are stored in a strongly consistent distributed cache — revocation must propagate IMMEDIATELY because a deactivated user must be locked out within milliseconds, not minutes."</div>
+
+    <div class="sub">What I'd Build Next</div>
+    <table>
+      <thead><tr><th>Extension</th><th>Architecture Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Continuous Access Evaluation</td><td>Instead of "authenticate once, trust for 8 hours," continuously re-evaluate risk signals during a session: device posture changes, impossible travel detected, IP reputation drops. Requires a streaming risk-scoring pipeline that consumes signals from endpoints, network, and cloud apps — and can revoke sessions mid-flight.</td></tr>
+        <tr><td>Passkey / FIDO2 Everywhere</td><td>Eliminate passwords entirely. Users authenticate with biometrics (Face ID, Touch ID) or security keys. Requires: WebAuthn credential storage per-user-per-device, cross-device sync (Apple/Google passkey sync), and a migration path from password-based to passwordless for existing tenants.</td></tr>
+        <tr><td>Identity Threat Detection (ITDR)</td><td>ML-based detection of compromised identities: token replay, session hijacking, lateral movement. Requires: behavioral baselining per-user (normal login times, locations, apps), anomaly detection model, real-time alerting, and automated response (lock account, terminate sessions, require re-auth).</td></tr>
+        <tr><td>Decentralized Identity (Verifiable Credentials)</td><td>Users hold cryptographic credentials in a digital wallet (W3C Verifiable Credentials). Present proof of identity without revealing all attributes ("prove I'm over 21 without revealing my birthdate"). Requires: new trust model (issuer → holder → verifier), wallet integration, and selective disclosure crypto.</td></tr>
+        <tr><td>Fine-Grained Authorization (Zanzibar-style)</td><td>Move beyond "can this user access this app?" to "can this user edit this specific document?" Relationship-based access control at the resource level, like Google's Zanzibar. Requires: a policy evaluation engine that can handle millions of authorization checks per second with sub-10ms latency, plus a graph database for relationship storage.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><strong>Closing framing:</strong> Okta occupies a unique position among the systems we've designed: it is INFRASTRUCTURE FOR TRUST. Every other system we've designed — Salesforce, Slack, AWS, GitHub — depends on an identity provider to answer the question "is this user who they claim to be?" If the identity provider answers wrong, ALL downstream systems are compromised. This asymmetry of impact shapes every decision: per-tenant signing keys (breach isolation), outbound-only agents (eliminate supply-chain attack surface), HSM-stored keys (even Okta operators can't extract them), strong session consistency (revocation in milliseconds), and multi-layer tenant isolation (defense in depth against the one bug that would be existential). The priority ordering is unique: SECURITY > AVAILABILITY > CONSISTENCY > LATENCY. In most systems you trade security for speed. In an identity platform, you trade speed for security — and then engineer your way back to fast.</div>
+  </div>
+</div>
+
+
+<!-- P7 -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan)">07</span>
+    <span class="phase-title">Interview Q&amp;A</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"Here are the hardest questions an interviewer would ask about this design, and how to answer them. Each answer demonstrates deep understanding of the tradeoffs, not just surface knowledge."</div>
+
+    <div style="margin:8px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q1</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">What happens if Okta goes down? How do you achieve 99.99% availability?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">If Okta goes down, employees at 19,000+ companies can't log in to any of their cloud applications — it's an enterprise-wide work stoppage. 99.99% means &lt;53 minutes of downtime per year. We achieve this through: (1) multi-region active-active deployment — each region can independently serve auth requests, (2) session persistence — if the auth service is briefly unavailable, users with existing sessions continue working (sessions are validated against Redis, not the auth DB), (3) SAML/OIDC responses are signed with keys cached at the SP side, so SPs can validate tokens even during brief Okta outages. The most critical failover scenario is database failure: we use synchronous replication to a standby with automatic failover (&lt;30 seconds). During those 30 seconds, new logins fail but existing sessions work. For planned maintenance, we do rolling deploys with zero-downtime migrations. The honest answer: achieving 99.99% is as much about operational discipline (change management, runbooks, chaos testing) as it is about architecture.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q2</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you prevent a compromised password at one SP from affecting others?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">This is a core benefit of SSO — the user's password is ONLY stored and verified by Okta, never by individual SPs. When a user logs into Salesforce via Okta SSO, Salesforce never sees the password. It receives a signed SAML assertion saying &quot;Okta verified this user at this time.&quot; If Salesforce is compromised, the attacker gets Salesforce data but NOT the user's Okta password. They can't use the breach to access Slack, AWS, or any other SP. Conversely, if the user's Okta password is compromised, the blast radius IS every SP — which is why Okta enforces MFA, credential stuffing detection, and password policy enforcement at the IdP layer. The security model is: centralize the high-value target (credentials) in a purpose-built, hardened system rather than distributing it across dozens of SPs with varying security postures.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q3</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How does user deprovisioning work across 200+ connected applications?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">When HR deactivates an employee in the source directory (Workday, AD), Okta's provisioning engine must propagate that change to every connected application. The pipeline is: (1) directory sync detects the change (via SCIM webhook from Workday, or polling AD every 5 minutes), (2) Okta marks the user as &quot;deactivated&quot; in the Universal Directory, (3) ALL active sessions for that user are immediately revoked (delete from Redis), (4) for each connected SP that supports SCIM, Okta sends a SCIM PATCH to deactivate the user account, (5) for SPs without SCIM (legacy apps), Okta can disable via API or flag for manual review. Steps 4-5 are asynchronous and may take 5-60 seconds per SP. The SLA we guarantee: session revocation (step 3) within 30 seconds, SCIM deprovisioning within 5 minutes. The risk window is the time between deactivation and SCIM propagation — during this window, the user can't START new sessions (Okta blocks auth) but EXISTING sessions at SPs might still be valid until they expire or the SP processes the SCIM request.</p>
+      </div>
+    </div>
+    <div style="margin:18px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(248,81,73,.1);color:var(--accent-red);font-weight:600;flex-shrink:0">Q4</span>
+        <p style="color:var(--text);font-size:13.5px;font-weight:600;line-height:1.5;margin:0">How do you handle multi-tenant isolation in a shared infrastructure?</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-left:0px">
+        <span style="font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(63,185,80,.1);color:var(--accent-green);font-weight:600;flex-shrink:0">A</span>
+        <p style="color:var(--text-muted);font-size:13px;line-height:1.65;margin:0">Every query includes org_id as a mandatory filter — there is no code path that can accidentally return data across organizations. This is enforced at multiple layers: (1) database: sharded by org_id, so a query physically cannot scan another org's data, (2) application: middleware injects org_id from the authenticated session into every DB query — developers can't forget it, (3) API: every API endpoint validates that the requested resource belongs to the caller's org, (4) cache: Redis keys are prefixed with org_id, so cache poisoning across tenants is impossible. For noisy neighbor protection: rate limits are per-org, so one organization running a bulk user import can't degrade auth latency for other orgs. CPU-intensive operations (bcrypt hashing) run in isolated thread pools per org. We regularly run penetration tests specifically targeting cross-tenant data leakage — it's the highest-severity finding category.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.j
