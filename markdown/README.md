@@ -1,10 +1,12 @@
 # System Design Interview Prep
 
-28 full system designs, a 6-phase playbook, and 143 interview Q&A pairs. Each design is a 75-minute walkthrough with architecture diagrams, deep dives, failure analysis, and the hardest questions interviewers ask.
+**By [Nishant Tyagi](https://cybertect.ai)** — AI Engineering, Cybersecurity & System Design | [LinkedIn](https://www.linkedin.com/in/nishant-tyagi-builder/) | [GitHub](https://github.com/ni5h4nt)
+
+30 full system designs, a 6-phase playbook, and 143 interview Q&A pairs. Each design is a 75-minute walkthrough with architecture diagrams, deep dives, failure analysis, and the hardest questions interviewers ask.
 
 | | |
 |---|---|
-| **27** System Designs | **6** Categories |
+| **30** System Designs | **6** Categories |
 | **84** Deep Dives | **137** Interview Q&As |
 
 ---
@@ -95,4 +97,14 @@ The framework behind every design: Clarify, Estimate, High-Level, Deep Dives, Cr
 
 ---
 
-*Built for system design interview preparation — 29 designs x 75 minutes each*
+## Author
+
+**[Nishant Tyagi](https://cybertect.ai)** — Software engineering leader with 20+ years of experience in AI security, system architecture, and formal verification. Carnegie Mellon University (2010–2013), MIT Applied Data Science (2023), CISSP.
+
+- [cybertect.ai](https://cybertect.ai) — AI Engineering, Cybersecurity & System Design
+- [LinkedIn](https://www.linkedin.com/in/nishant-tyagi-builder/)
+- [GitHub](https://github.com/ni5h4nt)
+
+---
+
+*Built for system design interview preparation — 30 designs x 75 minutes each*
