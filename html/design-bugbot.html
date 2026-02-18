@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Cursor BugBot — Worked Example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e1117;--surface:#161b22;--surface-raised:#1c2129;--border:#2d333b;--border-light:#373e47;--text:#e6edf3;--text-muted:#8b949e;--text-dim:#6e7681;--accent-blue:#58a6ff;--accent-green:#3fb950;--accent-orange:#d29922;--accent-red:#f85149;--accent-purple:#bc8cff;--accent-cyan:#39d2c0;--accent-yellow:#e3b341;--phase1:#58a6ff;--phase2:#d29922;--phase3:#3fb950;--phase4:#f85149;--phase5:#bc8cff;--phase6:#39d2c0;--nav-width:270px;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-display:'Fraunces',Georgia,serif}
+  *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}nav .logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}nav .logo h1{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.3}nav .logo span{display:block;font-family:var(--font-body);font-size:11px;color:var(--text-dim);margin-top:4px;font-weight:400;text-transform:uppercase;letter-spacing:.08em}
+  .nav-section-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:12px 20px 6px}nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;border-left:2px solid transparent}nav a:hover{color:var(--text);background:var(--surface-raised)}.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.nav-time{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);background:var(--surface-raised);padding:1px 6px;border-radius:3px}
+  main{margin-left:var(--nav-width);padding:32px 48px 120px;max-width:960px}
+  .phase{margin-bottom:40px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface)}.phase-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}.phase-header:hover{background:var(--surface-raised)}.phase-number{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;color:var(--bg);flex-shrink:0}.phase-title{font-family:var(--font-display);font-size:17px;font-weight:700;flex:1}.phase-time{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0}.phase-chevron{width:20px;height:20px;color:var(--text-dim);transition:transform .25s ease;flex-shrink:0}.phase.collapsed .phase-chevron{transform:rotate(-90deg)}.phase.collapsed .phase-body{display:none}.phase-body{padding:0 20px 20px;border-top:1px solid var(--border)}
+  .callout{margin:14px 0;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;line-height:1.6}.callout.goal{background:rgba(88,166,255,.05);border-left:3px solid var(--accent-blue);color:var(--text-muted)}.callout.goal strong{color:var(--accent-blue)}.callout.say{background:rgba(63,185,80,.06);border-left:3px solid var(--accent-green);color:var(--text-muted)}.callout.say::before{content:'🗣️ '}.callout.tip{background:rgba(210,153,34,.06);border-left:3px solid var(--accent-orange);color:var(--text-muted)}.callout.tip::before{content:'💡 '}.callout.decision{background:rgba(248,81,73,.05);border-left:3px solid var(--accent-red);color:var(--text-muted)}.callout.decision::before{content:'⚖️ '}.callout.warn{background:rgba(188,140,255,.06);border-left:3px solid var(--accent-purple);color:var(--text-muted)}.callout code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:12px}
+  .sub{font-size:14px;font-weight:700;color:var(--accent-cyan);margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .items{list-style:none;margin:10px 0}.items li{position:relative;padding:5px 0 5px 22px;font-size:13.5px;line-height:1.55;color:var(--text-muted)}.items li::before{content:'→';position:absolute;left:2px;color:var(--text-dim);font-family:var(--font-mono);font-size:12px}.items li strong{color:var(--text);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0}thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border-light);font-weight:600}tbody td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text-muted)}tbody tr:last-child td{border-bottom:none}tbody td:first-child{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:11.5px;white-space:nowrap}
+  .est-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.est-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised)}.est-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px}.est-card .value{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--accent-yellow)}.est-card .detail{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+  .schema{background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:12px 0;font-family:var(--font-mono);font-size:12px;line-height:1.7;color:var(--text-muted);overflow-x:auto;white-space:pre}.schema .table-name{color:var(--accent-cyan);font-weight:600}.schema .pk{color:var(--accent-yellow)}.schema .fk{color:var(--accent-purple)}.schema .type{color:var(--text-dim)}.schema .comment{color:var(--text-dim);font-style:italic}
+  .failure-row{display:flex;gap:8px;margin:6px 0;font-size:12.5px;align-items:flex-start}.failure-row .scenario{color:var(--accent-red);font-weight:600;min-width:180px;flex-shrink:0}.failure-row .mitigation{color:var(--text-muted)}
+  @media(max-width:900px){nav{display:none}main{margin-left:0;padding:20px 16px 80px}.est-grid{grid-template-columns:1fr}}
+  .svg-diagram{margin:14px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface-raised);overflow:hidden;position:relative}.svg-diagram svg{display:block;width:100%;height:auto}.svg-diagram .dia-title{position:absolute;top:10px;right:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);opacity:.6}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <h1>Design Cursor BugBot</h1>
+    <span>AI Code Review · 75 min</span>
+  </div>
+  <div class="nav-section-label">Interview Phases</div>
+  <a href="#p1"><span class="nav-dot" style="background:var(--phase1)"></span>Clarify &amp; Scope<span class="nav-time">5-7m</span></a>
+  <a href="#p2"><span class="nav-dot" style="background:var(--phase2)"></span>Estimation<span class="nav-time">3-5m</span></a>
+  <a href="#p3"><span class="nav-dot" style="background:var(--phase3)"></span>High-Level Design<span class="nav-time">8-12m</span></a>
+  <a href="#p4"><span class="nav-dot" style="background:var(--phase4)"></span>Deep Dives<span class="nav-time">25-30m</span></a>
+  <a href="#p5"><span class="nav-dot" style="background:var(--phase5)"></span>Cross-Cutting<span class="nav-time">10-12m</span></a>
+  <a href="#p6"><span class="nav-dot" style="background:var(--phase6)"></span>Wrap-Up<span class="nav-time">3-5m</span></a>
+  <div class="nav-section-label">Deep Dives</div>
+  <a href="#dd-pipeline">V1 Pipeline: Majority Voting</a>
+  <a href="#dd-agentic">V2 Agentic Architecture</a>
+  <a href="#dd-precision">Precision vs. Recall Tuning</a>
+  <a href="#dd-autofix">Autofix &amp; Remediation Loop</a>
+  <div class="nav-section-label">Reference</div>
+  <a href="#data-model">Data Model</a>
+  <a href="#failures">Failure Scenarios</a>
+  <a href="#p7"><span class="nav-dot" style="background:var(--accent-cyan)"></span>Interview Q&amp;A<span class="nav-time">Practice</span></a>
+</nav>
+
+<main>
+
+<!-- ═══════════ PHASE 1 ═══════════ -->
+<div class="phase" id="p1">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase1)">01</span>
+    <span class="phase-title">Clarify the Problem &amp; Scope</span><span class="phase-time">5–7 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"We're designing Cursor's BugBot — an AI agent that automatically reviews pull requests for logic bugs, security vulnerabilities, and performance issues before code reaches production. The core challenge: use LLMs to find <strong>real bugs humans would miss</strong>, not stylistic nitpicks. BugBot processes 2M+ PRs per month for Fortune 500 companies, achieves a 70% resolution rate (meaning developers fix 70% of flagged issues), and catches ~0.7 bugs per run. It evolved from a pipeline-based system with majority voting into a fully agentic architecture — one of the most instructive examples of taking an LLM product from prototype to production at scale."</div>
+    <div class="sub">Questions I'd Ask</div>
+    <ul class="items">
+      <li><strong>What does BugBot actually review?</strong> <em>→ The diff of a pull request: changed files, added/removed lines. It also fetches surrounding context from the repo to understand intent. It focuses on logic bugs, security flaws, and edge cases — not linting, formatting, or style.</em></li>
+      <li><strong>How is it triggered?</strong> <em>→ Automatically on every new PR and PR update via GitHub webhook, or manually with <code>@cursor review</code> or <code>bugbot run</code>. Results appear as inline comments on the PR, just like a human reviewer.</em></li>
+      <li><strong>What's the key metric?</strong> <em>→ Resolution rate: the fraction of flagged bugs that developers actually fix before merging. This is measured by an AI judge that compares the flagged issue against the final merged diff. Went from 52% → 70% across 40 experiments.</em></li>
+      <li><strong>What's the precision/recall trade-off?</strong> <em>→ Precision is king. A false positive wastes developer attention and erodes trust. BugBot was built to minimize noise: it's better to miss a bug than to cry wolf. The resolution rate metric directly encodes this philosophy.</em></li>
+      <li><strong>How does the agentic version differ from V1?</strong> <em>→ V1 ran 8 parallel LLM passes with randomized diff ordering + majority voting + validator models. V2 is a single agentic loop that reasons over diffs, calls tools dynamically, and decides its own investigation depth. V2 enabled the largest quality gains.</em></li>
+      <li><strong>What about remediation?</strong> <em>→ Each flagged bug has a "Fix in Cursor" button (opens IDE with pre-filled prompt) and "Fix in Web" (spawns a Cloud Agent). BugBot Autofix (beta) automatically spawns agents to fix found bugs.</em></li>
+    </ul>
+    <div class="sub">Agreed Scope</div>
+    <table>
+      <thead><tr><th>In Scope</th><th>Out of Scope</th></tr></thead>
+      <tbody>
+        <tr><td>PR webhook ingestion &amp; diff extraction</td><td>Cursor IDE internals (Tab, Composer model)</td></tr>
+        <tr><td>V1 pipeline: multi-pass + majority voting + validators</td><td>Background Agents / general agentic coding</td></tr>
+        <tr><td>V2 agentic loop: tool use, dynamic context</td><td>Cursor's code completion / autocomplete</td></tr>
+        <tr><td>Precision/recall optimization &amp; BugBench</td><td>Billing / subscription management</td></tr>
+        <tr><td>GitHub integration (rate limits, comment API)</td><td>GitLab / Bitbucket support (not yet offered)</td></tr>
+        <tr><td>Custom rules (BUGBOT.md / .cursor files)</td><td>Full CI/CD pipeline design</td></tr>
+        <tr><td>Autofix: Cloud Agent remediation loop</td><td>Cursor's privacy mode / data retention policies</td></tr>
+      </tbody>
+    </table>
+    <div class="sub">Core Use Cases</div>
+    <ul class="items">
+      <li><strong>UC1: Auto-review on PR open</strong> — Developer pushes a PR. GitHub fires webhook. BugBot fetches diff + context, runs analysis, posts inline comments within minutes. Team sees results before human review starts.</li>
+      <li><strong>UC2: Manual trigger</strong> — Developer comments <code>@cursor review</code> on an existing PR. BugBot re-runs analysis (useful after force-push or when requesting a fresh review on updated code).</li>
+      <li><strong>UC3: Fix in Cursor</strong> — Developer clicks "Fix in Cursor" on a flagged bug. Cursor IDE opens, switches to the PR branch, and loads a pre-filled agent prompt describing the bug. Developer edits and applies fix.</li>
+      <li><strong>UC4: Autofix (beta)</strong> — BugBot Autofix spawns a Cloud Agent that creates a fix commit for the flagged bug, pushes it to the branch. Developer reviews the auto-generated fix in the PR.</li>
+      <li><strong>UC5: Custom rules enforcement</strong> — Team defines <code>.cursor/BUGBOT.md</code> with rules like "never use deprecated API X" or "always bump manifest version when changing extension code." BugBot enforces these on every PR.</li>
+    </ul>
+    <div class="callout tip">The defining tension in AI code review: <strong>precision vs. coverage</strong>. A tool that flags 50 issues per PR — mostly false positives — will be disabled within a week. A tool that catches 0.7 real bugs per run and is right 70% of the time becomes a required pre-merge check. BugBot's entire architecture is designed around this insight: the cost of a false positive (eroded trust, wasted time) vastly exceeds the cost of a false negative (missed bug that human reviewers might catch anyway).</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2 ═══════════ -->
+<div class="phase" id="p2">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase2);color:var(--bg)">02</span>
+    <span class="phase-title">Back-of-the-Envelope Estimation</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="est-grid">
+      <div class="est-card"><div class="label">PRs Reviewed / Month</div><div class="value">2M+</div><div class="detail">~70K PRs/day. Fortune 500 enterprises + indie devs. Burst on Mon-Fri 9am-5pm per timezone.</div></div>
+      <div class="est-card"><div class="label">Resolution Rate</div><div class="value">70%</div><div class="detail">Up from 52% at launch. 40 experiments. Key metric: fraction of flagged bugs actually fixed by developer at merge.</div></div>
+      <div class="est-card"><div class="label">Bugs Flagged / Run</div><div class="value">~0.7</div><div class="detail">Up from 0.4 at launch. Resolved bugs per PR: ~0.5 (0.7 × 70%). Intentionally conservative to minimize noise.</div></div>
+      <div class="est-card"><div class="label">Bugs Found (Beta)</div><div class="value">1.5M+</div><div class="detail">Over 1M PRs in beta, 1.5M potential bugs flagged. 50%+ fixed before merge = ~750K real bugs caught.</div></div>
+      <div class="est-card"><div class="label">LLM Calls / PR (V1)</div><div class="value">8–16</div><div class="detail">8 parallel bug-finding passes + validator model calls + majority voting computation. Heavy token usage.</div></div>
+      <div class="est-card"><div class="label">LLM Calls / PR (V2)</div><div class="value">Variable</div><div class="detail">Agentic loop: agent decides depth. Simple PRs: 2-3 calls. Complex PRs: 10+ calls with tool use. More efficient overall.</div></div>
+      <div class="est-card"><div class="label">Review Latency Target</div><div class="value">&lt;5 min</div><div class="detail">Must finish before human review starts. Large PRs may take longer. Webhook → comment posted in minutes.</div></div>
+      <div class="est-card"><div class="label">GitHub API Budget</div><div class="value">Critical</div><div class="detail">5K req/hr per installation. Rate-limit monitoring, request batching, proxy infra. Rebuilt Git layer in Rust.</div></div>
+    </div>
+    <div class="callout tip">Key cost insight: at 2M PRs/month and ~8 LLM calls per PR (V1), that's <strong>16M LLM inference calls per month</strong> — a massive and expensive workload. The transition to agentic architecture wasn't just about quality: by letting the agent decide investigation depth, simple PRs use fewer calls while complex ones get deeper analysis. This is more cost-efficient overall while producing better results.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3 ═══════════ -->
+<div class="phase" id="p3">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase3)">03</span>
+    <span class="phase-title">High-Level Design</span><span class="phase-time">8–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="callout say">"The system has four stages: (1) GitHub event ingestion and diff extraction, (2) context assembly — gathering the diff plus surrounding code, project rules, and repo structure, (3) the analysis engine — either V1 multi-pass pipeline or V2 agentic loop — which produces bug candidates, and (4) result delivery — posting inline comments on the PR with fix links. A separate metrics pipeline tracks resolution rates to hill-climb on quality."</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">BugBot End-to-End Architecture</span>
+      <svg viewBox="0 0 780 520" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ar1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="ar2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Developer + GitHub -->
+        <rect x="40" y="14" width="120" height="34" rx="6" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="100" y="35" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">Developer</text>
+        <line x1="160" y1="31" x2="200" y2="31" stroke="#6e7681" stroke-width="1" marker-end="url(#ar1)"/>
+        <text x="180" y="24" fill="#6e7681" font-size="7" text-anchor="middle">push PR</text>
+        <rect x="200" y="14" width="120" height="34" rx="6" fill="#161b22" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="260" y="31" fill="#e3b341" font-size="9" text-anchor="middle" font-weight="600">GitHub</text>
+        <text x="260" y="42" fill="#6e7681" font-size="7" text-anchor="middle">PR created/updated</text>
+
+        <!-- Webhook -->
+        <line x1="260" y1="48" x2="260" y2="74" stroke="#58a6ff" stroke-width="1" marker-end="url(#ar1)"/>
+        <text x="270" y="64" fill="#58a6ff" font-size="7">webhook</text>
+
+        <!-- Stage 1: Ingestion -->
+        <rect x="40" y="74" width="700" height="56" rx="8" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="54" y="92" fill="#58a6ff" font-size="9" font-weight="600">① INGESTION &amp; DIFF EXTRACTION</text>
+        <rect x="54" y="100" width="130" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="119" y="114" fill="#6e7681" font-size="7" text-anchor="middle">Webhook Handler</text>
+        <rect x="200" y="100" width="140" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="270" y="114" fill="#6e7681" font-size="7" text-anchor="middle">Git Layer (Rust)</text>
+        <rect x="356" y="100" width="130" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="421" y="114" fill="#6e7681" font-size="7" text-anchor="middle">Diff Parser</text>
+        <rect x="502" y="100" width="120" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="562" y="114" fill="#6e7681" font-size="7" text-anchor="middle">Rate-limit Proxy</text>
+        <rect x="636" y="100" width="90" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="681" y="114" fill="#6e7681" font-size="7" text-anchor="middle">Batching</text>
+
+        <line x1="390" y1="130" x2="390" y2="152" stroke="#6e7681" stroke-width="1" marker-end="url(#ar1)"/>
+
+        <!-- Stage 2: Context Assembly -->
+        <rect x="40" y="152" width="700" height="56" rx="8" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.15)" stroke-width="1"/>
+        <text x="54" y="170" fill="#d29922" font-size="9" font-weight="600">② CONTEXT ASSEMBLY</text>
+        <rect x="54" y="178" width="130" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="119" y="192" fill="#6e7681" font-size="7" text-anchor="middle">Diff + Surrounding Code</text>
+        <rect x="200" y="178" width="140" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="270" y="192" fill="#6e7681" font-size="7" text-anchor="middle">BUGBOT.md Rules</text>
+        <rect x="356" y="178" width="130" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="421" y="192" fill="#6e7681" font-size="7" text-anchor="middle">Team / Org Rules</text>
+        <rect x="502" y="178" width="120" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="562" y="192" fill="#6e7681" font-size="7" text-anchor="middle">Repo Structure</text>
+        <rect x="636" y="178" width="90" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="681" y="192" fill="#6e7681" font-size="7" text-anchor="middle">PR Metadata</text>
+
+        <line x1="390" y1="208" x2="390" y2="230" stroke="#6e7681" stroke-width="1" marker-end="url(#ar1)"/>
+
+        <!-- Stage 3: Analysis Engine -->
+        <rect x="40" y="230" width="700" height="120" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="54" y="248" fill="#3fb950" font-size="9" font-weight="600">③ ANALYSIS ENGINE</text>
+
+        <!-- V1 Pipeline -->
+        <rect x="54" y="258" width="320" height="78" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.12)" stroke-width="1"/>
+        <text x="68" y="274" fill="#58a6ff" font-size="8" font-weight="600">V1: Pipeline (Jul 2025)</text>
+        <text x="68" y="290" fill="#6e7681" font-size="7">8 parallel LLM passes (randomized diff order)</text>
+        <text x="68" y="302" fill="#6e7681" font-size="7">→ Majority voting (2+ passes agree = signal)</text>
+        <text x="68" y="314" fill="#6e7681" font-size="7">→ Validator model (filter false positives)</text>
+        <text x="68" y="326" fill="#6e7681" font-size="7">→ Category filter → Bug candidates</text>
+
+        <!-- V2 Agentic -->
+        <rect x="394" y="258" width="330" height="78" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.12)" stroke-width="1"/>
+        <text x="408" y="274" fill="#3fb950" font-size="8" font-weight="600">V2: Agentic (Fall 2025)</text>
+        <text x="408" y="290" fill="#6e7681" font-size="7">Agent loop: reason → tools → investigate</text>
+        <text x="408" y="302" fill="#6e7681" font-size="7">→ Dynamic context pull (files, symbols, deps)</text>
+        <text x="408" y="314" fill="#6e7681" font-size="7">→ Aggressive prompts (flag everything suspicious)</text>
+        <text x="408" y="326" fill="#6e7681" font-size="7">→ Agent decides depth per finding → Bug candidates</text>
+
+        <line x1="390" y1="350" x2="390" y2="372" stroke="#6e7681" stroke-width="1" marker-end="url(#ar1)"/>
+
+        <!-- Stage 4: Delivery -->
+        <rect x="40" y="372" width="700" height="56" rx="8" fill="rgba(188,140,255,.03)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="54" y="390" fill="#bc8cff" font-size="9" font-weight="600">④ RESULT DELIVERY &amp; REMEDIATION</text>
+        <rect x="54" y="398" width="140" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="124" y="412" fill="#6e7681" font-size="7" text-anchor="middle">GitHub PR Comments</text>
+        <rect x="210" y="398" width="120" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="270" y="412" fill="#6e7681" font-size="7" text-anchor="middle">Fix in Cursor</text>
+        <rect x="346" y="398" width="100" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="396" y="412" fill="#6e7681" font-size="7" text-anchor="middle">Fix in Web</text>
+        <rect x="462" y="398" width="130" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="527" y="412" fill="#6e7681" font-size="7" text-anchor="middle">Autofix (Cloud Agent)</text>
+        <rect x="608" y="398" width="120" height="22" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="668" y="412" fill="#6e7681" font-size="7" text-anchor="middle">Analytics Dashboard</text>
+
+        <!-- Metrics feedback loop -->
+        <rect x="40" y="448" width="700" height="44" rx="6" fill="rgba(248,81,73,.03)" stroke="rgba(248,81,73,.12)" stroke-width="1"/>
+        <text x="54" y="466" fill="#f85149" font-size="9" font-weight="600">⑤ METRICS &amp; HILL-CLIMBING</text>
+        <text x="54" y="482" fill="#6e7681" font-size="8">Resolution rate (AI judge) · BugBench (offline eval on curated diffs) · Online A/B experiments · Model/prompt/tool iteration</text>
+
+        <!-- Legend -->
+        <rect x="40" y="500" width="700" height="16" rx="3" fill="rgba(255,255,255,.01)"/>
+        <circle cx="60" cy="508" r="3" fill="#e3b341"/><text x="68" y="511" fill="#6e7681" font-size="7">Developer/GitHub</text>
+        <circle cx="165" cy="508" r="3" fill="#58a6ff"/><text x="173" y="511" fill="#6e7681" font-size="7">Ingestion</text>
+        <circle cx="245" cy="508" r="3" fill="#d29922"/><text x="253" y="511" fill="#6e7681" font-size="7">Context</text>
+        <circle cx="320" cy="508" r="3" fill="#3fb950"/><text x="328" y="511" fill="#6e7681" font-size="7">Analysis</text>
+        <circle cx="400" cy="508" r="3" fill="#bc8cff"/><text x="408" y="511" fill="#6e7681" font-size="7">Delivery</text>
+        <circle cx="475" cy="508" r="3" fill="#f85149"/><text x="483" y="511" fill="#6e7681" font-size="7">Metrics loop</text>
+      </svg>
+    </div>
+
+    <div class="sub">Key Architectural Decisions</div>
+    <table>
+      <thead><tr><th>Decision</th><th>Choice</th><th>Why Not Alternative</th></tr></thead>
+      <tbody>
+        <tr><td>Analysis style</td><td>Agentic loop (V2)</td><td>Fixed pipeline (V1) couldn't adapt depth per PR; wasted tokens on simple PRs, under-investigated complex ones</td></tr>
+        <tr><td>Key metric</td><td>Resolution rate (AI-judged)</td><td>Precision/recall too abstract; resolution rate directly measures "did the developer value this?" Signal is real.</td></tr>
+        <tr><td>Diff ordering</td><td>Randomized per pass (V1)</td><td>LLMs show positional bias; randomizing diff order produces diverse reasoning across passes</td></tr>
+        <tr><td>False positive filter</td><td>Majority voting + validator</td><td>Single-pass flagging had too many false positives; multiple passes agreeing = stronger signal</td></tr>
+        <tr><td>Git integration</td><td>Custom Rust layer</td><td>Shell-out to git CLI too slow and unreliable at 2M PRs/month; Rust for speed + reliability</td></tr>
+        <tr><td>GitHub interaction</td><td>Proxy + batching + rate monitor</td><td>Raw GitHub API hits rate limits fast at scale; proxy layer manages quotas across installations</td></tr>
+        <tr><td>Custom rules</td><td>BUGBOT.md in repo</td><td>Hardcoded checks can't adapt to diverse codebases; natural-language rules are flexible and team-specific</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4 ═══════════ -->
+<div class="phase" id="p4">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase4)">04</span>
+    <span class="phase-title">Deep Dives</span><span class="phase-time">25–30 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <!-- DD1: V1 Pipeline -->
+    <div class="sub" id="dd-pipeline">Deep Dive 1: V1 Pipeline — Majority Voting (7 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand the original multi-pass architecture, why randomized diff ordering matters, and how majority voting filters false positives.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">V1 Pipeline: 8 Passes + Majority Voting</span>
+      <svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="v1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Input -->
+        <rect x="40" y="10" width="140" height="28" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1"/>
+        <text x="110" y="28" fill="#e3b341" font-size="8" text-anchor="middle" font-weight="600">PR Diff + Context</text>
+
+        <!-- Shuffle -->
+        <line x1="110" y1="38" x2="110" y2="62" stroke="#6e7681" stroke-width="1" marker-end="url(#v1)"/>
+        <rect x="40" y="62" width="140" height="24" rx="5" fill="rgba(210,153,34,.06)" stroke="#d29922" stroke-width="1"/>
+        <text x="110" y="78" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">Randomize diff ordering × 8</text>
+
+        <!-- 8 parallel passes -->
+        <line x1="110" y1="86" x2="110" y2="106" stroke="#6e7681" stroke-width=".8" marker-end="url(#v1)"/>
+        <rect x="40" y="106" width="700" height="68" rx="6" fill="rgba(88,166,255,.03)" stroke="rgba(88,166,255,.12)" stroke-width="1"/>
+        <text x="54" y="122" fill="#58a6ff" font-size="8" font-weight="600">8 Parallel LLM Passes (each sees different diff order)</text>
+
+        <!-- Pass boxes -->
+        <rect x="54" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="91" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 1</text>
+        <text x="91" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: A,B,C</text>
+
+        <rect x="138" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="175" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 2</text>
+        <text x="175" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: A,D</text>
+
+        <rect x="222" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="259" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 3</text>
+        <text x="259" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: A,B</text>
+
+        <rect x="306" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="343" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 4</text>
+        <text x="343" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: B,E</text>
+
+        <rect x="390" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="427" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 5</text>
+        <text x="427" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: A</text>
+
+        <rect x="474" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="511" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 6</text>
+        <text x="511" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: A,B,F</text>
+
+        <rect x="558" y="130" width="74" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="595" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 7</text>
+        <text x="595" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: A</text>
+
+        <rect x="642" y="130" width="84" height="34" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".6"/>
+        <text x="684" y="145" fill="#6e7681" font-size="7" text-anchor="middle">Pass 8</text>
+        <text x="684" y="158" fill="#f85149" font-size="6" text-anchor="middle">bugs: B,D</text>
+
+        <!-- Majority voting -->
+        <line x1="390" y1="174" x2="390" y2="198" stroke="#6e7681" stroke-width="1" marker-end="url(#v1)"/>
+        <rect x="220" y="198" width="340" height="36" rx="6" fill="rgba(210,153,34,.06)" stroke="#d29922" stroke-width="1"/>
+        <text x="390" y="214" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">Majority Voting (≥2 passes agree)</text>
+        <text x="390" y="228" fill="#6e7681" font-size="7" text-anchor="middle">A: 7/8 ✓ · B: 5/8 ✓ · D: 2/8 ✓ · C,E,F: 1/8 each ✗ (single-pass noise)</text>
+
+        <!-- Validator -->
+        <line x1="390" y1="234" x2="390" y2="256" stroke="#6e7681" stroke-width="1" marker-end="url(#v1)"/>
+        <rect x="250" y="256" width="280" height="28" rx="5" fill="rgba(188,140,255,.06)" stroke="#bc8cff" stroke-width="1"/>
+        <text x="390" y="274" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">Validator Model (final false-positive filter)</text>
+
+        <!-- Output -->
+        <line x1="390" y1="284" x2="390" y2="300" stroke="#3fb950" stroke-width="1" marker-end="url(#v1)"/>
+        <rect x="270" y="300" width="240" height="20" rx="4" fill="rgba(63,185,80,.08)" stroke="#3fb950" stroke-width="1"/>
+        <text x="390" y="314" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">Output: Bug A (high), Bug B (medium)</text>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>Why randomize diff order?</strong> LLMs exhibit positional bias — they attend more to text at the beginning and end of the context window. By shuffling which files/hunks appear first in each pass, different passes "notice" different code sections. This produces diverse reasoning without changing the model or prompt.</li>
+      <li><strong>Majority voting threshold:</strong> A bug found by only 1 out of 8 passes is likely a hallucination or noise. A bug found by 5+ passes is almost certainly real. The threshold (≥2) balances catching genuine issues against filtering noise.</li>
+      <li><strong>Validator model:</strong> A separate LLM call that receives the bug candidate + context and decides "is this actually a bug?" This second opinion catches false positives that slipped past majority voting — things that look like bugs but aren't (intentional patterns, documented exceptions).</li>
+      <li><strong>Weaknesses of V1:</strong> Fixed 8-pass cost regardless of PR complexity. No ability to investigate deeper when something looks suspicious. All context must be loaded upfront — the model can't go fetch more files. These limitations motivated V2.</li>
+    </ul>
+
+    <!-- DD2: Agentic Architecture -->
+    <div class="sub" id="dd-agentic">Deep Dive 2: V2 Agentic Architecture (8 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand why the shift to agentic design produced "the largest quality gains" and how the agent loop works.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">V2 Agentic Loop</span>
+      <svg viewBox="0 0 780 310" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="ag1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+          <marker id="ag2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#3fb950" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Input -->
+        <rect x="40" y="10" width="160" height="30" rx="5" fill="#161b22" stroke="#e3b341" stroke-width="1"/>
+        <text x="120" y="29" fill="#e3b341" font-size="8" text-anchor="middle" font-weight="600">PR Diff + Minimal Context</text>
+        <line x1="120" y1="40" x2="120" y2="62" stroke="#6e7681" stroke-width="1" marker-end="url(#ag1)"/>
+
+        <!-- Agent Brain -->
+        <rect x="40" y="62" width="460" height="220" rx="8" fill="rgba(63,185,80,.03)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="56" y="82" fill="#3fb950" font-size="10" font-weight="600">Agent Loop (iterative reasoning)</text>
+
+        <!-- Step 1: Reason -->
+        <rect x="56" y="94" width="180" height="40" rx="5" fill="rgba(88,166,255,.06)" stroke="#58a6ff" stroke-width="1"/>
+        <text x="146" y="112" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="600">① Reason over diff</text>
+        <text x="146" y="126" fill="#6e7681" font-size="7" text-anchor="middle">Aggressive prompt: investigate all</text>
+
+        <!-- Step 2: Tool call -->
+        <line x1="236" y1="114" x2="266" y2="114" stroke="#6e7681" stroke-width="1" marker-end="url(#ag1)"/>
+        <rect x="266" y="94" width="220" height="40" rx="5" fill="rgba(210,153,34,.06)" stroke="#d29922" stroke-width="1"/>
+        <text x="376" y="112" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">② Call tools (dynamic)</text>
+        <text x="376" y="126" fill="#6e7681" font-size="7" text-anchor="middle">Fetch file · Read symbol · Check deps</text>
+
+        <!-- Step 3: Investigate -->
+        <line x1="376" y1="134" x2="376" y2="156" stroke="#6e7681" stroke-width="1" marker-end="url(#ag1)"/>
+        <rect x="266" y="156" width="220" height="40" rx="5" fill="rgba(188,140,255,.06)" stroke="#bc8cff" stroke-width="1"/>
+        <text x="376" y="174" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">③ Investigate suspicious pattern</text>
+        <text x="376" y="188" fill="#6e7681" font-size="7" text-anchor="middle">Pull more context · Trace call chains</text>
+
+        <!-- Loop back arrow -->
+        <path d="M 266 176 L 230 176 L 230 134 L 236 134" fill="none" stroke="#3fb950" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#ag2)"/>
+        <text x="216" y="158" fill="#3fb950" font-size="7" text-anchor="end">loop</text>
+
+        <!-- Step 4: Decide -->
+        <line x1="376" y1="196" x2="376" y2="218" stroke="#6e7681" stroke-width="1" marker-end="url(#ag1)"/>
+        <rect x="56" y="218" width="430" height="50" rx="5" fill="rgba(63,185,80,.04)" stroke="#3fb950" stroke-width="1"/>
+        <text x="271" y="236" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">④ Agent decides: flag as bug OR dismiss OR investigate deeper</text>
+        <text x="271" y="252" fill="#6e7681" font-size="7" text-anchor="middle">Self-determines investigation depth. Simple PR → 2 iterations. Complex PR → 10+ iterations.</text>
+        <text x="271" y="264" fill="#6e7681" font-size="7" text-anchor="middle">Each finding includes: location, explanation, severity, suggested fix.</text>
+
+        <!-- Tools sidebar -->
+        <rect x="530" y="62" width="210" height="220" rx="8" fill="rgba(210,153,34,.03)" stroke="rgba(210,153,34,.12)" stroke-width="1"/>
+        <text x="544" y="82" fill="#d29922" font-size="9" font-weight="600">Available Tools</text>
+        <text x="544" y="102" fill="#6e7681" font-size="8">🔍 read_file(path, range)</text>
+        <text x="544" y="118" fill="#6e7681" font-size="8">📂 list_directory(path)</text>
+        <text x="544" y="134" fill="#6e7681" font-size="8">🔗 find_references(symbol)</text>
+        <text x="544" y="150" fill="#6e7681" font-size="8">📦 check_dependencies(pkg)</text>
+        <text x="544" y="166" fill="#6e7681" font-size="8">🔎 search_codebase(query)</text>
+        <text x="544" y="182" fill="#6e7681" font-size="8">📋 read_rules(BUGBOT.md)</text>
+        <text x="544" y="198" fill="#6e7681" font-size="8">🏷️ get_pr_metadata()</text>
+        <text x="544" y="214" fill="#6e7681" font-size="8">📝 get_commit_history(file)</text>
+        <text x="544" y="236" fill="#d29922" font-size="7" font-weight="600">Small tool changes →</text>
+        <text x="544" y="250" fill="#d29922" font-size="7" font-weight="600">outsized behavior impact</text>
+        <text x="544" y="266" fill="#6e7681" font-size="7">(agent shaped by available tools)</text>
+
+        <!-- Output -->
+        <line x1="270" y1="282" x2="270" y2="300" stroke="#3fb950" stroke-width="1" marker-end="url(#ag2)"/>
+        <rect x="170" y="300" width="400" height="20" rx="4" fill="rgba(63,185,80,.08)"/>
+        <text x="370" y="313" fill="#3fb950" font-size="8" text-anchor="middle" font-weight="600">Output: Bug candidates with explanations, locations, and suggested fixes</text>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>Key shift: aggressive prompting.</strong> V1 restrained models to minimize false positives. V2 does the opposite: the agent is prompted to investigate every suspicious pattern and err on the side of flagging. The agentic loop's iterative verification catches the false positives that aggressive prompting creates — better to over-investigate than under-investigate.</li>
+      <li><strong>Dynamic vs. static context:</strong> V1 loaded all context upfront (diff + surrounding files). V2 starts with minimal context and the agent pulls in additional files at runtime. The model "consistently pulled in the additional context it needed" without requiring everything provided ahead of time — more efficient and more targeted.</li>
+      <li><strong>Tool design = behavior design:</strong> Because the agent's behavior is shaped by the tools it can call, even small changes in tool design or availability had an outsized impact on outcomes. Adding a <code>find_references</code> tool, for example, let the agent trace call chains across files — something V1 couldn't do.</li>
+      <li><strong>Experimentation surface:</strong> The agentic architecture opened up a richer surface for experimentation. The team could vary how much upfront context the model received, which tools were available, how prompts were structured — all independently. This made the 40-experiment hill-climbing process much more productive.</li>
+    </ul>
+
+    <!-- DD3: Precision/Recall -->
+    <div class="sub" id="dd-precision">Deep Dive 3: Precision vs. Recall Optimization (5 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand how BugBot measures quality and why the resolution rate metric was a breakthrough.</div>
+    <ul class="items">
+      <li><strong>The resolution rate metric:</strong> An AI judge examines each bug BugBot flagged, then checks the final merged diff. If the developer fixed the issue (even if not exactly as BugBot suggested), the bug is marked "resolved." Resolution rate = resolved / total flagged. This measures real-world developer value, not abstract accuracy.</li>
+      <li><strong>Why not precision/recall?</strong> Precision requires labeling ground truth for every PR — impossibly expensive at 2M PRs/month. Resolution rate is a proxy that can be computed automatically: if the developer fixed it, it was probably a real bug. If they ignored it, it was probably noise. Not perfect, but scalable and actionable.</li>
+      <li><strong>BugBench (offline eval):</strong> A curated benchmark of real code diffs with human-annotated bugs. Used for offline evaluation before deploying changes. Prevents regressions that online A/B testing would catch too late. The combination of BugBench (offline) + resolution rate (online) gives both fast iteration and real-world signal.</li>
+      <li><strong>Surprising regressions:</strong> Many changes that seemed intuitively better actually regressed metrics. The team found that early qualitative judgments were often correct. This is a common lesson in ML systems: iterate with data, not intuition, but respect the baseline.</li>
+      <li><strong>Category filtering:</strong> Not all bug types are equally valuable. BugBot filters out categories where false positive rates are high (e.g., style suggestions) and focuses on categories where resolution rates are high (logic bugs, null pointer dereferences, race conditions, security vulnerabilities).</li>
+      <li><strong>The 52% → 70% journey:</strong> V1 launched at 52% resolution rate. 40 experiments later (models, prompts, iteration counts, validators, context management, category filtering, agentic design), V2 reached 70%. The agentic switch was the single largest improvement. Each experiment was evaluated both on BugBench and on live resolution rates.</li>
+    </ul>
+
+    <!-- DD4: Autofix -->
+    <div class="sub" id="dd-autofix">Deep Dive 4: Autofix &amp; Remediation Loop (5 min)</div>
+    <div class="callout goal"><strong>Goal:</strong> Understand the full remediation pipeline from bug detection to automated fix.</div>
+
+    <div class="svg-diagram">
+      <span class="dia-title">Remediation Flows</span>
+      <svg viewBox="0 0 780 240" xmlns="http://www.w3.org/2000/svg" style="font-family:'DM Sans',sans-serif">
+        <defs>
+          <marker id="rf1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><path d="M0,0 L7,2.5 L0,5" fill="none" stroke="#6e7681" stroke-width="1"/></marker>
+        </defs>
+
+        <!-- Bug found -->
+        <rect x="40" y="60" width="130" height="30" rx="5" fill="rgba(248,81,73,.06)" stroke="#f85149" stroke-width="1"/>
+        <text x="105" y="79" fill="#f85149" font-size="8" text-anchor="middle" font-weight="600">Bug Detected</text>
+
+        <!-- Three paths -->
+        <line x1="170" y1="66" x2="240" y2="30" stroke="#6e7681" stroke-width="1" marker-end="url(#rf1)"/>
+        <line x1="170" y1="75" x2="240" y2="75" stroke="#6e7681" stroke-width="1" marker-end="url(#rf1)"/>
+        <line x1="170" y1="84" x2="240" y2="130" stroke="#6e7681" stroke-width="1" marker-end="url(#rf1)"/>
+
+        <!-- Path A: Fix in Cursor -->
+        <rect x="240" y="10" width="500" height="40" rx="6" fill="rgba(88,166,255,.04)" stroke="rgba(88,166,255,.15)" stroke-width="1"/>
+        <text x="254" y="28" fill="#58a6ff" font-size="8" font-weight="600">Path A: "Fix in Cursor" (IDE flow)</text>
+        <text x="254" y="42" fill="#6e7681" font-size="7">Click → Cursor IDE opens → switch to PR branch → pre-filled agent prompt → developer edits + applies → push</text>
+
+        <!-- Path B: Fix in Web -->
+        <rect x="240" y="58" width="500" height="40" rx="6" fill="rgba(188,140,255,.04)" stroke="rgba(188,140,255,.15)" stroke-width="1"/>
+        <text x="254" y="76" fill="#bc8cff" font-size="8" font-weight="600">Path B: "Fix in Web" (Cloud Agent)</text>
+        <text x="254" y="90" fill="#6e7681" font-size="7">Click → Cursor web app → agent manager → edit prompt → agent creates fix → push commit to PR branch</text>
+
+        <!-- Path C: Autofix -->
+        <rect x="240" y="110" width="500" height="50" rx="6" fill="rgba(63,185,80,.04)" stroke="rgba(63,185,80,.15)" stroke-width="1"/>
+        <text x="254" y="128" fill="#3fb950" font-size="8" font-weight="600">Path C: Autofix (Beta — fully autonomous)</text>
+        <text x="254" y="142" fill="#6e7681" font-size="7">BugBot auto-spawns Cloud Agent → agent clones repo → creates fix → pushes commit → developer reviews auto-fix</text>
+        <text x="254" y="154" fill="#6e7681" font-size="7">Roadmap: run code to verify fix · deep research for complex issues · always-on scanning (not just PR-triggered)</text>
+
+        <!-- All paths converge -->
+        <line x1="390" y1="160" x2="390" y2="182" stroke="#6e7681" stroke-width="1" marker-end="url(#rf1)"/>
+        <rect x="250" y="182" width="280" height="40" rx="6" fill="rgba(210,153,34,.04)" stroke="#d29922" stroke-width="1"/>
+        <text x="390" y="200" fill="#d29922" font-size="8" text-anchor="middle" font-weight="600">Metrics: resolution rate updated</text>
+        <text x="390" y="214" fill="#6e7681" font-size="7" text-anchor="middle">AI judge: was the bug fixed in the merged diff?</text>
+      </svg>
+    </div>
+
+    <ul class="items">
+      <li><strong>"Fix in Cursor" is the killer feature.</strong> It bridges detection and remediation with one click. The IDE opens, switches branches, and presents a pre-filled prompt that describes the bug and its context. The developer edits the prompt if needed, the agent generates a fix, and the developer pushes. This is why BugBot has a 70% resolution rate — the friction to fix is near zero.</li>
+      <li><strong>Autofix roadmap:</strong> The team is building toward BugBot that can run code to verify its own bug reports (not just flag, but prove the bug exists), deep research for complex issues (trace through dependency chains, read documentation), and always-on scanning that monitors the codebase continuously rather than waiting for PRs.</li>
+      <li><strong>Cloud Agents for remediation:</strong> The "Fix in Web" and Autofix paths spawn Cloud Agents — remote environments that clone the repo, make changes on a separate branch, and push. These share the same security considerations as Cursor's Background Agents: read-write repo access, auto-run commands, potential for prompt injection from malicious content in the codebase.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5 ═══════════ -->
+<div class="phase" id="p5">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase5)">05</span>
+    <span class="phase-title">Cross-Cutting Concerns</span><span class="phase-time">10–12 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub" id="failures">Failure Scenarios</div>
+    <div class="failure-row"><span class="scenario">False positive flood</span><span class="mitigation">Majority voting (V1), agentic self-verification (V2), validator models, category filtering. Resolution rate metric detects regressions. Rollback to previous version if rate drops.</span></div>
+    <div class="failure-row"><span class="scenario">GitHub rate limits hit</span><span class="mitigation">Proxy-based infrastructure with rate-limit monitoring. Request batching. Rebuilt Git layer in Rust minimizes API calls. Per-installation quota tracking. Graceful degradation: queue PRs and process when quota refreshes.</span></div>
+    <div class="failure-row"><span class="scenario">Large PR overwhelms context</span><span class="mitigation">V2 agent pulls context dynamically rather than loading everything upfront. Chunking strategies for very large diffs. Prioritize changed files with highest complexity/risk signals.</span></div>
+    <div class="failure-row"><span class="scenario">LLM provider outage</span><span class="mitigation">Multi-model support. Fall back to alternate provider. Queue reviews for retry. Users can manually re-trigger with <code>@cursor review</code> when service recovers.</span></div>
+    <div class="failure-row"><span class="scenario">Prompt injection via code</span><span class="mitigation">Malicious code in the PR could manipulate the LLM into ignoring bugs or generating harmful output. Sandbox the agent's tool access. Separate analysis from remediation. Human review of agent-generated commits.</span></div>
+    <div class="failure-row"><span class="scenario">Review too slow (&gt;10 min)</span><span class="mitigation">Agent loop has iteration limits. Timeout and report partial results. V2's variable depth means most simple PRs finish in 1-2 minutes; only complex ones take longer.</span></div>
+    <div class="failure-row"><span class="scenario">Sensitive code exposure</span><span class="mitigation">Code sent to LLM APIs. Cursor offers Privacy Mode (zero retention). Enterprise SSO/SCIM. SOC 2 compliance. No training on customer code (per Cursor policy).</span></div>
+
+    <div class="sub" id="data-model">Data Model</div>
+    <div class="schema"><span class="comment">// Core entities for BugBot's review pipeline</span>
+
+<span class="table-name">review_runs</span> {
+  <span class="pk">run_id</span>           <span class="type">UUID</span>           <span class="comment">-- unique per BugBot execution</span>
+  <span class="fk">installation_id</span>  <span class="type">BIGINT</span>         <span class="comment">-- GitHub App installation</span>
+  <span class="fk">repo_id</span>          <span class="type">BIGINT</span>         <span class="comment">-- GitHub repo</span>
+  <span class="fk">pr_number</span>        <span class="type">INT</span>            <span class="comment">-- PR that triggered review</span>
+  trigger          <span class="type">ENUM</span>           <span class="comment">-- AUTO | MANUAL | RERUN</span>
+  head_sha         <span class="type">VARCHAR(40)</span>    <span class="comment">-- commit SHA at review time</span>
+  architecture     <span class="type">ENUM</span>           <span class="comment">-- PIPELINE_V1 | AGENTIC_V2</span>
+  status           <span class="type">ENUM</span>           <span class="comment">-- PENDING | RUNNING | COMPLETE | FAILED</span>
+  started_at       <span class="type">TIMESTAMPTZ</span>
+  completed_at     <span class="type">TIMESTAMPTZ</span>
+  model_config     <span class="type">JSONB</span>          <span class="comment">-- model, prompt version, tool set</span>
+  tokens_used      <span class="type">INT</span>            <span class="comment">-- total LLM tokens consumed</span>
+}
+
+<span class="table-name">bug_findings</span> {
+  <span class="pk">finding_id</span>       <span class="type">UUID</span>
+  <span class="fk">run_id</span>           <span class="type">UUID</span>
+  file_path        <span class="type">TEXT</span>           <span class="comment">-- e.g., "src/auth/handler.ts"</span>
+  line_start       <span class="type">INT</span>
+  line_end         <span class="type">INT</span>
+  severity         <span class="type">ENUM</span>           <span class="comment">-- CRITICAL | HIGH | MEDIUM | LOW</span>
+  category         <span class="type">ENUM</span>           <span class="comment">-- LOGIC | SECURITY | PERF | EDGE_CASE</span>
+  title            <span class="type">TEXT</span>           <span class="comment">-- one-line summary</span>
+  explanation      <span class="type">TEXT</span>           <span class="comment">-- detailed markdown explanation</span>
+  suggested_fix    <span class="type">TEXT</span>           <span class="comment">-- code suggestion</span>
+  confidence       <span class="type">FLOAT</span>          <span class="comment">-- V1: majority vote fraction; V2: agent confidence</span>
+  gh_comment_id    <span class="type">BIGINT</span>         <span class="comment">-- GitHub comment ID (for updates)</span>
+  resolution       <span class="type">ENUM</span>           <span class="comment">-- PENDING | RESOLVED | DISMISSED | IGNORED</span>
+  resolved_at      <span class="type">TIMESTAMPTZ</span>
+}
+
+<span class="table-name">custom_rules</span> {
+  <span class="pk">rule_id</span>          <span class="type">UUID</span>
+  <span class="fk">repo_id</span>          <span class="type">BIGINT</span>
+  scope            <span class="type">ENUM</span>           <span class="comment">-- REPO | TEAM | ORG</span>
+  source_file      <span class="type">TEXT</span>           <span class="comment">-- e.g., ".cursor/BUGBOT.md"</span>
+  rule_text        <span class="type">TEXT</span>           <span class="comment">-- natural language rule</span>
+  created_at       <span class="type">TIMESTAMPTZ</span>
+}
+
+<span class="table-name">experiments</span> {
+  <span class="pk">experiment_id</span>    <span class="type">UUID</span>
+  name             <span class="type">TEXT</span>           <span class="comment">-- "agentic_v2_aggressive_prompt"</span>
+  config_diff      <span class="type">JSONB</span>          <span class="comment">-- what changed vs. baseline</span>
+  traffic_pct      <span class="type">FLOAT</span>          <span class="comment">-- % of PRs receiving this variant</span>
+  resolution_rate  <span class="type">FLOAT</span>          <span class="comment">-- observed resolution rate</span>
+  bugbench_score   <span class="type">FLOAT</span>          <span class="comment">-- offline benchmark score</span>
+  started_at       <span class="type">TIMESTAMPTZ</span>
+  concluded_at     <span class="type">TIMESTAMPTZ</span>
+  promoted         <span class="type">BOOLEAN</span>        <span class="comment">-- did this become the new default?</span>
+}</div>
+
+    <div class="sub">Competitive Landscape</div>
+    <table>
+      <thead><tr><th>Dimension</th><th>Cursor BugBot</th><th>CodeRabbit</th><th>GitHub Copilot</th><th>Greptile</th></tr></thead>
+      <tbody>
+        <tr><td>Focus</td><td>Logic bugs, security, edge cases</td><td>Comprehensive review (bugs + style + docs)</td><td>Inline completion + PR summaries</td><td>Deep codebase understanding</td></tr>
+        <tr><td>Architecture</td><td>Agentic loop with tool use</td><td>AST analysis + LLM</td><td>Copilot X / code review</td><td>Codebase indexing + LLM</td></tr>
+        <tr><td>Bug Detection</td><td>~42% (benchmark), 0.7 bugs/run</td><td>~46% (benchmark)</td><td>~35% (benchmark)</td><td>~82% (self-reported)</td></tr>
+        <tr><td>Precision Focus</td><td>Very high (70% resolution rate)</td><td>Moderate (more verbose)</td><td>Moderate</td><td>Lower (more false positives)</td></tr>
+        <tr><td>IDE Integration</td><td>"Fix in Cursor" (killer feature)</td><td>VS Code extension</td><td>Native in VS Code/GitHub</td><td>IDE plugins</td></tr>
+        <tr><td>Platforms</td><td>GitHub only</td><td>GitHub, GitLab, Bitbucket, Azure</td><td>GitHub</td><td>GitHub</td></tr>
+        <tr><td>Pricing</td><td>$40/user/month</td><td>$15-30/user/month</td><td>Included in Copilot</td><td>$79/user/month</td></tr>
+        <tr><td>Adoption</td><td>2M PRs/month, Fortune 500</td><td>2M repos, 13M PRs reviewed</td><td>Massive (GitHub native)</td><td>Smaller, technical niche</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub">GitHub Integration Challenges at Scale</div>
+    <ul class="items">
+      <li><strong>Rate limits:</strong> GitHub API allows 5,000 requests/hour per installation. At 2M PRs/month, BugBot needs to fetch diffs, read files, post comments, and update statuses — easily hundreds of thousands of API calls daily. The proxy layer monitors quotas across all installations and batches requests.</li>
+      <li><strong>Rust Git layer:</strong> Cursor rebuilt their Git integration in Rust specifically for BugBot. The goals: minimize data fetch operations (only fetch the files actually needed, not entire repo checkouts), ensure reliability at scale, and handle edge cases like binary files, submodules, and very large repos.</li>
+      <li><strong>Webhook reliability:</strong> GitHub webhooks can be delayed, duplicated, or dropped. BugBot needs idempotent processing (same PR event → same review, not duplicate reviews), webhook verification (HMAC signatures), and a dead-letter queue for failed processing.</li>
+      <li><strong>Comment threading:</strong> BugBot posts inline comments on the exact lines where bugs are found, just like a human reviewer. On PR updates, it needs to update or resolve previous comments, avoid duplicate reports, and handle force-pushes where line numbers change.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 6 ═══════════ -->
+<div class="phase" id="p6">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--phase6)">06</span>
+    <span class="phase-title">Wrap-Up &amp; Evolution</span><span class="phase-time">3–5 min</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+    <div class="sub">Evolution Timeline</div>
+    <ul class="items">
+      <li><strong>Early 2025:</strong> Cursor team builds BugBot internally for their own code review. "As coding agents became more capable, we found ourselves spending more time on review." BugBot was built to solve their own problem first.</li>
+      <li><strong>Spring 2025:</strong> Internal qualitative iteration. Multiple configurations of models, pipelines, filters, and context strategies. Team polls engineers internally — "if one configuration had fewer false positives, we adopted it."</li>
+      <li><strong>June 2025:</strong> Cursor 1.0 releases. BugBot announced in preview alongside Background Agents and Memories. Requires Max mode (Pro subscription).</li>
+      <li><strong>July 2025:</strong> BugBot V1 exits beta. Pipeline architecture: 8 parallel passes, majority voting, validator models. Resolution rate: 52%. 1M+ PRs reviewed in beta, 1.5M bugs flagged, 50%+ fixed before merge.</li>
+      <li><strong>Summer-Fall 2025:</strong> 40 experiments. Resolution rate metric defined. BugBench benchmark created. Models, prompts, validators, context management all iterated. Many "intuitive improvements" regressed metrics.</li>
+      <li><strong>Fall 2025:</strong> V2 agentic architecture deployed. "The largest quality gains to date." Resolution rate jumps to 70%. Aggressive prompting replaces cautious prompting. Dynamic context replaces static loading.</li>
+      <li><strong>Sept 2025:</strong> Cursor 1.7 adds Team Rules, Bugbot Rules honored at org level. Custom rules via <code>.cursor/BUGBOT.md</code> become a major feature.</li>
+      <li><strong>Late 2025:</strong> Bugbot pricing: $40/user/month. Pooled cap of 200 PRs/month per license. Fortune 500 adoption: Rippling, Discord, Samsara, Airtable, Sierra AI. 2M+ PRs/month.</li>
+      <li><strong>Jan 2026:</strong> BugBot Autofix in beta. Cloud Agents auto-fix found bugs. Roadmap: code execution for verification, deep research, always-on scanning mode. Version 11 shipped (from V1 in July).</li>
+    </ul>
+
+    <div class="sub">The Generator-Verifier Gap</div>
+    <div class="callout tip">BugBot exists because of a fundamental asymmetry in AI-assisted development: <strong>generating code is easier than verifying it</strong>. As AI tools (Cursor Agent, Copilot, Claude Code) generate more code faster, the review burden on humans increases. BugBot is the verification counterpart to the generation wave. As Sierra's Vijay Iyengar put it: "The generator-verifier gap is real, and Bugbot is incredibly strong at reviewing AI-generated code." This positions BugBot not as a nice-to-have but as an essential counterbalance to the explosion of AI-generated code.</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 7 ═══════════ -->
+<div class="phase" id="p7">
+  <div class="phase-header" onclick="this.closest('.phase').classList.toggle('collapsed')">
+    <span class="phase-number" style="background:var(--accent-cyan);color:var(--bg)">★</span>
+    <span class="phase-title">Interview Q&A — Practice</span><span class="phase-time">Practice</span>
+    <svg class="phase-chevron" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 6.3a1 1 0 011.4 0L10 8.6l2.3-2.3a1 1 0 111.4 1.4l-3 3a1 1 0 01-1.4 0l-3-3a1 1 0 010-1.4z"/></svg>
+  </div>
+  <div class="phase-body">
+
+    <div class="sub">Q1: Why did Cursor transition from a pipeline to an agentic architecture?</div>
+    <div class="callout say">"The pipeline architecture had a fundamental limitation: it was one-size-fits-all. Every PR got exactly 8 LLM passes regardless of complexity. A one-line typo fix consumed the same resources as a 500-line refactor of authentication logic. The agentic approach lets the system adapt. The agent reasons about the diff, identifies suspicious patterns, and decides how deep to investigate. For simple PRs, it might finish in 2-3 tool calls. For complex ones, it might trace call chains across 10 files. This produces better results at lower average cost. The second insight was about context. V1 loaded all context upfront — you had to guess what the model would need. V2 starts minimal and the agent pulls in context dynamically, only fetching files it actually needs to investigate a specific pattern. This is both more efficient and more targeted. The third shift was prompting: V1 used conservative prompts to minimize false positives. V2 uses aggressive prompts that flag everything suspicious, then relies on the iterative loop to verify or dismiss. This catches more real bugs while maintaining precision."</div>
+
+    <div class="sub">Q2: How would you measure the quality of an AI code review system?</div>
+    <div class="callout say">"The metric that unlocked BugBot's improvement was resolution rate: what fraction of flagged bugs do developers actually fix before merging? This is brilliant because it's a proxy for 'was this useful?' — if a developer took the time to fix the issue, it was probably a real bug. If they ignored it, it was probably noise. It's computed by an AI judge that compares flagged issues against the final merged diff, so it scales to millions of PRs without human annotation. For offline evaluation, they use BugBench — a curated set of real diffs with human-labeled bugs. This gives fast iteration without waiting for production data. The combination is key: BugBench prevents shipping regressions quickly, while resolution rate measures actual real-world value. I'd also track false positive rate (via developer dismissals), time-to-review (minutes from webhook to first comment), and adoption metrics (what % of teams make BugBot a required check)."</div>
+
+    <div class="sub">Q3: Why is randomized diff ordering effective for LLM-based code review?</div>
+    <div class="callout say">"LLMs have well-documented positional biases. Content at the beginning and end of the context window gets disproportionate attention, while content in the middle can be under-attended. In code review, this means the model might scrutinize the first few files closely and skim the last ones. By randomizing the order of diff hunks across 8 passes, each pass 'notices' different sections of the code. A bug buried in the middle of a large diff might be missed in 7 out of 8 passes, but the one pass where that code appears near the beginning catches it. Majority voting then aggregates: if 2+ passes flag the same issue, it's likely real regardless of which pass caught it. This is essentially an ensemble technique that exploits the stochastic nature of LLM attention to achieve broader coverage than any single pass."</div>
+
+    <div class="sub">Q4: What's the hardest part of running BugBot at 2M PRs/month?</div>
+    <div class="callout say">"GitHub rate limits. Every PR requires multiple API calls: fetch the diff, read surrounding files for context, post inline comments, update check statuses. At 2M PRs/month, that's potentially hundreds of millions of API calls against GitHub's 5,000/hour per-installation limit. Cursor rebuilt their Git layer in Rust specifically for this — minimizing data fetches and making every API call count. They added a proxy layer that monitors rate limits across all installations, batches requests, and queues work when quotas are close to exhaustion. The second challenge is cost. V1's 8-pass architecture meant ~16M LLM inference calls per month. At frontier model pricing, that's an enormous bill. The agentic architecture helps by letting simple PRs use fewer calls, but you still need careful model selection — using the most powerful model for investigation, cheaper models for validation, and routing based on PR complexity."</div>
+
+    <div class="sub">Q5: How would you handle the security implications of BugBot Autofix?</div>
+    <div class="callout say">"Autofix creates a fundamentally different threat model from review-only BugBot. When BugBot only posts comments, the worst case is bad advice that a human ignores. When Autofix spawns a Cloud Agent that clones repos, writes code, and pushes commits, you have: (1) prompt injection risk — malicious code in the PR could manipulate the agent into introducing vulnerabilities or exfiltrating secrets; (2) supply chain risk — the agent has write access to the repo and could modify dependencies; (3) infrastructure risk — the agent runs on Cursor's servers with access to customer code. Mitigations: sandbox the agent's environment (no network access except to the repo), diff-review before merge (auto-generated commits should be clearly labeled and require human approval), limit the scope of changes (the agent should only modify files related to the flagged bug), and rate-limit auto-generated commits per PR. Cursor acknowledges this explicitly: their docs warn about prompt injection and note their infra hasn't been audited by third parties yet."</div>
+
+    <div class="sub">Q6: What's the generator-verifier gap, and why does it matter for BugBot?</div>
+    <div class="callout say">"As AI coding tools — Cursor Agent, GitHub Copilot, Claude Code — get better at generating code, they produce more code faster than humans can review. This creates a gap: generation throughput is skyrocketing while verification throughput (human code review) remains roughly constant. The result is either a review bottleneck that slows everything down, or reviews get rushed and bugs slip through. BugBot closes this gap by applying AI to the verification side. It's the natural counterpart to AI code generation. Interestingly, BugBot is especially strong at reviewing AI-generated code because AI-generated code tends to have predictable failure modes: it's syntactically correct but may miss edge cases, use deprecated APIs, or introduce subtle logic errors that a pattern-matching review catches. This makes BugBot not just useful but increasingly necessary as the fraction of AI-generated code in production grows — reportedly 41% of code is now AI-generated."</div>
+
+  </div>
+</div>
+
+</main>
+
+<script>
+document.querySelectorAll('nav a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t&&t.classList.contains('collapsed'))t.classList.remove('collapsed');
+  });
+});
+</script>
+</body>
+</html>
